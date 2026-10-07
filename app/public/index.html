@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<link rel="icon" href="data:,">
+<title>ใครอ่ะ — AI รับสายแปลกแทนคุณ</title>
+<meta name="description" content="ตั้งโอนสายครั้งเดียวจบ AI คุยภาษาของคุณคัดสายหลอกทุกสาย แล้วส่งสรุปพร้อมคลิปเสียงให้คุณ">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+</head>
+<body data-title-th="ใครอ่ะ — AI รับสายแปลกแทนคุณ" data-title-en="Krai-a — AI answers unknown calls for you">
+<nav class="nav"><div class="nav-in">
+  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอ่ะ" data-en="Krai-a">ใครอ่ะ</span></a>
+  <div class="nav-links">
+    <a data-page="features" href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
+    <a data-page="how" href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
+    <a data-page="demo" href="/demo.html">Live demo</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang" id="langToggle"><button data-lang="th" class="on">TH</button><button data-lang="en">EN</button></div>
+    <span id="navAuth" style="display:flex;gap:10px"></span>
+  </div>
+</div></nav>
+
+<header class="hero dots"><div class="wrap hero-grid">
+  <div>
+    <span class="kicker" data-th="ระบบคัดกรองสายหลอกอัตโนมัติ · คุยภาษาของคุณ" data-en="Automated scam-call screening · Speaks your language">ระบบคัดกรองสายหลอกอัตโนมัติ · คุยภาษาของคุณ</span>
+    <h1 data-th="<span class='hl'>ตัดสายโจร</span><br>ก่อนโดนตัดเงิน" data-en="Every scam call<br><span class='hl'>ends at AI.</span>"><span class="hl">ตัดสายโจร</span><br>ก่อนโดนตัดเงิน</h1>
+    <p class="lede" data-th="โอนสายครั้งเดียวจบ — AI คุยภาษาของคุณรับทุกสายแปลกแทนคุณ โจรโดนตัดสายทิ้ง สายสำคัญได้สรุปพร้อมเบอร์โทรกลับ" data-en="Forward once — AI takes every unknown call in your language. Scammers get cut off; important calls arrive briefed with a callback number.">โอนสายครั้งเดียวจบ — AI คุยภาษาของคุณรับทุกสายแปลกแทนคุณ โจรโดนตัดสายทิ้ง สายสำคัญได้สรุปพร้อมเบอร์โทรกลับ</p>
+    <div class="hero-cta">
+      <a class="btn big primary" href="/demo.html" data-th="ลองเดโมสด <span class='arr'>→</span>" data-en="Try the live demo <span class='arr'>→</span>">ลองเดโมสด <span class="arr">→</span></a>
+      <a class="btn big light" href="#try-forward" data-th="ดูเบอร์และวิธีโอนสาย" data-en="See number & setup">ดูเบอร์และวิธีโอนสาย</a>
+    </div>
+    <p class="hero-proof" data-th="ไม่ต้องสมัคร · กดลองเดโมสดได้เลย · ดู AI รับสายแบบเรียลไทม์" data-en="No signup · try the live demo · watch AI screen calls in real time">ไม่ต้องสมัคร · กดลองเดโมสดได้เลย · ดู AI รับสายแบบเรียลไทม์</p>
+  </div>
+  <div>
+    <div class="live-pill"><span class="rec"></span><span data-th="สด · หนึ่งสายหลอก ตั้งแต่ต้นจนจบ" data-en="LIVE · One scam call, start to finish">สด · หนึ่งสายหลอก ตั้งแต่ต้นจนจบ</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
+    <div class="story" id="storyBox">
+      <div class="mg-dots" id="mgDots">
+        <span><i>1</i><em data-th="โอนสาย" data-en="Forward">โอนสาย</em></span>
+        <span><i>2</i><em data-th="สายเข้า" data-en="Incoming">สายเข้า</em></span>
+        <span><i>3</i><em data-th="AI จัดการ" data-en="AI handles">AI จัดการ</em></span>
+        <span><i>4</i><em data-th="สรุปถึงคุณ" data-en="Briefed">สรุปถึงคุณ</em></span>
+      </div>
+      <div class="mg-stage">
+        <div class="mg-scene" id="mgS1"><div class="mg-center">
+          <div class="mg-dialer">
+            <div class="mg-dial" id="mgDial"></div>
+            <div class="mg-keys" id="mgKeys">
+              <div class="mg-key" data-k="1">1</div>
+              <div class="mg-key" data-k="2">2<small>ABC</small></div>
+              <div class="mg-key" data-k="3">3<small>DEF</small></div>
+              <div class="mg-key" data-k="4">4<small>GHI</small></div>
+              <div class="mg-key" data-k="5">5<small>JKL</small></div>
+              <div class="mg-key" data-k="6">6<small>MNO</small></div>
+              <div class="mg-key" data-k="7">7<small>PQRS</small></div>
+              <div class="mg-key" data-k="8">8<small>TUV</small></div>
+              <div class="mg-key" data-k="9">9<small>WXYZ</small></div>
+              <div class="mg-key" data-k="*">*</div>
+              <div class="mg-key" data-k="0">0<small>+</small></div>
+              <div class="mg-key" data-k="#">#</div>
+            </div>
+            <div class="mg-callrow"><div class="mg-callbtn" id="mgCallBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg></div></div>
+            <div class="mg-status" id="mgDialStatus">…</div>
+          </div>
+          <div class="mg-label" data-th="มือถือคุณ · กดครั้งเดียว" data-en="Your phone · dial once">มือถือคุณ · กดครั้งเดียว</div>
+        </div></div>
+        <div class="mg-scene" id="mgS2"><div class="mg-center">
+          <div class="callscreen compact" id="mgCall">
+            <div class="cs-statusbar"><span>9:41</span><span class="cs-island"></span><span class="cs-sig">5G <i class="cs-batt"><i></i></i></span></div>
+            <div class="cs-avatar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg></div>
+            <div class="cs-number" id="mgNum">…</div>
+            <div class="cs-status" id="mgStatus">…</div>
+            <div class="cs-actions">
+              <div class="cs-btn dec"><i>✕</i></div>
+              <div class="cs-btn ans"><i>✓</i></div>
+            </div>
+            <div class="cs-home"></div>
+          </div>
+          <div class="mg-label" data-th="มือถือคุณ" data-en="Your phone">มือถือคุณ</div>
+        </div></div>
+        <div class="mg-scene" id="mgS3"><div class="mg-center">
+          <div class="mg-cloud" id="mgCloud">
+            <div class="mg-cloud-head"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span data-th="AI ใครอ่ะ รับช่วงต่อ" data-en="Krai-a AI takes over">AI ใครอ่ะ รับช่วงต่อ</span><span class="ab-dot"></span></div>
+            <div class="mg-work" id="mgWork" role="status"></div>
+            <div class="mg-verdict" id="mgVerdict"></div>
+            <div class="mg-reason" id="mgReason"></div>
+          </div>
+        </div></div>
+        <div class="mg-scene" id="mgS4"><div class="mg-center">
+          <div class="mg-alert" id="mgAlert"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 22c1.1 0 2-.9 2-2h-4a2 2 0 002 2zm6-6v-5a6 6 0 00-4.5-5.8V4a1.5 1.5 0 00-3 0v.2A6 6 0 006 10v5l-2 2v1h16v-1l-2-2z"/></svg><b data-th="สรุป + คลิปเสียงถึงมือถือคุณ" data-en="Brief + recording to your phone">สรุป + คลิปเสียงถึงมือถือคุณ</b><span class="badge SCAM" id="mgAlertBadge">…</span></div>
+          <div class="mg-label" data-th="คุณแค่โทรกลับเบอร์จริง" data-en="You only call real numbers back">คุณแค่โทรกลับเบอร์จริง</div>
+        </div></div>
+      </div>
+      <div class="live-foot">
+        <button class="live-replay" id="liveReplay" data-th="เล่นอีกครั้ง" data-en="Replay">เล่นอีกครั้ง</button>
+        <a class="live-cta" href="/demo.html" data-th="อยากได้แบบนี้? ลองเดโมสด →" data-en="Want this? Try the demo →">อยากได้แบบนี้? ลองเดโมสด →</a>
+      </div>
+    </div>
+  </div>
+</div>
+<span class="sticker s1" data-th="สกัดทุกสคริปต์มิจฉาชีพ" data-en="Every scam script intercepted">สกัดทุกสคริปต์มิจฉาชีพ</span>
+<span class="sticker s2" data-th="สายสำคัญแจ้งให้โทรกลับ" data-en="Important calls flagged back">สายสำคัญแจ้งให้โทรกลับ</span>
+</header>
+
+<div class="ticker" aria-hidden="true"><div class="ticker-track" id="tickerTrack">
+<span data-th="ปกป้องจากอ้างตำรวจ + หมายจับ + ห้ามวางสาย" data-en="Shielded from fake police + warrants + no-hang-up threats">ปกป้อง</span>
+<span data-th="ปกป้องจากพัสดุตกค้าง + ขอ OTP" data-en="Shielded from stuck parcels + OTP requests">ปกป้อง</span>
+<span data-th="ปกป้องจากอ้างธนาคาร + ให้โหลดแอป" data-en="Shielded from fake banks + install-this-app traps">ปกป้อง</span>
+<span data-th="ปกป้องจากคืนภาษี + ขอเลขบัญชี" data-en="Shielded from tax refunds + bank-account phishing">ปกป้อง</span>
+</div></div>
+
+<section class="proof"><div class="wrap proof-row">
+  <div class="p rv"><div class="n">24<span data-th=" ชม." data-en="h"> ชม.</span></div><div class="l" data-th="AI เฝ้าสายให้ตลอด" data-en="AI on guard, always">AI เฝ้าสายให้ตลอด</div></div>
+  <div class="p rv"><div class="n">3<span data-th=" สี" data-en=" colors"> สี</span></div><div class="l" data-th="คำตัดสินพร้อมคลิปเสียงทุกสาย" data-en="verdicts with recordings">คำตัดสินพร้อมคลิปเสียงทุกสาย</div></div>
+  <div class="p rv"><div class="n">1<span data-th=" นาที" data-en=" min"> นาที</span></div><div class="l" data-th="ตั้งโอนสายครั้งเดียวจบ" data-en="one-time forward setup">ตั้งโอนสายครั้งเดียวจบ</div></div>
+  <div class="p rv"><div class="n">0<span data-th=" บาท" data-en=""> บาท</span></div><div class="l" data-th="กดลองเดโมได้เลย ไม่ต้องสมัคร" data-en="try the demo, no signup">กดลองเดโมได้เลย ไม่ต้องสมัคร</div></div>
+</div></section>
+
+<section class="section"><div class="wrap">
+  <div class="sec-head rv">
+    <span class="kicker" data-th="วิธีใช้ 3 ขั้น" data-en="3 steps">วิธีใช้ 3 ขั้น</span>
+    <h2 data-th="ตั้งครั้งเดียว แล้วลืมเรื่องสายหลอกไปได้เลย" data-en="Set up once, then forget scam calls exist">ตั้งครั้งเดียว แล้วลืมเรื่องสายหลอกไปได้เลย</h2>
+  </div>
+  <div class="steps">
+    <div class="step rv"><div class="banner b1"><span class="no">1</span><span data-th="สมัครด้วยเบอร์มือถือ" data-en="Sign up with your mobile">สมัครด้วยเบอร์มือถือ</span></div><div class="bd" data-th="กรอกเบอร์ ยืนยัน OTP ระบบออก <b>เบอร์ AI ประจำบ้าน</b>ให้ทันที เบอร์ละหลัง ไม่ปนกับใคร" data-en="Enter your number, verify OTP, and get a <b>home AI number</b> instantly — one per household.">กรอกเบอร์ ยืนยัน OTP ระบบออก <b>เบอร์ AI ประจำบ้าน</b>ให้ทันที เบอร์ละหลัง ไม่ปนกับใคร</div></div>
+    <div class="step rv"><div class="banner b2"><span class="no">2</span><span data-th="กดโอนสายครั้งเดียว" data-en="Forward once">กดโอนสายครั้งเดียว</span></div><div class="bd" data-th="จากมือถือเครื่องเดิมกด <code>**21*[เบอร์ AI]#</code> แล้วโทรออก สายแปลกทุกสายจะวิ่งเข้า AI ก่อน" data-en="From your own phone dial <code>**21*[AI number]#</code> — every unknown call goes to AI first.">จากมือถือเครื่องเดิมกด <code>**21*[เบอร์ AI]#</code> แล้วโทรออก สายแปลกทุกสายจะวิ่งเข้า AI ก่อน</div></div>
+    <div class="step rv"><div class="banner b3"><span class="no">3</span><span data-th="รับสรุปพร้อมคลิปเสียง" data-en="Get verdict + recording">รับสรุปพร้อมคลิปเสียง</span></div><div class="bd" data-th="AI คุยภาษาของคุณ จับสคริปต์ขู่-เร่ง-ขอโอน แล้วส่งคำตัดสิน <b>แดง/เขียว/เหลือง</b> พร้อมคลิปเสียงให้คุณ" data-en="AI chats in your language, catches threats and transfer demands, then sends a <b>red/green/yellow</b> verdict with the recording.">AI คุยภาษาของคุณ จับสคริปต์ขู่-เร่ง-ขอโอน แล้วส่งคำตัดสิน <b>แดง/เขียว/เหลือง</b> พร้อมคลิปเสียงให้คุณ</div></div>
+  </div>
+</div></section>
+
+<section class="section cream"><div class="wrap">
+  <div class="sec-head rv">
+    <span class="kicker" data-th="ทำไมต้องใครอ่ะ" data-en="Why Krai-a">ทำไมต้องใครอ่ะ</span>
+    <h2 data-th="แอปแปะป้ายเบอร์ ช่วยคุณไม่ได้ตอนกำลังโดนกดดันสด" data-en="Caller-ID apps can't help while you're pressured live">แอปแปะป้ายเบอร์ ช่วยคุณไม่ได้ตอนกำลังโดนกดดันสด</h2>
+  </div>
+  <div class="lanes">
+    <div class="lane bad rv">
+      <div class="lane-tag" data-th="วิธีเดิม · แอปแปะป้ายเบอร์" data-en="Old way · caller-ID app">วิธีเดิม · แอปแปะป้ายเบอร์</div>
+      <div class="lane-track">
+        <div class="fnode" data-th="สายแปลกเข้า" data-en="Unknown call in">สายแปลกเข้า</div><span class="farr">→</span>
+        <div class="fnode" data-th="แอปโชว์แค่ “น่าสงสัย?”" data-en="App only says “suspicious?”">แอปโชว์แค่ “น่าสงสัย?”</div><span class="farr">→</span>
+        <div class="fnode" data-th="คุณต้องรับเอง" data-en="You pick up yourself">คุณต้องรับเอง</div><span class="farr">→</span>
+        <div class="fnode" data-th="โดนกดดันสด 10 นาที" data-en="Pressured live for 10 minutes">โดนกดดันสด 10 นาที</div><span class="farr">→</span>
+        <div class="fnode end" data-th="ตัดสินใจพลาด · เงินหาย" data-en="One wrong move · money gone">ตัดสินใจพลาด · เงินหาย</div>
+      </div>
+    </div>
+    <div class="lane good rv">
+      <div class="lane-tag" data-th="ใครอ่ะ · AI รับแทน" data-en="Krai-a · AI answers">ใครอ่ะ · AI รับแทน</div>
+      <div class="lane-track">
+        <div class="fnode" data-th="สายแปลกเข้า" data-en="Unknown call in">สายแปลกเข้า</div><span class="farr">→</span>
+        <div class="fnode" data-th="AI รับแทนใน 3 วิ" data-en="AI answers in 3 seconds">AI รับแทนใน 3 วิ</div><span class="farr">→</span>
+        <div class="fnode" data-th="จับสคริปต์ขู่ + ขอโอน" data-en="Catches threats + transfer demands">จับสคริปต์ขู่ + ขอโอน</div><span class="farr">→</span>
+        <div class="fnode" data-th="ตัดสาย + ส่งคลิปเสียงให้คุณ" data-en="Hangs up + sends you the recording">ตัดสาย + ส่งคลิปเสียงให้คุณ</div><span class="farr">→</span>
+        <div class="fnode end" data-th="คุณแค่โทรกลับเบอร์จริง" data-en="You only call real numbers back">คุณแค่โทรกลับเบอร์จริง</div>
+      </div>
+    </div>
+  </div>
+</div></section>
+
+<section class="section"><div class="wrap">
+  <div class="sec-head rv">
+    <span class="kicker" data-th="คำตัดสิน 3 ทาง" data-en="3-way verdict">คำตัดสิน 3 ทาง</span>
+    <h2 data-th="AI ตัดสินแค่ที่มั่นใจ ที่เหลือส่งให้คุณพร้อมคลิปเสียง" data-en="AI judges only when sure — the rest comes to you with recordings">AI ตัดสินแค่ที่มั่นใจ ที่เหลือส่งให้คุณพร้อมคลิปเสียง</h2>
+  </div>
+  <div class="trio">
+    <div class="vcard r rv"><div class="top" data-th="แดง · มิจฉาชีพ" data-en="RED · Scammer">แดง · มิจฉาชีพ</div><p data-th="AI วางสายสุภาพ 'ขอเวลาตรวจสอบก่อนนะคะ' แล้วแจ้งเตือนแดงพร้อมสคริปต์ที่จับได้" data-en="AI hangs up politely, then sends a red alert with the caught script.">AI วางสายสุภาพ “ขอเวลาตรวจสอบก่อนนะคะ” แล้วแจ้งเตือนแดงพร้อมสคริปต์ที่จับได้</p></div>
+    <div class="vcard g rv"><div class="top" data-th="เขียว · คนจริง" data-en="GREEN · Legit">เขียว · คนจริง</div><p data-th="ฝากข้อความ (รพ.นัด/พัสดุ/งาน) พร้อมเบอร์ติดต่อกลับ ส่งแจ้งเตือนเขียวให้คุณโทรกลับ" data-en="Takes a message (hospital/parcel/work) with a callback number — green alert for you.">ฝากข้อความ (รพ.นัด/พัสดุ/งาน) พร้อมเบอร์ติดต่อกลับ ส่งแจ้งเตือนเขียวให้คุณโทรกลับ</p></div>
+    <div class="vcard y rv"><div class="top" data-th="เหลือง · ไม่ชัวร์" data-en="YELLOW · Unsure">เหลือง · ไม่ชัวร์</div><p data-th="ไม่กล่าวหาใคร — ฝากข้อความอย่างเดียว แล้วส่งจุดน่าสงสัยให้คุณตัดสินใจเอง" data-en="Never accuses — message only, plus suspicious points for you to judge.">ไม่กล่าวหาใคร — ฝากข้อความอย่างเดียว แล้วส่งจุดน่าสงสัยให้คุณตัดสินใจเอง</p></div>
+  </div>
+  <div class="pull rv" data-th="<b>หลักการโทรกลับ:</b> คนจริงยอมให้โทรกลับเสมอ ใครขัดขืนหรือขู่ว่าห้ามวางสาย = สัญญาณโจรในตัว — โทรกลับเบอร์ที่โชว์ยังฆ่าเบอร์ปลอมได้ด้วย" data-en="<b>The callback rule:</b> legit callers always accept a callback. Anyone who resists or threatens = a scammer signal — calling back also kills spoofed numbers."><b>หลักการโทรกลับ:</b> คนจริงยอมให้โทรกลับเสมอ ใครขัดขืนหรือขู่ว่าห้ามวางสาย = สัญญาณโจรในตัว — โทรกลับเบอร์ที่โชว์ยังฆ่าเบอร์ปลอมได้ด้วย</div>
+</div></section>
+
+<section class="section" id="try-forward"><div class="wrap">
+  <div class="sec-head rv">
+    <span class="kicker" data-th="ลองตั้งโอนสาย" data-en="Try forwarding">ลองตั้งโอนสาย</span>
+    <h2 data-th="โอนสายเข้าเบอร์นี้" data-en="Forward to this number">โอนสายเข้าเบอร์นี้</h2>
+    <p data-th="จดเบอร์ กดโอนสายจากมือถือคุณ แล้วกดปุ่มจำลองสายหลอก — ดูว่า AI รับแทนคุณยังไง" data-en="Note the number, forward from your phone, then simulate a scam call — see AI answer for you.">จดเบอร์ กดโอนสายจากมือถือคุณ แล้วกดปุ่มจำลองสายหลอก — ดูว่า AI รับแทนคุณยังไง</p>
+  </div>
+  <div class="fwd-grid">
+    <div class="card rv"><div class="pad">
+      <div class="fwd-cap" data-th="เบอร์ AI จำลองของคุณ" data-en="Your demo AI number">เบอร์ AI จำลองของคุณ</div>
+      <div class="fwd-num" id="simNumber">…</div>
+      <div class="fwd-cap" data-th="รหัสโอนสายของคุณ" data-en="Your forwarding code">รหัสโอนสายของคุณ</div>
+      <div class="fwd-code" id="simFwd" style="margin:8px 0">…</div>
+      <ol class="sim-steps">
+        <li data-th="<span class='n'>1</span>กดรหัสนี้จากมือถือคุณ แล้วโทรออก" data-en="<span class='n'>1</span>Dial this code from your phone."><span class="n">1</span>กดรหัสนี้จากมือถือคุณ แล้วโทรออก</li>
+        <li data-th="<span class='n'>2</span>สายแปลกทุกสายวิ่งเข้าเบอร์ AI ก่อน" data-en="<span class='n'>2</span>Every unknown call hits the AI number first."><span class="n">2</span>สายแปลกทุกสายวิ่งเข้าเบอร์ AI ก่อน</li>
+        <li data-th="<span class='n'>3</span>กดปุ่มข้างล่าง จำลองสายหลอกดูผล" data-en="<span class='n'>3</span>Hit the button — simulate a scam call."><span class="n">3</span>กดปุ่มข้างล่าง จำลองสายหลอกดูผล</li>
+      </ol>
+      <button class="btn primary big" id="simBtn" data-th="จำลองสายหลอกโทรเข้า" data-en="Simulate a scam call">จำลองสายหลอกโทรเข้า</button>
+      <p class="sim-note" data-th="โหมดจำลอง — สมัครเพื่อรับเบอร์จริงของบ้านคุณ" data-en="Simulated — sign up to get your real home number.">โหมดจำลอง — สมัครเพื่อรับเบอร์จริงของบ้านคุณ</p>
+    </div></div>
+    <div class="phone rv">
+      <div class="phone-body">
+        <div class="callscreen idle" id="csSim">
+          <div class="cs-statusbar"><span>9:41</span><span class="cs-island"></span><span class="cs-sig">5G <i class="cs-batt"><i></i></i></span></div>
+          <div class="cs-avatar"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 12c2.7 0 5-2.3 5-5s-2.3-5-5-5-5 2.3-5 5 2.3 5 5 5zm0 2c-3.3 0-10 1.7-10 5v3h20v-3c0-3.3-6.7-5-10-5z"/></svg></div>
+          <div class="cs-number">…</div>
+          <div class="cs-status" data-th="กดปุ่ม “จำลองสายหลอกโทรเข้า” แล้วดู AI รับสายแทนคุณ" data-en="Hit “Simulate a scam call” and watch AI answer for you">กดปุ่ม “จำลองสายหลอกโทรเข้า” แล้วดู AI รับสายแทนคุณ</div>
+          <div class="cs-heard"></div>
+          <div class="cs-chips"></div>
+          <div class="cs-verdict"></div>
+          <div class="cs-actions">
+            <div class="cs-btn dec"><i>✕</i></div>
+            <div class="cs-btn ans"><i>✓</i></div>
+          </div>
+          <div class="cs-home"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="sim-result" id="simResult"></div>
+</div></section>
+
+
+
+<section class="section"><div class="wrap">
+  <div class="cta-band rv">
+    <div><h2 data-th="สายหลอกสายต่อไป ให้ AI รับแทนคุณ" data-en="Let AI take the next scam call for you">สายหลอกสายต่อไป ให้ AI รับแทนคุณ</h2><p data-th="กดเดโมสด เลือกสคริปต์มิจฉาชีพ ดู AI รับสายให้ดูแบบเรียลไทม์" data-en="Hit the live demo, pick a scam script, watch AI screen it in real time.">กดเดโมสด เลือกสคริปต์มิจฉาชีพ ดู AI รับสายให้ดูแบบเรียลไทม์</p></div>
+    <a class="btn big sun" href="/demo.html" data-th="ลองเดโมสด <span class='arr'>→</span>" data-en="Try the live demo <span class='arr'>→</span>">ลองเดโมสด <span class="arr">→</span></a>
+  </div>
+</div></section>
+
+<footer class="foot"><div class="foot-grid">
+  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอ่ะ" data-en="Krai-a">ใครอ่ะ</span></a>
+    <p style="margin-top:10px" data-th="AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ" data-en="AI answers unknown calls, sends scammers away, flags important calls back.">AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ</p></div>
+  <div><h4 data-th="ผลิตภัณฑ์" data-en="Product">ผลิตภัณฑ์</h4>
+    <a href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
+    <a href="/demo.html">Live demo</a></div>
+  <div><h4 data-th="ช่วยเหลือ" data-en="Help">ช่วยเหลือ</h4>
+    <a href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
+</div>
+  <div><h4 data-th="ความน่าเชื่อถือ" data-en="Trust">ความน่าเชื่อถือ</h4>
+    <a href="/how-it-works.html" data-th="ขอบเขตที่กันไม่ได้" data-en="Honest scope">ขอบเขตที่กันไม่ได้</a>
+</div>
+</div><div class="foot-base"><span>© 2026 Krai-a</span><span data-th="สายแปลกทุกสาย มี AI รับแทน" data-en="Every unknown call, answered by AI.">สายแปลกทุกสาย มี AI รับแทน</span></div></footer>
+<p class="foot-note" style="background:var(--ink);margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
+<script type="module">
+import { initNav, initReveal, api, i18n } from '/site.js';
+initNav('home'); initReveal();
+document.getElementById('tickerTrack').innerHTML += document.getElementById('tickerTrack').innerHTML;
+
+// Shared incoming-call screen driver: hero autoplay + forwarding sim.
+// Hero story + sim play REAL scam calls through /api/demo — no typing needed.
+const CTXT = {
+  ringing: { th: 'สายเข้าจากเบอร์แปลก…', en: 'Incoming unknown call…' },
+  answered: { th: 'AI รับสายแทนคุณแล้ว', en: 'AI answered for you' },
+  heard: { th: 'ปลายสาย', en: 'Caller' },
+  endScam: { th: 'ตัดสายแล้ว · ส่งสรุปพร้อมคลิปเสียงให้คุณ', en: 'Hung up · brief + recording sent to you' },
+  endLegit: { th: 'จบสาย · ฝากข้อความพร้อมเบอร์โทรกลับแล้ว', en: 'Done · message + callback saved' },
+  endUnsure: { th: 'จบสาย · ส่งคลิปเสียงให้คุณตัดสินใจ', en: 'Done · recording sent for your call' },
+  err: { th: 'ต่อเซิร์ฟเวอร์ไม่ได้ กรุณาลองใหม่', en: 'Connection failed — try again' },
+  sig: {
+    threat: { th: 'ข่มขู่', en: 'threat' },
+    urgency: { th: 'เร่งรัด', en: 'pressure' },
+    secrecy: { th: 'ห้ามบอกใคร', en: 'secrecy' },
+    authority: { th: 'อ้างอำนาจ', en: 'authority' },
+  },
+  known: { th: 'ตรงมุกที่ระบาด', en: 'known scam' },
+  forwarded: { th: 'โอนสายแล้ว ✓', en: 'Forwarded ✓' },
+  dialing: { th: 'กำลังตั้งโอนสาย…', en: 'Setting up forwarding…' },
+  dialDone: { th: 'สายแปลกทุกสาย → AI ✓', en: 'Unknown calls → AI ✓' },
+  chatting: { th: 'AI กำลังคุยแทนคุณ…', en: 'AI is chatting for you…' },
+  turnN: { th: 'เทิร์น', en: 'turn' },
+  pressCode: { th: 'กดรหัสโอนสาย…', en: 'Dialing forward code…' },
+  forward: { th: 'โอนสายจากเครื่องคุณไป AI…', en: 'Forwarding from your phone to AI…' },
+  alertToYou: { th: 'แจ้งเตือนที่ส่งถึงมือถือคุณ', en: 'Alert sent to your phone' },
+  cta: { th: 'ชอบแบบนี้? ลองเดโมสด →', en: 'Like this? Try the live demo →' },
+};
+const cesc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const creduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+const csleep = (ms) => new Promise((r) => setTimeout(r, creduced ? 0 : ms));
+const csRefs = (id) => {
+  const root = document.getElementById(id);
+  const q = (c) => root.querySelector(c);
+  return { root, number: q('.cs-number'), status: q('.cs-status'), heard: q('.cs-heard'), chips: q('.cs-chips'), verdict: q('.cs-verdict') };
+};
+async function runCallScreen(cs, opts = {}) {
+  const L = i18n.lang;
+  cs.root.classList.remove('idle', 'answered', 'ended');
+  cs.verdict.className = 'cs-verdict';
+  cs.verdict.innerHTML = '';
+  cs.chips.innerHTML = '';
+  cs.heard.innerHTML = '';
+  const call = await api('/api/demo/call', { method: 'POST', body: { scriptId: opts.scriptId || 'scam-police' } });
+  cs.number.textContent = call.call.callerPhone || '…';
+  if (opts.forward) {
+    cs.status.textContent = CTXT.forward[L];
+    await csleep(1500);
+  }
+  cs.root.classList.add('ringing');
+  cs.status.textContent = CTXT.ringing[L];
+  await csleep(1300);
+  cs.root.classList.remove('ringing');
+  cs.root.classList.add('answered');
+  cs.status.textContent = CTXT.answered[L];
+  await csleep(700);
+  let last = null;
+  for (const line of call.script.lines) {
+    const short = line.length > 80 ? `${line.slice(0, 80)}…` : line;
+    cs.heard.innerHTML = `<b>${CTXT.heard[L]}:</b> ${cesc(short)}`;
+    await csleep(950);
+    const turn = await api('/api/demo/turn', { method: 'POST', body: { callId: call.call.id, text: line } });
+    last = turn;
+    const v = turn.verdict;
+    cs.chips.innerHTML = [...(v.pressureSignals || [])]
+      .map((s) => `<span>${cesc((CTXT.sig[s] || { th: s, en: s })[L])}</span>`).join('')
+      + (v.matchesKnownScam ? `<span class="k">${CTXT.known[L]}</span>` : '');
+    cs.verdict.className = `cs-verdict show ${v.verdict}`;
+    cs.verdict.innerHTML = `<span class="badge ${v.verdict}">${v.verdict}</span><span>${Math.round(v.confidence * 100)}%</span>`;
+    if (turn.ended) break;
+    await csleep(500);
+  }
+  cs.root.classList.remove('answered');
+  cs.root.classList.add('ended');
+  const v = last?.verdict?.verdict;
+  cs.status.textContent = v === 'SCAM' ? CTXT.endScam[L] : v === 'LEGIT' ? CTXT.endLegit[L] : CTXT.endUnsure[L];
+  if (opts.onEnd && last) opts.onEnd(last);
+}
+
+let storyRun = 1;
+async function playStory(myRun, startAt = 0) {
+  const L = i18n.lang;
+  const $ = (id) => document.getElementById(id);
+  const scenes = [$('mgS1'), $('mgS2'), $('mgS3'), $('mgS4')];
+  const dots = [...document.querySelectorAll('#mgDots span')];
+  const alive = () => myRun === storyRun;
+  const show = (i) => {
+    scenes.forEach((s, k) => s.classList.toggle('on', k === i));
+    dots.forEach((d, k) => { d.classList.toggle('on', k === i); d.classList.toggle('done', k < i); });
+  };
+  const mgCall = $('mgCall');
+  const mgNum = $('mgNum');
+  const mgStatus = $('mgStatus');
+  const mgCloud = $('mgCloud');
+  const mgWork = $('mgWork');
+  const mgVerdict = $('mgVerdict');
+  const mgReason = $('mgReason');
+  const mgAlertBadge = $('mgAlertBadge');
+  mgCall.classList.remove('ringing', 'leaving');
+  mgCloud.classList.remove('on');
+  mgWork.textContent = '';
+  mgVerdict.className = 'mg-verdict';
+  mgVerdict.innerHTML = '';
+  mgReason.textContent = '';
+  mgNum.textContent = '…';
+  try {
+    // Scene 1: dial the forwarding code once.
+    if (startAt <= 0) {
+      show(0);
+      let demoNum = '+6621000142';
+      try { const st = await api('/api/status'); if (st.demoNumber) demoNum = st.demoNumber; } catch { /* fallback number */ }
+      if (!alive()) return;
+      const code = `**21*${demoNum}#`;
+      const mgDial = $('mgDial');
+      const mgDialStatus = $('mgDialStatus');
+      const mgKeys = $('mgKeys');
+      const mgCallBtn = $('mgCallBtn');
+      mgDialStatus.textContent = CTXT.pressCode[L];
+      if (creduced) {
+        mgDial.textContent = code;
+      } else {
+        mgDial.textContent = '';
+        for (let i = 0; i < code.length; i += 1) {
+          const ch = code[i];
+          mgDial.textContent = code.slice(0, i + 1);
+          const key = mgKeys.querySelector(`[data-k="${ch === '+' ? '0' : ch}"]`);
+          if (key) key.classList.add('hit');
+          await csleep(140);
+          if (key) key.classList.remove('hit');
+          if (!alive()) return;
+        }
+        mgCallBtn.classList.add('pressed');
+        await csleep(400);
+        mgCallBtn.classList.remove('pressed');
+        if (!alive()) return;
+      }
+      mgDialStatus.textContent = CTXT.dialing[L];
+      await csleep(1400);
+      if (!alive()) return;
+      mgDialStatus.textContent = CTXT.dialDone[L];
+      await csleep(2600);
+      if (!alive()) return;
+    }
+    // Scene 2: scam call comes in, leaves your phone.
+    let call;
+    if (startAt <= 1) {
+      show(1);
+      call = await api('/api/demo/call', { method: 'POST', body: { scriptId: 'scam-police' } });
+      if (!alive()) return;
+      mgNum.textContent = call.call.callerPhone || '…';
+      mgCall.classList.add('ringing');
+      mgStatus.textContent = CTXT.ringing[L];
+      await csleep(2600);
+      if (!alive()) return;
+      mgCall.classList.remove('ringing');
+      mgCall.classList.add('leaving');
+      mgStatus.textContent = CTXT.forwarded[L];
+      await csleep(2200);
+      if (!alive()) return;
+    } else {
+      call = await api('/api/demo/call', { method: 'POST', body: { scriptId: 'scam-police' } });
+      if (!alive()) return;
+    }
+    // Scene 3: AI takes over outside your phone.
+    let last = null;
+    if (startAt <= 2) {
+      show(2);
+      mgCloud.classList.add('on');
+      for (let i = 0; i < call.script.lines.length; i += 1) {
+        if (!alive()) return;
+        mgWork.textContent = `${CTXT.chatting[L]} (${CTXT.turnN[L]} ${i + 1})`;
+        await csleep(1600);
+        if (!alive()) return;
+        const turn = await api('/api/demo/turn', { method: 'POST', body: { callId: call.call.id, text: call.script.lines[i] } });
+        last = turn;
+        if (turn.ended) break;
+        await csleep(900);
+      }
+      if (!alive()) return;
+    } else {
+      for (const line of call.script.lines) {
+        const turn = await api('/api/demo/turn', { method: 'POST', body: { callId: call.call.id, text: line } });
+        last = turn;
+        if (!alive()) return;
+        if (turn.ended) break;
+      }
+    }
+    const v = last.verdict;
+    mgWork.textContent = '';
+    mgVerdict.className = `mg-verdict show ${v.verdict}`;
+    mgVerdict.innerHTML = `<span class="badge ${v.verdict}">${v.verdict}</span><span>${Math.round(v.confidence * 100)}%</span>`;
+    mgReason.textContent = (L === 'en' ? v.reasonEn : v.reason) || '';
+    mgAlertBadge.className = `badge ${v.verdict}`;
+    mgAlertBadge.textContent = v.verdict;
+    if (startAt <= 2) {
+      await csleep(3000);
+      if (!alive()) return;
+    }
+    // Scene 4: brief + recording back to you.
+    show(3);
+    await csleep(6500);
+  } catch {
+    mgStatus.textContent = CTXT.err[i18n.lang];
+  }
+  if (alive() && !creduced) playStory(myRun, 0);
+}
+document.getElementById('liveReplay').onclick = () => { storyRun += 1; playStory(storyRun, 0); };
+document.querySelectorAll('#mgDots span').forEach((d, i) => {
+  d.setAttribute('role', 'button');
+  d.setAttribute('tabindex', '0');
+  const jump = () => { storyRun += 1; playStory(storyRun, i); };
+  d.onclick = jump;
+  d.onkeydown = (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); jump(); } };
+});
+setTimeout(() => playStory(storyRun), 900);
+
+try {
+  const st = await api('/api/status');
+  const num = st.demoNumber || '+6621000142';
+  document.getElementById('simNumber').textContent = num;
+  document.getElementById('simFwd').textContent = `**21*${num}#`;
+} catch { /* keep placeholders */ }
+
+document.getElementById('simBtn').onclick = async (e) => {
+  const btn = e.currentTarget;
+  btn.disabled = true;
+  document.getElementById('simResult').innerHTML = '';
+  try {
+    await runCallScreen(csRefs('csSim'), {
+      forward: true,
+      onEnd(last) {
+        const v = last.verdict;
+        const box = document.getElementById('simResult');
+        const head = document.createElement('div');
+        head.className = 'sr-head';
+        head.innerHTML = `<span class="badge ${v.verdict}">${v.verdict}</span><b>${CTXT.alertToYou[i18n.lang]}</b>`;
+        box.appendChild(head);
+        if (last.notify?.message?.text) {
+          const t = document.createElement('div');
+          t.className = 'sr-text';
+          t.textContent = last.notify.message.text;
+          box.appendChild(t);
+        }
+        const cta = document.createElement('a');
+        cta.className = 'btn primary';
+        cta.href = '/demo.html';
+        cta.textContent = CTXT.cta[i18n.lang];
+        box.appendChild(cta);
+        box.scrollIntoView({ behavior: creduced ? 'auto' : 'smooth', block: 'nearest' });
+      },
+    });
+  } catch {
+    document.querySelector('#csSim .cs-status').textContent = CTXT.err[i18n.lang];
+  } finally {
+    btn.disabled = false;
+  }
+};
+</script>
+</body>
+</html>

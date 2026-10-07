@@ -1,0 +1,126 @@
+﻿Themes
+AI Builder Cup 2026
+Overview
+Challenges &amp; Requirements
+Rewards &amp; Prizes
+FAQs
+Select Language
+English
+Indonesian
+Simplified Chinese
+Korean
+Japanese
+Register now
+Select Language
+English
+Indonesian
+Simplified Chinese
+Korean
+Japanese
+Register
+now
+Overview
+Challenges &amp; Requirements
+Rewards &amp; Prizes
+FAQs
+Themes
+Every team builds against one of the following themes. Choose the one closest to the problem you want to solve.
+BFSI: Intelligent Risk, Fraud &amp; Financial Experiences
+Build an AI-powered solution that addresses meaningful challenges across banking, financial services, insurance, or related industries. Solutions may focus on detecting and mitigating fraud or risk, automating complex processes, improving customer interactions, or delivering more personalized and informed financial experiences.
+Retail &amp; Commerce: Intelligent Customer and Business Experiences
+Build an AI-powered solution that transforms how businesses understand, engage, and serve customers while improving operational efficiency across physical and digital commerce. Solutions may address discovery, personalization, conversational shopping, demand planning, inventory, customer insights, or fraud.
+Manufacturing: Intelligent Operations &amp; Industrial Efficiency
+Build an AI-powered solution that addresses challenges related to efficiency, quality, reliability, supply and demand, or sustainability across manufacturing and industrial operations. Solutions should demonstrate how AI can transform operational data into meaningful insights, recommendations, or actions.
+Media, Content &amp; Digital Experiences
+Build an AI-powered solution that transforms how content is created, discovered, personalized, understood, or experienced. Solutions may address challenges across media, entertainment, publishing, education, communication, or other digital content ecosystems.
+Future of Work &amp; Enterprise Productivity
+Build an AI-powered solution that transforms how individuals and organizations access knowledge, collaborate, make decisions, and complete everyday work. Solutions should demonstrate meaningful improvements in productivity, efficiency, knowledge accessibility, or workflow execution.
+Sustainability &amp; Social Impact
+Build an AI-powered solution that addresses a meaningful environmental or societal challenge. Solutions may focus on improving resource efficiency, increasing accessibility, strengthening resilience, supporting communities, or enabling more informed and sustainable decision-making.
+What you'll build
+A working prototype that addresses your chosen problem statement. The goal is a functional solution that demonstrates a clear idea in action—not just a pitch deck or a mockup. Crucially, all submissions must leverage Google AI models (like Gemini or Gemma) or be built using agentic platforms (such as Agent Platform, Antigravity, or AI Studio), and they must be deployed on Google Cloud via Cloud Run or Firebase.
+We'll be hosting online sessions covering the overall program and a walkthrough of the problem statements, so you can attend for clarity as you build.
+Challenge Themes
+Dive deep into specific industry challenges across BFSI, Retail &amp; Commerce, Manufacturing and more. Choose one problem statement:
+BFSI: Intelligent Risk, Fraud &amp; Financial Experiences
+Retail &amp; Commerce: Intelligent Customer and Business Experiences
+Manufacturing: Intelligent Operations &amp; Industrial Efficiency
+Media, Content &amp; Digital Experiences
+Future of Work &amp; Enterprise Productivity
+Sustainability &amp; Social Impact
+AI Tools
+All prototype submissions must integrate AI models such as the family of Gemini or Gemma models or built using agentic platforms like Agent Platform, Antigravity, AI Studio and prototypes must be deployed on Google Cloud Platform using Cloud Run or Firebase.
+Register now
+What you'll submit
+Following requirements are mandatory while submitting your solution:
+Clear Proposal:
+Submit a compelling vision for your AI solution, highlighting its positive impact and alignment with one of the problem statements in a deck/PPT converted into a PDF.
+Clearly articulate the problem your solution addresses and how it will benefit the community.
+Demonstrate the feasibility of your project and its potential for scalability.
+Functional Prototype:
+Build a working prototype using Google Cloud's AI tools &amp; deployed on Cloud Run/GCP/Firebase.
+Ensure the prototype effectively demonstrates your solution's capabilities and benefits.
+Comprehensive Documentation:
+Include a link to a public YouTube or Vimeo video or public Google drive link (3 minutes) showcasing your AI creation in action.
+Category Specification:
+Clearly identify the problem statement you are submitting for (Healthcare, Education, Sustainability, Accessibility, Social Good).
+Submission Specifics
+Functionality
+Your project must be functional and demonstrate a clear solution to the chosen social challenge.
+The solution should be user-friendly, accessible, and scalable.
+Ensure that your project aligns with the hackathon's focus on social impact.
+Platform Compatibility
+Your solution should be compatible with the specified Google Cloud platform and tools.
+Consider factors like scalability, performance, and integration with existing systems.
+Language
+All submission materials, including code, documentation, and presentations, must be in English.
+Judging criteria
+Submissions are scored against four weighted criteria:
+Register now
+Technical Merit &amp; Gen AI Implementation
+40%
+Meaningful use of Gen AI:
+How effectively and meaningfully has Generative AI been incorporated into the solution? Does the use of Gen AI contribute directly to solving the problem or enhancing the overall solution?
+Technical implementation:
+Is the solution functional, technically sound, and appropriately implemented?
+Scalability &amp; sustainability:
+Does the solution demonstrate potential for wider adoption, scalability, and future development beyond the prototype stage?
+Problem Alignment &amp; Impact
+25%
+Problem alignment:
+How effectively does the solution address the chosen problem statement, challenge objective, or theme?
+Potential impact:
+Does the solution demonstrate clear and meaningful value for its intended users, organization, industry, community, or other relevant stakeholders?
+Innovation &amp; Creativity
+25%
+Originality &amp; differentiation:
+Does the solution demonstrate a fresh perspective, novel approach, or meaningful differentiation from existing solutions?
+Innovation in the use of Gen AI:
+Does the solution demonstrate a creative or innovative application of Generative AI beyond a basic or superficial implementation?
+User Experience &amp; Solution Design
+10%
+Usability &amp; accessibility:
+Is the solution intuitive, user-friendly, and reasonably accessible to its intended users?
+Experience &amp; integration:
+Do the various components, including the Gen AI capabilities, work together cohesively to deliver a smooth and meaningful user experience?
+CONTACT US
++91 98703 30830
+Click here to join
+For any queries, email us at:
+OR EMAIL US AT
+Email copied
+support+aibuildercup@hack2skill.com
+AI
+Builder
+Cup
+Build in JAPAC.
+Build for the world.
+QUICK LINKS
+Overview
+Who can apply
+Timeline
+Rewards &amp; Prizes
+FAQs
+Challenges &amp; Requirements
+© Google Cloud AI Builder Cup. ALL RIGHTS RESERVED
+© Gen AI Academy APAC Edition. ALL RIGHTS RESERVED

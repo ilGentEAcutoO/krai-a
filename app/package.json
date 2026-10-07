@@ -1,0 +1,20 @@
+{
+  "name": "krai-a-demo",
+  "version": "0.1.0",
+  "description": "Krai-a demo — lean hackathon build: Thai AI call screener (web sessions + Twilio). AI Builder Cup.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "test": "node --test test/verdict.test.js test/store.test.js test/gates.test.js test/privacy.test.js test/demo.test.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  }
+}

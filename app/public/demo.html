@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="color-scheme" content="light only">
+<link rel="icon" href="data:,">
+<title>Live demo — ใครอ่ะ</title>
+<meta name="description" content="เดโมสด: เลือกสคริปต์มิจฉาชีพ ดู AI รับสายและตัดสินแบบเรียลไทม์">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/site.css">
+<style>
+.scn-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.scn-pick .script{text-align:left;background:#fff;border:2px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:var(--font);box-shadow:var(--sh-sm);border-top-width:6px}
+.scn-pick .script[data-exp="SCAM"]{border-top-color:var(--bad)}
+.scn-pick .script[data-exp="LEGIT"]{border-top-color:var(--ok)}
+.scn-pick .script[data-exp="UNSURE"]{border-top-color:var(--warn)}
+.scn-pick .script.on{outline:3px solid var(--brand-deep);outline-offset:1px}
+.scn-pick .script b{display:block;font-size:13.5px}
+.scn-pick .script span{font-size:12px;color:var(--ink2)}
+.tag{font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:6px;margin-left:6px;border:1px solid var(--line)}
+.tag.SCAM{background:var(--bad);color:#fff;border-color:var(--bad)}
+.tag.LEGIT{background:var(--ok);color:#fff;border-color:var(--ok)}
+.tag.UNSURE{background:var(--warn);color:var(--warn-ink);border-color:var(--warn)}
+.lines{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:200px;overflow:auto}
+.line{text-align:left;background:#fff;border:2px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13.5px;cursor:pointer;color:var(--ink2);font-family:var(--font)}
+.line:hover:not(:disabled){border-color:var(--brand-deep);color:var(--ink)}
+.line:disabled{opacity:.45;cursor:default}
+.status-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:2px solid var(--line);border-radius:20px;padding:7px 14px;font-size:13.5px;font-weight:800;box-shadow:var(--sh-sm)}
+.status-pill .dot{width:10px;height:10px;border-radius:50%;background:#c9c9c9}
+.status-pill.live .dot{background:#16A34A}
+.status-pill.mock .dot{background:var(--warn)}
+.verdict{border-radius:12px;padding:12px 14px;margin-bottom:10px;border:2px solid var(--line);background:#fff}
+.verdict.SCAM{background:var(--bad-soft);border-color:var(--bad)}
+.verdict.LEGIT{background:var(--ok-soft);border-color:var(--ok)}
+.verdict.UNSURE{background:var(--warn-soft);border-color:var(--warn)}
+.verdict .conf{font-size:12px;color:var(--ink2)}
+.verdict .v-reason{font-size:15px;font-weight:700}
+.verdict .v-reason-en{font-size:13px;color:var(--ink2)}
+.signals{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.signals span{font-size:11px;background:rgba(0,0,0,.07);padding:2px 8px;border-radius:5px}
+.transcript{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto}
+.bubble{max-width:88%;padding:9px 13px;border-radius:12px;font-size:14px;border:2px solid var(--line)}
+.bubble.assistant{align-self:flex-start;background:var(--brand-soft)}
+.bubble.caller{align-self:flex-end;background:var(--warn-soft)}
+.bubble .who{display:block;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;color:var(--ink2);margin-bottom:2px}
+.notify{background:#fff;border:2px solid var(--line);border-radius:12px;padding:12px 14px;font-size:13.5px;white-space:pre-wrap;min-height:120px}
+.notify.SCAM{border-color:var(--bad);background:var(--bad-soft)}
+.notify.LEGIT{border-color:var(--ok);background:var(--ok-soft)}
+.notify.UNSURE{border-color:var(--warn);background:var(--warn-soft)}
+.history{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow:auto}
+.hrow{display:flex;justify-content:space-between;gap:8px;font-size:13px;border-bottom:2px dashed #E5DCC8;padding:6px 2px;color:var(--ink2)}
+.checkline{font-size:13.5px;color:var(--ink2);display:flex;gap:8px;align-items:center;margin-top:10px}
+.checkline input{width:18px;height:18px;accent-color:var(--brand-deep)}
+@media(max-width:920px){.scn-pick{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body data-title-th="Live demo — ใครอ่ะ" data-title-en="Live demo — Krai-a">
+<nav class="nav"><div class="nav-in">
+  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอ่ะ" data-en="Krai-a">ใครอ่ะ</span></a>
+  <div class="nav-links">
+    <a data-page="features" href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
+    <a data-page="how" href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
+    <a data-page="demo" href="/demo.html">Live demo</a>
+  </div>
+  <div class="nav-right">
+    <div class="lang" id="langToggle"><button data-lang="th" class="on">TH</button><button data-lang="en">EN</button></div>
+    <span id="navAuth" style="display:flex;gap:10px"></span>
+  </div>
+</div></nav>
+
+<div class="page-hero dots"><div class="wrap">
+  <span class="kicker">Live demo</span>
+  <h1 data-th="ดู AI รับสายมิจสด ๆ" data-en="Watch AI take a scam call, live">ดู AI รับสายมิจสด ๆ</h1>
+  <p data-th="สายจำลอง → AI คุยภาษาของคุณ → ตัดสินทุกเทิร์น → แจ้งเตือนเจ้าของ — โค้ดชุดเดียวกับวงจรโทรศัพท์จริง" data-en="Simulated call → AI chats in your language → per-turn verdict → owner alert — the same code as the real phone loop.">สายจำลอง → AI คุยภาษาของคุณ → ตัดสินทุกเทิร์น → แจ้งเตือนเจ้าของ — โค้ดชุดเดียวกับวงจรโทรศัพท์จริง</p>
+  <p style="margin-top:10px"><span class="status-pill" id="status"><span class="dot"></span><span id="statusText">connecting…</span></span></p>
+</div></div>
+
+<div class="wrap page-body">
+  <div class="demo-num">
+    <div><div class="fwd-cap" style="color:#CFC2A8;margin:0" data-th="เบอร์ AI ที่รับสายนี้" data-en="AI number answering this call">เบอร์ AI ที่รับสายนี้</div><div class="num" id="demoNum">…</div></div>
+    <div><div class="fwd-cap" style="color:#CFC2A8;margin:0" data-th="ของจริงกดแค่นี้จากมือถือ" data-en="In real life, just dial this">ของจริงกดแค่นี้จากมือถือ</div><div class="code" id="demoFwd">…</div></div>
+    <p data-th="เบอร์นี้คือเบอร์จำลองของเดโม — สมัครเพื่อรับเบอร์จริงประจำบ้านคุณ แล้วกดโอนสายด้วยรหัสแบบเดียวกัน" data-en="This is the demo's simulated number — sign up to get your real home number, then forward with the same kind of code.">เบอร์นี้คือเบอร์จำลองของเดโม — สมัครเพื่อรับเบอร์จริงประจำบ้านคุณ แล้วกดโอนสายด้วยรหัสแบบเดียวกัน</p>
+  </div>
+
+  <div class="dash-grid">
+    <section class="app-card">
+      <h2 data-th="1 · เลือกสคริปต์" data-en="1 · Pick a scenario">1 · เลือกสคริปต์</h2>
+      <div id="scripts" class="scn-pick"><p style="color:var(--ink3)">loading…</p></div>
+      <h2 data-th="2 · ปลายสายพูด" data-en="2 · Caller says">2 · ปลายสายพูด</h2>
+      <p class="sub" data-th="(หรือพิมพ์เองด้านล่าง)" data-en="(or freestyle-type below)">(หรือพิมพ์เองด้านล่าง)</p>
+      <div id="scriptLines" class="lines"><p style="color:var(--ink3)" data-th="เริ่มสายก่อน" data-en="Start a call first.">เริ่มสายก่อน</p></div>
+      <div class="chatrow" style="margin-bottom:8px">
+        <input id="freeText" type="text" data-th-ph="พิมพ์เป็นปลายสาย… (ไทย/อังกฤษ)" data-en-ph="Type as the caller… (Thai/English)" placeholder="พิมพ์เป็นปลายสาย… (ไทย/อังกฤษ)" autocomplete="off">
+        <button id="sendBtn" class="btn primary small" disabled data-th="ส่ง" data-en="Send">ส่ง</button>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button id="startBtn" class="btn dark small" data-th="เริ่มสาย" data-en="Start call">เริ่มสาย</button>
+        <button id="autoBtn" class="btn light small" disabled data-th="เล่นสคริปต์อัตโนมัติ" data-en="Auto-play script">เล่นสคริปต์อัตโนมัติ</button>
+        <button id="endBtn" class="btn light small" disabled data-th="วางสาย" data-en="End call">วางสาย</button>
+      </div>
+      <label class="checkline"><input type="checkbox" id="ttsToggle" checked> <span data-th="อ่านเสียงตอบ AI (Thai TTS ในเบราว์เซอร์)" data-en="Speak AI replies (browser Thai TTS)">อ่านเสียงตอบ AI (Thai TTS ในเบราว์เซอร์)</span></label>
+    </section>
+
+    <section class="app-card">
+      <h2 data-th="บทสนทนาสด" data-en="Live transcript">บทสนทนาสด</h2>
+      <div id="verdict" class="verdict none">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px"><span id="vBadge" class="badge">—</span><span id="vConf" class="conf"></span></div>
+        <div id="vReason" class="v-reason" data-th="ยังไม่มีสาย — เลือกสคริปต์แล้วกดเริ่มสาย" data-en="No call yet. Pick a scenario and press Start call.">ยังไม่มีสาย — เลือกสคริปต์แล้วกดเริ่มสาย</div>
+        <div id="vReasonEn" class="v-reason-en"></div>
+        <div id="vSignals" class="signals"></div>
+      </div>
+      <div id="transcript" class="transcript"><p style="color:var(--ink3)" data-th="บทสนทนาจะไหลมาทีละเทิร์น" data-en="Transcript will stream here turn by turn.">บทสนทนาจะไหลมาทีละเทิร์น</p></div>
+    </section>
+  </div>
+
+  <div class="dash-grid">
+    <section class="app-card">
+      <h2 data-th="แจ้งเตือนเจ้าของ" data-en="Owner notification">แจ้งเตือนเจ้าของ</h2>
+      <p class="sub" data-th="(ตัวอย่าง adapter — โปรดักชันส่งผ่าน LINE ได้)" data-en="(adapter preview — production pushes via LINE)">(ตัวอย่าง adapter — โปรดักชันส่งผ่าน LINE ได้)</p>
+      <div id="notify" class="notify empty"><p style="color:var(--ink3)" data-th="ปรากฏเมื่อสายจบ" data-en="Appears when the call ends.">ปรากฏเมื่อสายจบ</p></div>
+    </section>
+    <section class="app-card">
+      <h2 data-th="ประวัติสาย" data-en="Call history">ประวัติสาย</h2>
+      <div id="history" class="history"><p style="color:var(--ink3)" data-th="ยังไม่มีสาย" data-en="No calls yet.">ยังไม่มีสาย</p></div>
+    </section>
+  </div>
+
+  <div class="cancel-strip">
+    <div style="flex:1;min-width:220px"><b data-th="ทุกสายจบพร้อมหลักฐาน" data-en="Every call ends with evidence">ทุกสายจบพร้อมหลักฐาน</b> — <span data-th="export ชุดแจ้งความ (transcript + verdict + hash) ได้ในคลิกเดียว" data-en="export a police-ready bundle (transcript + verdict + hash) in one click.">export ชุดแจ้งความ (transcript + verdict + hash) ได้ในคลิกเดียว</span></div>
+    <a class="btn sun" href="/how-it-works.html" data-th="ดูวิธีใช้งาน" data-en="How it works">ดูวิธีใช้งาน</a>
+  </div>
+</div>
+
+<footer class="foot"><div class="foot-grid">
+  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอ่ะ" data-en="Krai-a">ใครอ่ะ</span></a>
+    <p style="margin-top:10px" data-th="AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ" data-en="AI answers unknown calls, sends scammers away, flags important calls back.">AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ</p></div>
+  <div><h4 data-th="ผลิตภัณฑ์" data-en="Product">ผลิตภัณฑ์</h4>
+    <a href="/" data-th="หน้าแรก" data-en="Home">หน้าแรก</a>
+    <a href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
+</div>
+  <div><h4 data-th="ช่วยเหลือ" data-en="Help">ช่วยเหลือ</h4>
+    <a href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
+</div>
+  <div><h4 data-th="ความน่าเชื่อถือ" data-en="Trust">ความน่าเชื่อถือ</h4>
+    <a href="/how-it-works.html" data-th="ขอบเขตที่กันไม่ได้" data-en="Honest scope">ขอบเขตที่กันไม่ได้</a>
+</div>
+</div><div class="foot-base"><span>© 2026 Krai-a</span><span data-th="สายแปลกทุกสาย มี AI รับแทน" data-en="Every unknown call, answered by AI.">สายแปลกทุกสาย มี AI รับแทน</span></div></footer>
+<p class="foot-note" style="background:var(--ink);margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
+<script src="/app.js"></script>
+<script type="module">
+import { initNav, api } from '/site.js';
+initNav('demo');
+try {
+  const st = await api('/api/status');
+  const num = st.demoNumber || '+6621000142';
+  document.getElementById('demoNum').textContent = num;
+  document.getElementById('demoFwd').textContent = `**21*${num}#`;
+} catch { /* keep placeholders */ }
+</script>
+</body>
+</html>
