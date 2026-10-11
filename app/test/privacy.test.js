@@ -10,7 +10,7 @@ import {
   deleteCall, purgeCalls, setReputation, getReputation, clearReputation,
 } from '../src/store.js';
 import { voiceIncoming, voiceTurn } from '../src/twilio/voice.js';
-import { buildMessage, notifyOwner } from '../src/notify/index.js';
+import { buildMessage, buildFlexMessage, notifyOwner } from '../src/notify/index.js';
 import { buildEvidenceBundle, privacyNoticeTh } from '../src/evidence.js';
 
 const AI_A = '+6621000881'; const OWNER_A = '+6681000881';
@@ -143,5 +143,53 @@ describe('evidence export + erasure + retention', () => {
     assert.match(t, /legitimate interests/);
     assert.ok(t.includes(String(config.retentionLegitDays)));
     assert.ok(t.includes(String(config.retentionScamDays)));
+  });
+});
+
+describe('LINE flex alert', () => {
+  const call = { callerPhone: '+6681300010', turns: [{ role: 'caller', text: 'x' }], minutesBilled: 2 };
+  const member = { ownerPhone: OWNER_A, lineUserId: '', familyWatchers: [] };
+
+  it('builds a bubble with verdict color + caller + reason', () => {
+    const verdict = { verdict: 'SCAM', confidence: 0.95, engine: 'hard-rule', reason: 'r', reasonEn: 're' };
+    const b = buildFlexMessage({ call, member, verdict });
+    assert.equal(b.type, 'bubble');
+    assert.equal(b.header.contents[0].color, '#E5484D');
+    assert.match(b.header.contents[0].text, /สายต้องสงสัย/);
+    assert.match(JSON.stringify(b.body.contents), /\+6681300010/);
+    const legit = buildFlexMessage({ call, member, verdict: { ...verdict, verdict: 'LEGIT' } });
+    assert.equal(legit.header.contents[0].color, '#0E9D80');
+  });
+
+  it('footer button appears only when public URL is set', () => {
+    const verdict = { verdict: 'UNSURE', confidence: 0.5, engine: 'rules', reason: 'r' };
+    const saved = config.publicBaseUrl;
+    config.publicBaseUrl = '';
+    assert.ok(!buildFlexMessage({ call, member, verdict }).footer.contents.some((c) => c.type === 'button'));
+    config.publicBaseUrl = 'https://demo.example.com';
+    const btn = buildFlexMessage({ call, member, verdict }).footer.contents.find((c) => c.type === 'button');
+    assert.equal(btn.action.uri, 'https://demo.example.com/dashboard.html');
+    config.publicBaseUrl = saved;
+  });
+
+  it('line adapter pushes flex with text altText', async () => {
+    const verdict = { verdict: 'SCAM', confidence: 0.95, engine: 'hard-rule', reason: 'r', reasonEn: 're' };
+    config.notifyAdapters = ['line'];
+    const savedToken = config.lineChannelAccessToken;
+    config.lineChannelAccessToken = 'test-token';
+    const realFetch = global.fetch;
+    let got = null;
+    global.fetch = async (url, opts) => { got = { url, body: JSON.parse(opts.body) }; return { ok: true }; };
+    try {
+      const { results } = await notifyOwner({ call, member, verdict });
+      assert.equal(results[0].ok, true);
+      const msg = got.body.messages[0];
+      assert.equal(msg.type, 'flex');
+      assert.equal(msg.contents.type, 'bubble');
+      assert.match(msg.altText, /สายต้องสงสัย/);
+    } finally {
+      global.fetch = realFetch;
+      config.lineChannelAccessToken = savedToken;
+    }
   });
 });

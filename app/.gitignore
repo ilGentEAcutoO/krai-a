@@ -1,0 +1,7 @@
+node_modules/
+.env
+.wrangler/
+npm-debug.log
+server.log
+server.err.log
+.env.bak*

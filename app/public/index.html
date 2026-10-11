@@ -5,37 +5,74 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light only">
 <link rel="icon" href="data:,">
-<title>ใครอ่ะ — AI รับสายแปลกแทนคุณ</title>
+<title>ใครอะ — AI รับสายแปลกแทนคุณ</title>
 <meta name="description" content="ตั้งโอนสายครั้งเดียวจบ AI คุยภาษาของคุณคัดสายหลอกทุกสาย แล้วส่งสรุปพร้อมคลิปเสียงให้คุณ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/site.css">
+<style>
+/* index overhaul — first-screen WOW, page-local (mint theme) */
+body{background:var(--paper)}
+.kx-hero{padding:96px 0 90px;background:linear-gradient(160deg,#e8f8ee 0%,#f0f4f3 40%,#e0f2e9 100%)}
+.kx-hero::before{content:"";position:absolute;inset:0;background:radial-gradient(640px 320px at 88% 8%,rgba(6,199,85,.14),transparent 65%),radial-gradient(560px 300px at 4% 92%,rgba(0,185,0,.1),transparent 65%);pointer-events:none}
+.kx-hero h1{font-size:clamp(52px,6.6vw,86px);line-height:1.14}
+.kx-hero .lede{font-size:20px}
+.kx-chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}
+.kx-chips span{display:inline-flex;align-items:center;gap:7px;font-size:13.5px;font-weight:800;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:999px;padding:6px 14px;box-shadow:var(--sh-sm)}
+.kx-chips b{color:var(--ok);font-weight:800}
+.kx-hero .story{border-radius:22px;border-top:5px solid var(--ink)}
+.kx-proof{background:#fff;color:var(--ink)}
+.kx-proof .p .n{color:var(--ink)}
+.kx-proof .p .l{color:var(--ink2)}
+.kx-proof .p{border-left:1px solid var(--line)}
+.kx-proof .p:first-child{border-left:none}
+.kx-plans .price{border-radius:20px}
+.kx-plans .price.hot{background:linear-gradient(180deg,#EDF7F0,#fff 60%);border:2px solid var(--brand);color:var(--ink);box-shadow:0 0 0 8px rgba(6,199,85,.1),var(--sh)}
+.kx-plans .price.hot li{color:var(--ink2)}
+.kx-plans .price.hot li::before{color:var(--ok)}
+.kx-plans .price.hot .amt small{color:var(--ink3)}
+.kx-plans .price.hot .pop{background:linear-gradient(135deg,#06c755,#05a647);color:#fff}
+.kx-plans .price.hot .ppp-note{color:var(--ink2)}
+.kx-fwd .card{border-radius:20px;border-top:5px solid var(--brand)}
+@media(max-width:920px){.kx-hero{padding:64px 0 60px}.kx-proof .p{border-left:none;border-top:1px solid var(--line)}.kx-proof .p:nth-child(-n+2){border-top:none}}
+.kx-live .live-cap{text-align:center;color:var(--ink3);font-weight:700;font-size:13.5px;margin:0 0 14px}
+.kx-live .n small{font-size:16px;font-weight:600;color:var(--ink2)}
+.kx-live .live-more{text-align:center;margin:14px 0 0}
+@media (prefers-reduced-motion:reduce){.kx-hero::before{display:none}}
+</style>
 </head>
-<body data-title-th="ใครอ่ะ — AI รับสายแปลกแทนคุณ" data-title-en="Krai-a — AI answers unknown calls for you">
+<body data-title-th="ใครอะ — AI รับสายแปลกแทนคุณ" data-title-en="Krai-a — AI answers unknown calls for you">
 <nav class="nav"><div class="nav-in">
-  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอ่ะ" data-en="Krai-a">ใครอ่ะ</span></a>
+  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
   <div class="nav-links">
     <a data-page="features" href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
     <a data-page="how" href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
+    <a data-page="family" href="/family.html" data-th="Family" data-en="Family">Family</a>
+    <a data-page="pricing" href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
     <a data-page="demo" href="/demo.html">Live demo</a>
   </div>
   <div class="nav-right">
-    <div class="lang" id="langToggle"><button data-lang="th" class="on">TH</button><button data-lang="en">EN</button></div>
+    <div class="lang" id="langToggle"><button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language / ภาษา"><svg class="lang-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg><span class="lang-cur" data-lang-cur>ไทย</span><span class="lang-chev" aria-hidden="true"></span></button><ul class="lang-menu" role="listbox" aria-label="Language / ภาษา" hidden><li role="option" tabindex="-1" data-lang="th" aria-selected="true"><span class="lang-code">TH</span><span>ไทย</span><span class="lang-tick" aria-hidden="true">✓</span></li><li role="option" tabindex="-1" data-lang="en" aria-selected="false"><span class="lang-code">EN</span><span>English</span><span class="lang-tick" aria-hidden="true">✓</span></li></ul></div>
     <span id="navAuth" style="display:flex;gap:10px"></span>
   </div>
 </div></nav>
 
-<header class="hero dots"><div class="wrap hero-grid">
+<header class="hero dots kx-hero"><div class="wrap hero-grid">
   <div>
     <span class="kicker" data-th="ระบบคัดกรองสายหลอกอัตโนมัติ · คุยภาษาของคุณ" data-en="Automated scam-call screening · Speaks your language">ระบบคัดกรองสายหลอกอัตโนมัติ · คุยภาษาของคุณ</span>
     <h1 data-th="<span class='hl'>ตัดสายโจร</span><br>ก่อนโดนตัดเงิน" data-en="Every scam call<br><span class='hl'>ends at AI.</span>"><span class="hl">ตัดสายโจร</span><br>ก่อนโดนตัดเงิน</h1>
     <p class="lede" data-th="โอนสายครั้งเดียวจบ — AI คุยภาษาของคุณรับทุกสายแปลกแทนคุณ โจรโดนตัดสายทิ้ง สายสำคัญได้สรุปพร้อมเบอร์โทรกลับ" data-en="Forward once — AI takes every unknown call in your language. Scammers get cut off; important calls arrive briefed with a callback number.">โอนสายครั้งเดียวจบ — AI คุยภาษาของคุณรับทุกสายแปลกแทนคุณ โจรโดนตัดสายทิ้ง สายสำคัญได้สรุปพร้อมเบอร์โทรกลับ</p>
     <div class="hero-cta">
-      <a class="btn big primary" href="/demo.html" data-th="ลองเดโมสด <span class='arr'>→</span>" data-en="Try the live demo <span class='arr'>→</span>">ลองเดโมสด <span class="arr">→</span></a>
+      <a class="btn big primary" href="/start.html" data-th="เริ่มทดลองใช้ฟรี 7 วัน <span class='arr'>→</span>" data-en="Start 7-day free trial <span class='arr'>→</span>">เริ่มทดลองใช้ฟรี 7 วัน <span class="arr">→</span></a>
       <a class="btn big light" href="#try-forward" data-th="ดูเบอร์และวิธีโอนสาย" data-en="See number & setup">ดูเบอร์และวิธีโอนสาย</a>
     </div>
-    <p class="hero-proof" data-th="ไม่ต้องสมัคร · กดลองเดโมสดได้เลย · ดู AI รับสายแบบเรียลไทม์" data-en="No signup · try the live demo · watch AI screen calls in real time">ไม่ต้องสมัคร · กดลองเดโมสดได้เลย · ดู AI รับสายแบบเรียลไทม์</p>
+    <p class="hero-proof" data-th="สมัครด้วยเบอร์มือถือ · ยืนยัน OTP · รับเบอร์ AI ทันที · ยกเลิกได้ทุกเมื่อ" data-en="Sign up with your mobile · Verify OTP · Get your AI number instantly · Cancel anytime">สมัครด้วยเบอร์มือถือ · ยืนยัน OTP · รับเบอร์ AI ทันที · ยกเลิกได้ทุกเมื่อ</p>
+    <div class="kx-chips">
+      <span data-th="<b>✓</b> ไม่ต้องลงแอป" data-en="<b>✓</b> No app to install"><b>✓</b> ไม่ต้องลงแอป</span>
+      <span data-th="<b>✓</b> คลิปเสียงทุกสายสำคัญ" data-en="<b>✓</b> Recordings that matter"><b>✓</b> คลิปเสียงทุกสายสำคัญ</span>
+      <span data-th="<b>✓</b> ยกเลิกเองได้ใน 1 นาที" data-en="<b>✓</b> Self-cancel in 1 minute"><b>✓</b> ยกเลิกเองได้ใน 1 นาที</span>
+    </div>
   </div>
   <div>
     <div class="live-pill"><span class="rec"></span><span data-th="สด · หนึ่งสายหลอก ตั้งแต่ต้นจนจบ" data-en="LIVE · One scam call, start to finish">สด · หนึ่งสายหลอก ตั้งแต่ต้นจนจบ</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
@@ -85,7 +122,7 @@
         </div></div>
         <div class="mg-scene" id="mgS3"><div class="mg-center">
           <div class="mg-cloud" id="mgCloud">
-            <div class="mg-cloud-head"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span data-th="AI ใครอ่ะ รับช่วงต่อ" data-en="Krai-a AI takes over">AI ใครอ่ะ รับช่วงต่อ</span><span class="ab-dot"></span></div>
+            <div class="mg-cloud-head"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/></svg><span data-th="AI ใครอะ รับช่วงต่อ" data-en="Krai-a AI takes over">AI ใครอะ รับช่วงต่อ</span><span class="ab-dot"></span></div>
             <div class="mg-work" id="mgWork" role="status"></div>
             <div class="mg-verdict" id="mgVerdict"></div>
             <div class="mg-reason" id="mgReason"></div>
@@ -98,7 +135,7 @@
       </div>
       <div class="live-foot">
         <button class="live-replay" id="liveReplay" data-th="เล่นอีกครั้ง" data-en="Replay">เล่นอีกครั้ง</button>
-        <a class="live-cta" href="/demo.html" data-th="อยากได้แบบนี้? ลองเดโมสด →" data-en="Want this? Try the demo →">อยากได้แบบนี้? ลองเดโมสด →</a>
+        <a class="live-cta" href="/start.html" data-th="อยากได้แบบนี้? เริ่มทดลองฟรี →" data-en="Want this? Start free →">อยากได้แบบนี้? เริ่มทดลองฟรี →</a>
       </div>
     </div>
   </div>
@@ -107,18 +144,22 @@
 <span class="sticker s2" data-th="สายสำคัญแจ้งให้โทรกลับ" data-en="Important calls flagged back">สายสำคัญแจ้งให้โทรกลับ</span>
 </header>
 
-<div class="ticker" aria-hidden="true"><div class="ticker-track" id="tickerTrack">
-<span data-th="ปกป้องจากอ้างตำรวจ + หมายจับ + ห้ามวางสาย" data-en="Shielded from fake police + warrants + no-hang-up threats">ปกป้อง</span>
-<span data-th="ปกป้องจากพัสดุตกค้าง + ขอ OTP" data-en="Shielded from stuck parcels + OTP requests">ปกป้อง</span>
-<span data-th="ปกป้องจากอ้างธนาคาร + ให้โหลดแอป" data-en="Shielded from fake banks + install-this-app traps">ปกป้อง</span>
-<span data-th="ปกป้องจากคืนภาษี + ขอเลขบัญชี" data-en="Shielded from tax refunds + bank-account phishing">ปกป้อง</span>
-</div></div>
-
-<section class="proof"><div class="wrap proof-row">
+<section class="proof kx-proof"><div class="wrap proof-row">
   <div class="p rv"><div class="n">24<span data-th=" ชม." data-en="h"> ชม.</span></div><div class="l" data-th="AI เฝ้าสายให้ตลอด" data-en="AI on guard, always">AI เฝ้าสายให้ตลอด</div></div>
   <div class="p rv"><div class="n">3<span data-th=" สี" data-en=" colors"> สี</span></div><div class="l" data-th="คำตัดสินพร้อมคลิปเสียงทุกสาย" data-en="verdicts with recordings">คำตัดสินพร้อมคลิปเสียงทุกสาย</div></div>
   <div class="p rv"><div class="n">1<span data-th=" นาที" data-en=" min"> นาที</span></div><div class="l" data-th="ตั้งโอนสายครั้งเดียวจบ" data-en="one-time forward setup">ตั้งโอนสายครั้งเดียวจบ</div></div>
-  <div class="p rv"><div class="n">0<span data-th=" บาท" data-en=""> บาท</span></div><div class="l" data-th="กดลองเดโมได้เลย ไม่ต้องสมัคร" data-en="try the demo, no signup">กดลองเดโมได้เลย ไม่ต้องสมัคร</div></div>
+  <div class="p rv"><div class="n">7<span data-th=" วัน" data-en=" days"> วัน</span></div><div class="l" data-th="ทดลองฟรีทุกแผน ไม่ต้องผูกบัตร" data-en="free trial on every plan, no card">ทดลองฟรีทุกแผน ไม่ต้องผูกบัตร</div></div>
+</div></section>
+
+<section class="proof kx-live" id="liveStats" hidden><div class="wrap">
+  <p class="live-cap rv" data-th="ตัวเลขจริงจากระบบ" data-en="Live numbers from the system">ตัวเลขจริงจากระบบ</p>
+  <div class="proof-row" id="liveRow">
+    <div class="p rv" data-stat="calls"><div class="n"><span data-num>…</span> <small data-th="สาย" data-en="calls">สาย</small></div><div class="l" data-th="ที่ AI คัดกรองแล้ว" data-en="screened by AI">ที่ AI คัดกรองแล้ว</div></div>
+    <div class="p rv" data-stat="scams"><div class="n"><span data-num>…</span> <small data-th="สาย" data-en="calls">สาย</small></div><div class="l" data-th="สายมิจที่สกัดได้" data-en="scam calls blocked">สายมิจที่สกัดได้</div></div>
+    <div class="p rv" data-stat="households"><div class="n"><span data-num>…</span> <small data-th="ครัวเรือน" data-en="households">ครัวเรือน</small></div><div class="l" data-th="ที่ไว้ใจให้ AI เฝ้าสาย" data-en="protected by AI">ที่ไว้ใจให้ AI เฝ้าสาย</div></div>
+    <div class="p rv" data-stat="minutes"><div class="n"><span data-num>…</span> <small data-th="นาที" data-en="min">นาที</small></div><div class="l" data-th="ที่ AI รับสายแทนคุณ" data-en="answered by AI for you">ที่ AI รับสายแทนคุณ</div></div>
+  </div>
+  <p class="live-more rv"><a class="live-cta" href="/stats.html" data-th="ดูสถิติทั้งหมด →" data-en="See all stats →">ดูสถิติทั้งหมด →</a></p>
 </div></section>
 
 <section class="section"><div class="wrap">
@@ -135,7 +176,7 @@
 
 <section class="section cream"><div class="wrap">
   <div class="sec-head rv">
-    <span class="kicker" data-th="ทำไมต้องใครอ่ะ" data-en="Why Krai-a">ทำไมต้องใครอ่ะ</span>
+    <span class="kicker" data-th="ทำไมต้องใครอะ" data-en="Why Krai-a">ทำไมต้องใครอะ</span>
     <h2 data-th="แอปแปะป้ายเบอร์ ช่วยคุณไม่ได้ตอนกำลังโดนกดดันสด" data-en="Caller-ID apps can't help while you're pressured live">แอปแปะป้ายเบอร์ ช่วยคุณไม่ได้ตอนกำลังโดนกดดันสด</h2>
   </div>
   <div class="lanes">
@@ -150,7 +191,7 @@
       </div>
     </div>
     <div class="lane good rv">
-      <div class="lane-tag" data-th="ใครอ่ะ · AI รับแทน" data-en="Krai-a · AI answers">ใครอ่ะ · AI รับแทน</div>
+      <div class="lane-tag" data-th="ใครอะ · AI รับแทน" data-en="Krai-a · AI answers">ใครอะ · AI รับแทน</div>
       <div class="lane-track">
         <div class="fnode" data-th="สายแปลกเข้า" data-en="Unknown call in">สายแปลกเข้า</div><span class="farr">→</span>
         <div class="fnode" data-th="AI รับแทนใน 3 วิ" data-en="AI answers in 3 seconds">AI รับแทนใน 3 วิ</div><span class="farr">→</span>
@@ -181,7 +222,7 @@
     <h2 data-th="โอนสายเข้าเบอร์นี้" data-en="Forward to this number">โอนสายเข้าเบอร์นี้</h2>
     <p data-th="จดเบอร์ กดโอนสายจากมือถือคุณ แล้วกดปุ่มจำลองสายหลอก — ดูว่า AI รับแทนคุณยังไง" data-en="Note the number, forward from your phone, then simulate a scam call — see AI answer for you.">จดเบอร์ กดโอนสายจากมือถือคุณ แล้วกดปุ่มจำลองสายหลอก — ดูว่า AI รับแทนคุณยังไง</p>
   </div>
-  <div class="fwd-grid">
+  <div class="fwd-grid kx-fwd">
     <div class="card rv"><div class="pad">
       <div class="fwd-cap" data-th="เบอร์ AI จำลองของคุณ" data-en="Your demo AI number">เบอร์ AI จำลองของคุณ</div>
       <div class="fwd-num" id="simNumber">…</div>
@@ -217,33 +258,81 @@
   <div class="sim-result" id="simResult"></div>
 </div></section>
 
-
+<section class="section cream"><div class="wrap">
+  <div class="sec-head rv">
+    <span class="kicker" data-th="3 แผน · ทดลองฟรี 7 วัน" data-en="3 plans · 7-day free trial">3 แผน · ทดลองฟรี 7 วัน</span>
+    <h2 data-th="เริ่ม ฿20 ถูกกว่าค่าเสียหายครั้งเดียวเป็นแสนเท่า" data-en="From $2 — a fraction of one scam's damage">เริ่ม ฿20 ถูกกว่าค่าเสียหายครั้งเดียวเป็นแสนเท่า</h2>
+  </div>
+  <div class="price-grid trio kx-plans">
+    <div class="price rv">
+      <div class="tagline" data-th="Starter" data-en="Starter">Starter</div>
+      <div class="amt" data-th="฿20<small>/เดือน</small>" data-en="$2<small>/mo</small>">฿20<small>/เดือน</small></div>
+      <p class="ppp-note" data-th="<span class='ppp'>PPP for Thai −71%</span> ปกติ $2 (~฿70)" data-en=""><span class="ppp">PPP for Thai −71%</span> ปกติ $2 (~฿70)</p>
+      <ul>
+        <li data-th="ป้องกัน 1 เบอร์ · 10 นาที ไม่เกิน 5 สาย" data-en="1 protected number · 10 min, max 5 calls">ป้องกัน 1 เบอร์ · 10 นาที ไม่เกิน 5 สาย</li>
+        <li data-th="แจ้งผลแดง/เขียว/เหลือง (ไม่มีเทป)" data-en="Verdict alerts, no recordings">แจ้งผลแดง/เขียว/เหลือง (ไม่มีเทป)</li>
+        <li data-th="รายชื่อคนรู้จัก + safe word" data-en="Known contacts + safe word">รายชื่อคนรู้จัก + safe word</li>
+      </ul>
+      <a class="btn dark" href="/start.html?plan=starter-20" data-th="ลองฟรี 7 วัน" data-en="Try free 7 days">ลองฟรี 7 วัน</a>
+    </div>
+    <div class="price rv">
+      <div class="tagline" data-th="Plus" data-en="Plus">Plus</div>
+      <div class="amt" data-th="฿100<small>/เดือน</small>" data-en="$6<small>/mo</small>">฿100<small>/เดือน</small></div>
+      <p class="ppp-note" data-th="<span class='ppp'>PPP for Thai −52%</span> ปกติ $6 (~฿210)" data-en=""><span class="ppp">PPP for Thai −52%</span> ปกติ $6 (~฿210)</p>
+      <ul>
+        <li data-th="ป้องกัน 1 เบอร์ · 50 นาที + เทปทุกสาย" data-en="1 protected number · 50 min + tapes">ป้องกัน 1 เบอร์ · 50 นาที + เทปทุกสาย</li>
+        <li data-th="ส่งออกหลักฐานแจ้งความ" data-en="Evidence export">ส่งออกหลักฐานแจ้งความ</li>
+      </ul>
+      <a class="btn dark" href="/start.html?plan=plus-100" data-th="ลองฟรี 7 วัน" data-en="Try free 7 days">ลองฟรี 7 วัน</a>
+    </div>
+    <div class="price hot rv"><div class="pop" data-th="คุ้มสุด" data-en="Best value">คุ้มสุด</div>
+      <div class="tagline" data-th="Family" data-en="Family">Family</div>
+      <div class="amt" data-th="฿149<small>/เดือน</small>" data-en="$8<small>/mo</small>">฿149<small>/เดือน</small></div>
+      <p class="ppp-note" data-th="<span class='ppp'>PPP for Thai −47%</span> ปกติ $8 (~฿280)" data-en=""><span class="ppp">PPP for Thai −47%</span> ปกติ $8 (~฿280)</p>
+      <ul>
+        <li data-th="ป้องกัน 2 เบอร์ · 50 นาทีรวมทั้งบ้าน" data-en="2 protected numbers · 50 shared min">ป้องกัน 2 เบอร์ · 50 นาทีรวมทั้งบ้าน</li>
+        <li data-th="ผู้ดูแล 2 เบอร์" data-en="2 watchers">ผู้ดูแล 2 เบอร์</li>
+        <li data-th="ทุกอย่างของ Plus" data-en="Everything in Plus">ทุกอย่างของ Plus</li>
+      </ul>
+      <a class="btn primary" href="/start.html?plan=family-149" data-th="ลองฟรี 7 วัน" data-en="Try free 7 days">ลองฟรี 7 วัน</a>
+    </div>
+  </div>
+  <p class="fwd-note rv" data-th="(ค่าบริการโทรศัพท์ในการโอนสาย ผู้ใช้จ่ายรายนาทีตามแพ็คเกจของผู้ใช้บริการเครือข่ายมือถือ)" data-en="(Call-forwarding carrier charges apply: you pay per minute according to your mobile plan.)">(ค่าบริการโทรศัพท์ในการโอนสาย ผู้ใช้จ่ายรายนาทีตามแพ็คเกจของผู้ใช้บริการเครือข่ายมือถือ)</p>
+  <div class="cancel-strip rv">
+    <div style="flex:1;min-width:220px"><b data-th="ยกเลิกได้ทุกเมื่อ" data-en="Cancel anytime">ยกเลิกได้ทุกเมื่อ</b> — <span data-th="กด ##21# หยุดโอนสาย + กดยกเลิกในห้องของฉัน ไม่ต้องโทรหาใคร" data-en="dial ##21# to stop forwarding + cancel in My account. No calls needed.">กด ##21# หยุดโอนสาย + กดยกเลิกในห้องของฉัน ไม่ต้องโทรหาใคร</span></div>
+    <a class="btn sun small" href="/pricing.html" data-th="เทียบทุกแผน" data-en="Compare plans">เทียบทุกแผน</a>
+  </div>
+</div></section>
 
 <section class="section"><div class="wrap">
   <div class="cta-band rv">
-    <div><h2 data-th="สายหลอกสายต่อไป ให้ AI รับแทนคุณ" data-en="Let AI take the next scam call for you">สายหลอกสายต่อไป ให้ AI รับแทนคุณ</h2><p data-th="กดเดโมสด เลือกสคริปต์มิจฉาชีพ ดู AI รับสายให้ดูแบบเรียลไทม์" data-en="Hit the live demo, pick a scam script, watch AI screen it in real time.">กดเดโมสด เลือกสคริปต์มิจฉาชีพ ดู AI รับสายให้ดูแบบเรียลไทม์</p></div>
-    <a class="btn big sun" href="/demo.html" data-th="ลองเดโมสด <span class='arr'>→</span>" data-en="Try the live demo <span class='arr'>→</span>">ลองเดโมสด <span class="arr">→</span></a>
+    <div><h2 data-th="สายหลอกสายต่อไป ให้ AI รับแทนคุณ" data-en="Let AI take the next scam call for you">สายหลอกสายต่อไป ให้ AI รับแทนคุณ</h2><p data-th="สมัคร 2 นาที ตั้งโอนสายอีก 1 นาที — มิจโดนส่งไปไกล สายสำคัญแจ้งให้โทรกลับ" data-en="2 min signup, 1 min forwarding — scammers sent away, important calls flagged back.">สมัคร 2 นาที ตั้งโอนสายอีก 1 นาที — มิจโดนส่งไปไกล สายสำคัญแจ้งให้โทรกลับ</p></div>
+    <a class="btn big sun" href="/start.html" data-th="รับเบอร์ AI ของฉัน <span class='arr'>→</span>" data-en="Get my AI number <span class='arr'>→</span>">รับเบอร์ AI ของฉัน <span class="arr">→</span></a>
   </div>
 </div></section>
 
 <footer class="foot"><div class="foot-grid">
-  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอ่ะ" data-en="Krai-a">ใครอ่ะ</span></a>
+  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
     <p style="margin-top:10px" data-th="AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ" data-en="AI answers unknown calls, sends scammers away, flags important calls back.">AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ</p></div>
   <div><h4 data-th="ผลิตภัณฑ์" data-en="Product">ผลิตภัณฑ์</h4>
     <a href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
+    <a href="/family.html" data-th="Family" data-en="Family">Family</a>
+    <a href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
     <a href="/demo.html">Live demo</a></div>
   <div><h4 data-th="ช่วยเหลือ" data-en="Help">ช่วยเหลือ</h4>
     <a href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-</div>
+    <a href="/start.html" data-th="สมัครใช้งาน" data-en="Sign up">สมัครใช้งาน</a>
+    <a href="/dashboard.html" data-th="ห้องของฉัน" data-en="My account">ห้องของฉัน</a></div>
   <div><h4 data-th="ความน่าเชื่อถือ" data-en="Trust">ความน่าเชื่อถือ</h4>
+    <a href="/pricing.html" data-th="ยกเลิกได้ทุกเมื่อ" data-en="Cancel anytime">ยกเลิกได้ทุกเมื่อ</a>
     <a href="/how-it-works.html" data-th="ขอบเขตที่กันไม่ได้" data-en="Honest scope">ขอบเขตที่กันไม่ได้</a>
-</div>
+    <a href="/dashboard.html" data-th="ลบข้อมูลของฉัน" data-en="Delete my data">ลบข้อมูลของฉัน</a>
+    <a href="/stats.html" data-th="สถิติโปร่งใส" data-en="Live stats">สถิติโปร่งใส</a></div>
 </div><div class="foot-base"><span>© 2026 Krai-a</span><span data-th="สายแปลกทุกสาย มี AI รับแทน" data-en="Every unknown call, answered by AI.">สายแปลกทุกสาย มี AI รับแทน</span></div></footer>
-<p class="foot-note" style="background:var(--ink);margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
+<p class="foot-note" style="background:#fff;margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
 <script type="module">
-import { initNav, initReveal, api, i18n } from '/site.js';
+import { initNav, initReveal, api, i18n, bragFigure, captchaToken, demoStartMessage } from '/site.js';
 initNav('home'); initReveal();
-document.getElementById('tickerTrack').innerHTML += document.getElementById('tickerTrack').innerHTML;
 
 // Shared incoming-call screen driver: hero autoplay + forwarding sim.
 // Hero story + sim play REAL scam calls through /api/demo — no typing needed.
@@ -270,7 +359,7 @@ const CTXT = {
   pressCode: { th: 'กดรหัสโอนสาย…', en: 'Dialing forward code…' },
   forward: { th: 'โอนสายจากเครื่องคุณไป AI…', en: 'Forwarding from your phone to AI…' },
   alertToYou: { th: 'แจ้งเตือนที่ส่งถึงมือถือคุณ', en: 'Alert sent to your phone' },
-  cta: { th: 'ชอบแบบนี้? ลองเดโมสด →', en: 'Like this? Try the live demo →' },
+  cta: { th: 'ชอบแบบนี้? สมัครใช้เบอร์จริง →', en: 'Like this? Get your real number →' },
 };
 const cesc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const creduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -287,7 +376,8 @@ async function runCallScreen(cs, opts = {}) {
   cs.verdict.innerHTML = '';
   cs.chips.innerHTML = '';
   cs.heard.innerHTML = '';
-  const call = await api('/api/demo/call', { method: 'POST', body: { scriptId: opts.scriptId || 'scam-police' } });
+  const recaptchaToken = await captchaToken('demo_call').catch(() => '');
+  const call = await api('/api/demo/call', { method: 'POST', body: { scriptId: opts.scriptId || 'scam-police', ...(recaptchaToken ? { recaptchaToken } : {}) } });
   cs.number.textContent = call.call.callerPhone || '…';
   if (opts.forward) {
     cs.status.textContent = CTXT.forward[L];
@@ -326,6 +416,7 @@ async function runCallScreen(cs, opts = {}) {
 let storyRun = 1;
 async function playStory(myRun, startAt = 0) {
   const L = i18n.lang;
+  let failed = false; // errors stop the loop: no quota burn, no message spam
   const $ = (id) => document.getElementById(id);
   const scenes = [$('mgS1'), $('mgS2'), $('mgS3'), $('mgS4')];
   const dots = [...document.querySelectorAll('#mgDots span')];
@@ -391,7 +482,8 @@ async function playStory(myRun, startAt = 0) {
     let call;
     if (startAt <= 1) {
       show(1);
-      call = await api('/api/demo/call', { method: 'POST', body: { scriptId: 'scam-police' } });
+      const recaptchaToken = await captchaToken('demo_call').catch(() => '');
+      call = await api('/api/demo/call', { method: 'POST', body: { scriptId: 'scam-police', ...(recaptchaToken ? { recaptchaToken } : {}) } });
       if (!alive()) return;
       mgNum.textContent = call.call.callerPhone || '…';
       mgCall.classList.add('ringing');
@@ -404,7 +496,8 @@ async function playStory(myRun, startAt = 0) {
       await csleep(2200);
       if (!alive()) return;
     } else {
-      call = await api('/api/demo/call', { method: 'POST', body: { scriptId: 'scam-police' } });
+      const recaptchaToken = await captchaToken('demo_call').catch(() => '');
+      call = await api('/api/demo/call', { method: 'POST', body: { scriptId: 'scam-police', ...(recaptchaToken ? { recaptchaToken } : {}) } });
       if (!alive()) return;
     }
     // Scene 3: AI takes over outside your phone.
@@ -445,10 +538,18 @@ async function playStory(myRun, startAt = 0) {
     // Scene 4: brief + recording back to you.
     show(3);
     await csleep(6500);
-  } catch {
-    mgStatus.textContent = CTXT.err[i18n.lang];
+  } catch (e) {
+    failed = true;
+    // Replaced mid-story (the visitor started their own sim, which wins by
+    // design): stay quiet instead of crying connection failure. Real network
+    // errors carry no .data and still fall through to the message below.
+    if (!String(e?.data?.error || '').includes('not found or ended')) {
+      mgStatus.textContent = demoStartMessage(e) || CTXT.err[i18n.lang];
+    }
   }
-  if (alive() && !creduced) playStory(myRun, 0);
+  // Loop only clean runs on visible tabs: quota is hourly-capped, so a
+  // failing or hidden story must never spin demo calls by itself.
+  if (alive() && !creduced && !failed && !document.hidden) playStory(myRun, 0);
 }
 document.getElementById('liveReplay').onclick = () => { storyRun += 1; playStory(storyRun, 0); };
 document.querySelectorAll('#mgDots span').forEach((d, i) => {
@@ -489,18 +590,36 @@ document.getElementById('simBtn').onclick = async (e) => {
         }
         const cta = document.createElement('a');
         cta.className = 'btn primary';
-        cta.href = '/demo.html';
+        cta.href = '/start.html';
         cta.textContent = CTXT.cta[i18n.lang];
         box.appendChild(cta);
         box.scrollIntoView({ behavior: creduced ? 'auto' : 'smooth', block: 'nearest' });
       },
     });
-  } catch {
-    document.querySelector('#csSim .cs-status').textContent = CTXT.err[i18n.lang];
+  } catch (e) {
+    document.querySelector('#csSim .cs-status').textContent = demoStartMessage(e) || CTXT.err[i18n.lang];
   } finally {
     btn.disabled = false;
   }
 };
+
+// Live trust stats: paint only metrics that cleared their minimums.
+let liveStatsCache = null;
+function paintLiveStats(stats) {
+  liveStatsCache = stats;
+  const row = document.getElementById('liveRow');
+  let visible = 0;
+  row.querySelectorAll('[data-stat]').forEach((cell) => {
+    const m = stats?.[cell.dataset.stat];
+    if (!m || !m.shown || !(m.display > 0)) { cell.style.display = 'none'; return; }
+    cell.style.display = '';
+    visible += 1;
+    cell.querySelector('[data-num]').textContent = bragFigure(m.display);
+  });
+  document.getElementById('liveStats').hidden = visible === 0;
+}
+try { paintLiveStats(await api('/api/stats')); } catch { /* stay hidden: no stats beats broken stats */ }
+window.addEventListener('krai-a:lang', () => { if (liveStatsCache) paintLiveStats(liveStatsCache); });
 </script>
 </body>
 </html>

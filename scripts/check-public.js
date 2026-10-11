@@ -9,13 +9,16 @@ const FORBIDDEN_PATHS = [
   { re: /(^|\/)\.env($|\.[^/]*$)/, except: /\.example$/ }, // .env.example is a safe template
   { re: /^agent-temp\// },
   { re: /^\.playwright-mcp\// },
+  { re: /^\.agents\// }, // local agent memory must never be committed
 ];
 
 const SELF = 'scripts/check-public.js';
 
 const SECRET_PATTERNS = [
   { name: 'google-api-key', re: /AIza[0-9A-Za-z_-]{20,}/ },
-  { name: 'twilio-sid', re: /AC[0-9a-f]{32}/ },
+  // All Twilio SID types (AC account, VA verify service, SK api key,
+  // PN number, MG messaging, SM message) — not just AC.
+  { name: 'twilio-sid', re: /\b(AC|VA|SK|PN|MG|SM)[0-9a-f]{32}\b/ },
   { name: 'line-id', re: /\bU[0-9a-f]{32}\b/ },
   { name: 'slack-token', re: /\bxox[bap]-[0-9A-Za-z-]{10,}/ },
   { name: 'sk-live', re: /\bsk-live-[0-9A-Za-z]{10,}/ },
@@ -64,6 +67,7 @@ function selfTest() {
   const cases = [
     ['AI' + 'zaSyFakeKeyForTest1234567890abcdefg', 'google-api-key', true],
     ['AC006d21' + '665387bc189f80e9f6e78fb4ef', 'twilio-sid', true],
+    ['VA000000' + '00000000000000000000000000', 'twilio-sid', true],
     ['U08a8864' + '39f7da786b6e358be1bb72c9e', 'line-id', true],
     ['Authorization: `Bearer ${token}`', 'bearer-token', false],
     ['Bea' + 'rer abcdefghij1234567890XYZ', 'bearer-token', true],
@@ -82,6 +86,7 @@ function selfTest() {
   if (blocked('app/src/store.js')) { console.error('self-test FAIL: path false positive'); fail += 1; }
   if (!blocked('app/.env')) { console.error('self-test FAIL: .env must be blocked'); fail += 1; }
   if (blocked('app/.env.example')) { console.error('self-test FAIL: .env.example must pass'); fail += 1; }
+  if (!blocked('.agents/memory/x.md')) { console.error('self-test FAIL: .agents must be blocked'); fail += 1; }
   console.log(fail ? `self-test: ${fail} FAIL` : 'self-test: ok');
   process.exit(fail ? 1 : 0);
 }

@@ -1,0 +1,8 @@
+node_modules
+npm-debug.log
+worker-src
+wrangler.jsonc
+test
+.env
+.gcloudignore
+README.md

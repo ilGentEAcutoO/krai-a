@@ -126,7 +126,9 @@ export async function classify(transcriptText, callerTexts = []) {
 }
 
 // ---- Persona reply (kept separate from verdict authority) ----
-const PERSONA_SYSTEM = `You are "Krai-a", a polite Thai AI receptionist answering a forwarded call. Rules: speak Thai, 1-2 short sentences. Open every call with the recording notice. Ask for name, organization, and callback number. Never accuse the caller of scamming. If they demand transfer/OTP/app install, deflect: say you need time to verify. Reply with the spoken sentence only, no quotes.`;
+// Speed-first: every extra turn costs phone + AI money, so conclude fast.
+const PERSONA_SYSTEM = `You are "Krai-a", a polite Thai AI receptionist answering a forwarded call. You are on a TIGHT time budget: conclude in as few turns as possible. Rules: speak Thai, ONE short sentence per reply, no small talk, never repeat a question. The FIRST reply must ask name + organization + callback number together. Never accuse the caller of scamming. If they demand transfer/OTP/app install, deflect once ("need time to verify") and ask nothing further. Reply with the spoken sentence only, no quotes.`;
+const WRAP_UP_NOTE = `\nBudget almost out: ask ONLY for a callback number, no new questions.`;
 
 const OPENING = 'สายนี้มีการบันทึกเพื่อความปลอดภัยค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ';
 const FALLBACK_REPLIES = [
@@ -139,16 +141,19 @@ export function openingLine() {
   return OPENING;
 }
 
-export async function personaReply(transcriptText, turnIndex) {
+export async function personaReply(transcriptText, turnIndex, opts = {}) {
+  // Last stretch of the budget: stop investigating, just secure a callback.
+  const wrapUp = opts.turnsLeft != null && opts.turnsLeft <= 2;
   if (live()) {
     try {
-      const reply = await geminiGenerate(PERSONA_SYSTEM, `Transcript so far:\n${transcriptText.slice(-3000)}\n\nNext assistant line:`, { maxTokens: 200 });
+      const reply = await geminiGenerate(wrapUp ? PERSONA_SYSTEM + WRAP_UP_NOTE : PERSONA_SYSTEM, `Transcript so far:\n${transcriptText.slice(-3000)}\n\nNext assistant line:`, { maxTokens: 200 });
       const clean = reply.trim().replace(/^["'“”]+|["'“”]+$/g, '');
       if (clean) return { text: clean, engine: 'gemini' };
     } catch {
       // fall through
     }
   }
+  if (wrapUp) return { text: 'ขอเบอร์ติดต่อกลับไว้หน่อยได้ไหมคะ เดี๋ยวจะรีบติดต่อกลับค่ะ', engine: 'rules' };
   return { text: FALLBACK_REPLIES[Math.min(turnIndex, FALLBACK_REPLIES.length - 1)], engine: 'rules' };
 }
 

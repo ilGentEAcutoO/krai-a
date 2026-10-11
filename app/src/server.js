@@ -1,5 +1,6 @@
-// Krai-a demo: lean hackathon build. Web sessions + real Twilio voice path,
-// console alerts (watch them land in /demo.html). No auth/billing/LINE.
+// Krai-a server: Twilio voice webhooks + demo API + static console.
+// Deploy target: Google Cloud Run (see Dockerfile). Static console served
+// from /public so the whole demo is one service.
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import { createServer } from 'node:http';
@@ -7,27 +8,43 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { addMember, listMembers, purgeCalls } from './store.js';
+import { markAssigned } from './numbers.js';
 import { voiceIncoming, voiceTurn, voiceStatus } from './twilio/voice.js';
-import { demoRouter } from './routes.js';
 import { privacyNoticeTh } from './evidence.js';
+import { bootLoad, startPersistence } from './persist/index.js';
+import { lineWebhookHandler } from './line/webhook.js';
+import { demoRouter } from './routes.js';
+import { billingRouter } from './billingRoutes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
-app.use(express.json());
+// Trust the platform LB (Cloud Run / container ingress) so req.ip is the
+// real client — required for per-IP rate limits to mean anything.
+app.set('trust proxy', 1);
+app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: false }));
 
-// One demo household: every call forwarded to the demo number lands here.
+// Seed demo household (mode A default number; override via env).
 if (listMembers().length === 0) {
-  addMember({ ownerPhone: '+66800000001', aiNumber: config.demoNumber || '+6620000001', plan: 'starter-20' });
+  const seed = addMember({
+    ownerPhone: config.seedMemberPhone,
+    aiNumber: config.demoNumber || '+6621000142',
+    counted: false, // demo fixture — never counts as a protected household
+    plan: 'family-149',
+    whitelisted: [{ phone: '+66810000002', label: 'Mom', safeWord: 'mango' }],
+    familyWatchers: [],
+  });
+  markAssigned(seed.aiNumber); // never hand the seed number to signups
 }
 
-app.get('/health', (req, res) => res.json({ ok: true, service: 'krai-a-demo', time: new Date().toISOString() }));
+app.get('/health', (req, res) => res.json({ ok: true, service: 'krai-a', time: new Date().toISOString() }));
 app.get('/privacy', (req, res) => res.json({ updated: '2026-10-07', text: privacyNoticeTh() }));
 
-// Real phone path: point a Twilio number's webhooks here.
+// Telephony adapter (Twilio posts form-encoded).
 app.post('/voice/incoming', voiceIncoming);
 app.post('/voice/turn', voiceTurn);
 app.post('/voice/status', voiceStatus);
+app.post('/line/webhook', lineWebhookHandler);
 
 // Demo + data API.
 const server = createServer(app);
@@ -41,6 +58,7 @@ function broadcast(msg) {
 wss.on('connection', (ws) => ws.send(JSON.stringify({ type: 'hello', engines: ['demo'] })));
 
 app.use('/api', demoRouter(broadcast));
+app.use('/api/billing', billingRouter());
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 // PDPA retention: sweep expired call records at boot + daily.
@@ -57,6 +75,9 @@ function sweepExpired() {
 sweepExpired();
 setInterval(sweepExpired, 86400000);
 
+await bootLoad(); // restore snapshot before serving (no-op locally)
+startPersistence(); // 15s snapshots + SIGTERM flush (needs max-instances=1)
+
 server.listen(config.port, () => {
-  console.log(`[krai-a-demo] listening on :${config.port} ai=${config.geminiApiKey ? 'gemini' : 'rules'}`);
+  console.log(`[krai-a] listening on :${config.port} identifyMode=${config.identifyMode} ai=${config.geminiApiKey ? 'gemini' : 'rules'}`);
 });

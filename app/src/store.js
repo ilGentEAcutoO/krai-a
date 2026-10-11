@@ -2,8 +2,11 @@
 // Demo runs fully in memory; production swaps this module for Firestore
 // without touching callers (same method names, same record shape).
 // Record shapes:
-//   member: { id, ownerPhone, aiNumber, plan, minutesUsed, whitelisted:[{phone,label,safeWord}], familyWatchers:[phone], createdAt }
+//   member: { id, ownerPhone, aiNumber, plan, minutesUsed, quotaPeriod, quotaWarnedPeriod, topupMinutes, topupCalls, autoTopup:{enabled,threshold,pack}, stripeCustomerId, payMethod, billingRegion, whitelisted:[{phone,label,safeWord}], familyWatchers:[phone], createdAt }
 //   call:   { id, memberId, callerPhone, aiNumber, startedAt, endedAt, turns:[{role,text,at}], verdict, minutesBilled }
+
+import { releaseNumber } from './numbers.js';
+import { recordCallEnd, recordMemberJoin, snapshotStats, restoreStats, backfillFromCalls } from './stats.js';
 
 const members = new Map(); // key: aiNumber (mode A) — mode B also indexes ForwardedFrom
 const membersByOwner = new Map(); // key: ownerPhone
@@ -23,7 +26,21 @@ export const PLANS = {
 };
 // Extra household seat (Family add-on): +1 protected number with its own
 // Plus-sized chunk, pooled into the household quota.
-export const ADDON_SEAT = { price: 49, quota: 50, calls: 25, numbers: 1 };
+// Priced at full-use variable cost (~฿69): absolute worst case breaks even,
+// typical use (~40%) is strongly profitable. Keeps bundle discount vs Plus.
+export const ADDON_SEAT = { price: 69, usd: 3, quota: 50, calls: 25, numbers: 1 };
+export const SEAT_TTL_MS = 10 * 60 * 1000; // pending seats die with their OTP window
+// One-time topup packs: extra screening minutes + calls on top of the plan quota (coupled).
+// Never expire, never reset — pooled into the household total until burned.
+// TH prices clear PromptPay's ฿20 minimum, so packs offer card + PromptPay.
+export const TOPUP_PACKS = {
+  'topup-small': { minutes: 10, calls: 5, price: 29, usd: 2 },
+  'topup-medium': { minutes: 30, calls: 15, price: 69, usd: 5 },
+};
+// Auto-topup guardrails: threshold = "charge when remaining drops to N min".
+export const AUTO_TOPUP_MIN_THRESHOLD = 1;
+export const AUTO_TOPUP_MAX_THRESHOLD = 30;
+export const AUTO_TOPUP_DEFAULT_THRESHOLD = 5;
 // Hard cap: 5 protected numbers per household (Family 2 + 3 seats).
 // Beyond that, start a new household (new subscription).
 export const MAX_HOUSEHOLD_SEATS = 5;
@@ -38,7 +55,119 @@ function todayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function addMember({ ownerPhone, aiNumber, plan = 'starter-20', whitelisted = [], familyWatchers = [] }) {
+// ---- quota model (minutes + calls per PLANS, pooled, monthly reset) ----
+// Total = plan quota + paid seats' chunks + topup packs. minutesUsed counts
+// within the current calendar month (quotaPeriod 'YYYY-MM'); topupMinutes
+// never resets. Old records without quotaPeriod roll into the current
+// period on first touch (used minutes restart — documented, one-time).
+export function quotaPeriodKey(nowMs = Date.now()) {
+  return new Date(nowMs).toISOString().slice(0, 7);
+}
+
+export function quotaResetAt(nowMs = Date.now()) {
+  const d = new Date(nowMs);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 1)).toISOString();
+}
+
+export function ensureQuotaPeriod(m, nowMs = Date.now()) {
+  if (!m) return m;
+  const key = quotaPeriodKey(nowMs);
+  if (m.quotaPeriod !== key) {
+    m.quotaPeriod = key;
+    m.minutesUsed = 0;
+  }
+  if (typeof m.topupMinutes !== 'number' || m.topupMinutes < 0) m.topupMinutes = 0;
+  if (typeof m.topupCalls !== 'number' || m.topupCalls < 0) m.topupCalls = 0;
+  return m;
+}
+
+export function quotaTotal(m) {
+  const base = planOf(m).quota || 0;
+  const seats = (m?.seatsPaid || 0) * ADDON_SEAT.quota;
+  return base + seats + (m?.topupMinutes || 0);
+}
+
+export function callsQuotaTotal(m) {
+  const base = planOf(m).calls || 0;
+  return base + (m?.seatsPaid || 0) * ADDON_SEAT.calls + (m?.topupCalls || 0);
+}
+
+export function callsUsedThisPeriod(memberId, nowMs = Date.now()) {
+  const prefix = quotaPeriodKey(nowMs);
+  let n = 0;
+  for (const c of calls.values()) {
+    if (c.memberId === memberId && String(c.startedAt || '').startsWith(prefix)) n += 1;
+  }
+  return n;
+}
+
+// Single consumption entry point: roll the period, then burn minutes.
+export function consumeMinutes(m, minutes, nowMs = Date.now()) {
+  ensureQuotaPeriod(m, nowMs);
+  m.minutesUsed = Math.max(0, (m.minutesUsed || 0) + Math.max(0, Number(minutes) || 0));
+  return quotaSummary(m, nowMs);
+}
+
+export function grantTopup(m, packId) {
+  const pack = TOPUP_PACKS[packId];
+  if (!m || !pack) return { granted: false, reason: !m ? 'unknown-member' : 'unknown-pack' };
+  ensureQuotaPeriod(m);
+  m.topupMinutes = (m.topupMinutes || 0) + pack.minutes;
+  m.topupCalls = (m.topupCalls || 0) + (pack.calls || 0);
+  return { granted: true, pack: packId, minutes: pack.minutes, calls: pack.calls || 0, topupMinutes: m.topupMinutes, topupCalls: m.topupCalls };
+}
+
+export function setAutoTopup(m, { enabled, threshold, pack } = {}) {
+  if (!m) return null;
+  const cur = m.autoTopup && typeof m.autoTopup === 'object' ? m.autoTopup : {};
+  const next = {
+    enabled: enabled === undefined ? !!cur.enabled : !!enabled,
+    threshold: AUTO_TOPUP_DEFAULT_THRESHOLD,
+    pack: TOPUP_PACKS[pack] ? pack : (TOPUP_PACKS[cur.pack] ? cur.pack : 'topup-small'),
+  };
+  const t = threshold === undefined ? cur.threshold : Number(threshold);
+  next.threshold = Number.isFinite(t)
+    ? Math.min(AUTO_TOPUP_MAX_THRESHOLD, Math.max(AUTO_TOPUP_MIN_THRESHOLD, Math.round(t)))
+    : AUTO_TOPUP_DEFAULT_THRESHOLD;
+  m.autoTopup = next;
+  return next;
+}
+
+// Full quota picture for GET /me/quota + LIFF meter. due=true means "charge
+// now" (card on file); manualPrompt=true means "show the top-up button"
+// (PromptPay/unknown method can never be charged off-session).
+export function quotaSummary(m, nowMs = Date.now()) {
+  ensureQuotaPeriod(m, nowMs);
+  const quota = quotaTotal(m);
+  const used = m?.minutesUsed || 0;
+  const remaining = Math.max(0, quota - used);
+  const callsQuota = callsQuotaTotal(m);
+  const callsUsed = m ? callsUsedThisPeriod(m.id, nowMs) : 0;
+  const callsRemaining = Math.max(0, callsQuota - callsUsed);
+  const auto = m?.autoTopup && typeof m.autoTopup === 'object'
+    ? { enabled: !!m.autoTopup.enabled, threshold: m.autoTopup.threshold ?? AUTO_TOPUP_DEFAULT_THRESHOLD, pack: m.autoTopup.pack || 'topup-small' }
+    : { enabled: false, threshold: AUTO_TOPUP_DEFAULT_THRESHOLD, pack: 'topup-small' };
+  const callsLowAt = Math.max(1, Math.round(auto.threshold / 2));
+  const low = auto.enabled && (remaining <= auto.threshold || callsRemaining <= callsLowAt);
+  const cardOnFile = m?.payMethod === 'card' && !!m?.stripeCustomerId;
+  return {
+    plan: m?.plan || 'starter-20',
+    period: quotaPeriodKey(nowMs),
+    quota,
+    used,
+    topupMinutes: m?.topupMinutes || 0,
+    topupCalls: m?.topupCalls || 0,
+    remaining,
+    callsQuota,
+    callsUsed,
+    callsRemaining,
+    resetAt: quotaResetAt(nowMs),
+    payMethod: m?.payMethod || '',
+    autoTopup: { ...auto, due: !!(low && cardOnFile), manualPrompt: !!(low && !cardOnFile) },
+  };
+}
+
+export function addMember({ ownerPhone, aiNumber, plan = 'starter-20', whitelisted = [], familyWatchers = [], lineUserId = '', counted = true }) {
   const member = {
     id: `m_${Date.now().toString(36)}_${membersByOwner.size + 1}`,
     ownerPhone,
@@ -46,17 +175,28 @@ export function addMember({ ownerPhone, aiNumber, plan = 'starter-20', whitelist
     numbers: [aiNumber],
     plan: PLANS[plan] ? plan : 'starter-20',
     minutesUsed: 0,
+    quotaPeriod: quotaPeriodKey(),
+    quotaWarnedPeriod: '', // last YYYY-MM the quota-low alert fired (once per period)
+    topupMinutes: 0,
+    topupCalls: 0,
+    autoTopup: { enabled: false, threshold: AUTO_TOPUP_DEFAULT_THRESHOLD, pack: 'topup-small' },
+    stripeCustomerId: '',
+    payMethod: '', // 'card' | 'promptpay' | '' (unknown) — from last Stripe session
+    billingRegion: 'th',
     whitelisted,
     familyWatchers,
-    lineUserId: '',
+    lineUserId: String(lineUserId || '').slice(0, 64),
     createdAt: new Date().toISOString(),
     trialEndsAt: new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString(),
     active: true,
     cancelledAt: null,
     forwardingConfirmed: false,
+    seatsPaid: 0,
+    pendingSeats: [],
   };
   members.set(aiNumber, member);
   membersByOwner.set(ownerPhone, member);
+  if (counted) recordMemberJoin();
   return member;
 }
 
@@ -71,6 +211,45 @@ export function addNumber(memberId, aiNumber) {
   m.numbers.push(aiNumber);
   addMemberAlias(aiNumber, m);
   return m.numbers;
+}
+
+// Extra family seats: every added number must pass OTP on its own phone
+// before it activates (pending -> verified -> numbers[]).
+export function seatCap(m) {
+  return Math.min(MAX_HOUSEHOLD_SEATS, planOf(m).numbers + (m?.seatsPaid || 0));
+}
+
+export function requestSeat(memberId, aiNumber, ownerPhone) {
+  const m = getMemberById(memberId);
+  if (!m) return null;
+  m.pendingSeats = m.pendingSeats || [];
+  const fresh = m.pendingSeats.find((s) => s.ownerPhone === ownerPhone);
+  if (fresh) { // resend: reuse the number, restart the clock
+    fresh.requestedAt = new Date().toISOString();
+    return fresh;
+  }
+  if (m.numbers.length + m.pendingSeats.length >= seatCap(m)) return null;
+  const seat = { aiNumber, ownerPhone, requestedAt: new Date().toISOString() };
+  m.pendingSeats.push(seat);
+  return seat;
+}
+
+export function confirmSeat(memberId, aiNumber) {
+  const m = getMemberById(memberId);
+  if (!m) return null;
+  m.pendingSeats = (m.pendingSeats || []).filter((s) => s.aiNumber !== aiNumber);
+  return addNumber(memberId, aiNumber);
+}
+
+export function pruneSeats(memberId, now = Date.now()) {
+  const m = getMemberById(memberId);
+  if (!m || !m.pendingSeats) return;
+  const live = [];
+  for (const s of m.pendingSeats) {
+    if (now - Date.parse(s.requestedAt) > SEAT_TTL_MS) releaseNumber(s.aiNumber);
+    else live.push(s);
+  }
+  m.pendingSeats = live;
 }
 
 export function setPlan(memberId, plan) {
@@ -209,6 +388,7 @@ export function endCall(callId) {
   call.endedAt = new Date().toISOString();
   const ms = Date.parse(call.endedAt) - Date.parse(call.startedAt);
   call.minutesBilled = Math.max(1, Math.ceil(ms / 60000));
+  recordCallEnd(call); // once per call: repeats early-return above
   return call;
 }
 
@@ -285,4 +465,38 @@ export function callsByMember(memberId, limit = 50) {
     .filter((c) => c.memberId === memberId)
     .sort((a, b) => (a.startedAt < b.startedAt ? 1 : -1))
     .slice(0, limit);
+}
+
+// ---- persistence (Firestore write-behind; see persist/index.js) ----
+export function serializeStore() {
+  return {
+    members: [...members.values()],
+    calls: [...calls.values()],
+    reputation: [...reputation.entries()],
+    rejectCounts: [...rejectCounts.entries()],
+    stats: snapshotStats(),
+  };
+}
+
+export function restoreStore(data = {}) {
+  members.clear();
+  calls.clear();
+  reputation.clear();
+  rejectCounts.clear();
+  for (const m of data.members || []) members.set(m.id, m);
+  for (const c of data.calls || []) calls.set(c.id, c);
+  for (const [k, v] of data.reputation || []) reputation.set(k, v);
+  for (const [k, v] of data.rejectCounts || []) rejectCounts.set(k, v);
+  // Old snapshots predate stats: rebuild from the restored call records
+  // so a deploy never zeroes the public totals (demo calls excluded).
+  if (data.stats) restoreStats(data.stats);
+  else {
+    restoreStats(null);
+    backfillFromCalls([...calls.values()]);
+  }
+}
+
+export function getMemberByLineUserId(lineUserId) {
+  if (!lineUserId) return null;
+  return [...members.values()].find((m) => m.lineUserId === lineUserId) || null;
 }

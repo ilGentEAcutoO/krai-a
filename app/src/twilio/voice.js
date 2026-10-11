@@ -3,10 +3,10 @@
 // We run member gate -> persona + verdict -> TwiML Say/Gather/Hangup.
 // Swap vendors by replacing this module only (same req/res shape).
 import { config } from '../config.js';
-import { findMember, isWhitelisted, createCall, getCall, addTurn, setVerdict, endCall, checkRejectLimit, countReject, getReputation, setReputation } from '../store.js';
+import { findMember, isWhitelisted, createCall, getCall, addTurn, setVerdict, endCall, checkRejectLimit, countReject, getReputation, setReputation, listMembers, consumeMinutes, quotaSummary } from '../store.js';
 import { openingLine, personaReply } from '../ai.js';
-import { judge, shouldEndNow, auditDecision } from '../verdict.js';
-import { notifyOwner } from '../notify/index.js';
+import { judge, shouldEndNow, auditDecision, talkBudgetMinutes } from '../verdict.js';
+import { notifyOwner, maybeNotifyQuotaLow } from '../notify/index.js';
 
 const esc = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 const VOICE = 'Polly.Tiamat'; // Thai TTS voice on Twilio
@@ -71,7 +71,7 @@ export function voiceIncoming(req, res) {
     return;
   }
 
-  if (member.minutesUsed >= config.maxMinutesPerHousePerMonth) {
+  if (quotaSummary(member).used >= config.maxMinutesPerHousePerMonth) {
     res.type('text/xml').send(sayHangupTwiml('ขออภัยค่ะ วงเงินการใช้งานเดือนนี้เต็มแล้ว'));
     return;
   }
@@ -95,6 +95,7 @@ export async function voiceTurn(req, res) {
   if (heard) addTurn(call.id, 'caller', heard);
 
   const member = { id: call.memberId, whitelisted: [], familyWatchers: [] }; // light ref; full record not needed for judging
+  const full = listMembers().find((m) => m.id === call.memberId);
   const callerTurns = call.turns.filter((t) => t.role === 'caller').length;
   const verdict = await judge({ call, member, isWhitelistedCaller: false });
   setVerdict(call.id, verdict);
@@ -103,22 +104,29 @@ export async function voiceTurn(req, res) {
     { verdict: verdict.verdict, confidence: verdict.confidence, signals: verdict.pressureSignals || [] },
     config.reputationTtlDays);
 
-  if (shouldEndNow({ verdict, turnCount: callerTurns }) || req.query.empty) {
+  // Talk budget (per-minute phone bill): cut at 20% of plan quota, always
+  // with the just-judged verdict's closing line — the call still concludes.
+  const budgetMinutes = talkBudgetMinutes(full);
+  const elapsedMs = Date.now() - Date.parse(call.startedAt);
+  if (shouldEndNow({ verdict, turnCount: callerTurns, elapsedMs, budgetMinutes }) || req.query.empty) {
     if (req.query.empty && callerTurns === 0) {
       res.type('text/xml').send(sayHangupTwiml('ไม่ได้ยินเสียง กรุณาฝากข้อความไว้หลังสัญญาณ ขอบคุณค่ะ'));
       return;
     }
     endCall(call.id);
-    const full = (await import('../store.js')).listMembers().find((m) => m.id === call.memberId);
     if (full) {
-      full.minutesUsed += call.minutesBilled;
+      consumeMinutes(full, call.minutesBilled);
+      await maybeNotifyQuotaLow(full);
       await notifyOwner({ call, member: full, verdict }).catch((e) => console.error('[notify] failed', e.message));
     }
     res.type('text/xml').send(sayHangupTwiml(verdict.closingLine));
     return;
   }
 
-  const reply = await personaReply(call.turns.map((t) => `${t.role}: ${t.text}`).join('\n'), callerTurns);
+  const reply = await personaReply(
+    call.turns.map((t) => `${t.role}: ${t.text}`).join('\n'), callerTurns,
+    { turnsLeft: config.maxTurnsPerCall - callerTurns },
+  );
   addTurn(call.id, 'assistant', reply.text);
   res.type('text/xml').send(gatherTwiml(reply.text, action));
 }

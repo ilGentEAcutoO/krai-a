@@ -5,6 +5,7 @@
 // Actions: CONTINUE | END_SCAM | END_LEGIT | END_UNSURE | VERIFY_SAFEWORD
 import { classify, closingLine } from './ai.js';
 import { config } from './config.js';
+import { quotaTotal } from './store.js';
 
 // Instant-red: explicit scam demands. Instant-green never exists — even
 // whitelisted callers are judged by their REQUEST, not their number.
@@ -80,11 +81,25 @@ function finalize(v) {
   };
 }
 
+// Talk budget: cap one call at a fraction (config) of the member's monthly
+// quota — ฿20/10min → 2min, ฿100/50min → 10min, ฿149/50min → 10min.
+// Pooled quota (plan + seats + topups), so a topup buys longer calls too.
+// Unknown member fails closed to the smallest plan. Infinity = disabled.
+export function talkBudgetMinutes(member) {
+  const quota = quotaTotal(member) || 0;
+  const f = Number(config.talkBudgetFraction) || 0;
+  if (!quota || f <= 0) return Infinity;
+  return Math.max(1, Math.ceil(quota * f));
+}
+
 // Per-turn light check: should we keep talking or end now?
-// Ends early on high-confidence SCAM (save cost), or at max turns.
-export function shouldEndNow({ verdict, turnCount }) {
+// Ends early on high-confidence SCAM (save cost), at max turns, or when the
+// talk budget is spent. The judge returns a verdict every turn, so a
+// budget-cut call still concludes — never hangs up without a summary.
+export function shouldEndNow({ verdict, turnCount, elapsedMs = null, budgetMinutes = null }) {
   if (verdict && verdict.verdict === 'SCAM' && verdict.confidence >= 0.9 && turnCount >= 2) return true;
   if (turnCount >= config.maxTurnsPerCall) return true;
+  if (elapsedMs != null && budgetMinutes != null && elapsedMs >= budgetMinutes * 60000) return true;
   return false;
 }
 

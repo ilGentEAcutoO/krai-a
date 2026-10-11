@@ -1,13 +1,13 @@
 {
-  "name": "krai-a-demo",
+  "name": "krai-a",
   "version": "0.1.0",
-  "description": "Krai-a demo — lean hackathon build: Thai AI call screener (web sessions + Twilio). AI Builder Cup.",
+  "description": "Krai-a — AI call screener that answers unknown calls in Thai, detects scam scripts with Gemini, and notifies the owner. AI Builder Cup demo.",
   "type": "module",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test test/verdict.test.js test/store.test.js test/gates.test.js test/privacy.test.js test/demo.test.js"
+    "test": "node --test test/verdict.test.js test/store.test.js test/auth.test.js test/plans.test.js test/gates.test.js test/privacy.test.js test/persist.test.js test/line.test.js test/budget.test.js test/captcha.test.js test/billing.test.js test/line-link.test.js test/quota.test.js test/quota-warn.test.js test/sms.test.js test/stats.test.js test/captcha-client.test.js"
   },
   "engines": {
     "node": ">=20"

@@ -26,6 +26,8 @@ export const config = {
   twilioAuthToken: process.env.TWILIO_AUTH_TOKEN || '',
   twilioAccountSid: process.env.TWILIO_ACCOUNT_SID || '',
   twilioVerifySid: process.env.TWILIO_VERIFY_SID || '',
+  thsmsApiKey: process.env.THSMS_API_KEY || '',
+  thsmsSender: process.env.THSMS_SENDER || '',
   demoNumber: process.env.DEMO_NUMBER || '', // the one AI number used in demo
 
   // Plan quota (minutes/month included in ฿149).
@@ -34,12 +36,35 @@ export const config = {
   // Notification adapters: comma list, e.g. "console,line".
   notifyAdapters: (process.env.NOTIFY_ADAPTERS || 'console').split(',').map((s) => s.trim()).filter(Boolean),
   lineChannelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
+  publicBaseUrl: (process.env.PUBLIC_BASE_URL || '').replace(/\/$/, ''),
+  lineChannelSecret: process.env.LINE_CHANNEL_SECRET || '',
+  lineLoginChannelId: process.env.LINE_LOGIN_CHANNEL_ID || '',
+  liffId: process.env.LINE_LIFF_ID || '2008922436-G2kWQbrj',
   lineDefaultTo: process.env.LINE_DEFAULT_TO || '',
 
   // Abuse limits (per spec: rate-limit rejects, cap minutes per house).
   maxRejectsPerDayPerCaller: num('MAX_REJECTS_PER_DAY', 20),
   maxMinutesPerHousePerMonth: num('MAX_MINUTES_PER_HOUSE', 200),
   maxTurnsPerCall: num('MAX_TURNS_PER_CALL', 12),
+
+  // Talk budget: one call may burn at most this fraction of the plan's
+  // monthly quota (0.2 → ฿20/10min = 2min, ฿100/50min = 10min). 0 disables.
+  talkBudgetFraction: Number(process.env.TALK_BUDGET_FRACTION ?? 0.2) || 0,
+
+  // Demo guards: the public page must not drain the AI budget.
+  demoMaxCallsPerHour: num('DEMO_MAX_CALLS_PER_HOUR', 30),
+  demoMaxCallsPerIpHour: num('DEMO_MAX_CALLS_PER_IP_HOUR', 5),
+  demoIdleMinutes: num('DEMO_IDLE_MINUTES', 10),
+
+  // Single-shot analysis endpoint (no UI sender yet — rate limits only).
+  analyzeMaxPerHour: num('ANALYZE_MAX_PER_HOUR', 100),
+  analyzeMaxPerIpMin: num('ANALYZE_MAX_PER_IP_MIN', 10),
+
+  // reCAPTCHA v3 (invisible bot gate on demo start). Empty apiKey = disabled.
+  recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY || '',
+  recaptchaProjectId: process.env.RECAPTCHA_PROJECT_ID || '',
+  recaptchaApiKey: process.env.RECAPTCHA_API_KEY || '',
+  recaptchaMinScore: num('RECAPTCHA_MIN_SCORE', 0.5),
 
   // Gate 1: forwarder allowlist (customer owner numbers). Empty = permissive.
   forwardAllowlist: (process.env.FORWARD_ALLOWLIST || '').split(',').map((s) => s.trim()).filter(Boolean),
@@ -58,6 +83,19 @@ export const config = {
   // Demo seed: household(s) pre-registered as members.
   seedMemberPhone: process.env.SEED_MEMBER_PHONE || '+66810000001',
   seedMemberName: process.env.SEED_MEMBER_NAME || 'Demo Household',
+
+  // Stripe billing (test mode). Empty secret = billing disabled (503).
+  stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+  stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
+  // One-time prices per plan/seat x region (THB for th, USD for intl).
+  stripePrices: {
+    'starter-20': { th: process.env.STRIPE_PRICE_STARTER_TH || '', intl: process.env.STRIPE_PRICE_STARTER_INTL || '' },
+    'plus-100': { th: process.env.STRIPE_PRICE_PLUS_TH || '', intl: process.env.STRIPE_PRICE_PLUS_INTL || '' },
+    'family-149': { th: process.env.STRIPE_PRICE_FAMILY_TH || '', intl: process.env.STRIPE_PRICE_FAMILY_INTL || '' },
+    seat: { th: process.env.STRIPE_PRICE_SEAT_TH || '', intl: process.env.STRIPE_PRICE_SEAT_INTL || '' },
+    'topup-small': { th: process.env.STRIPE_PRICE_TOPUP_SMALL_TH || '', intl: process.env.STRIPE_PRICE_TOPUP_SMALL_INTL || '' },
+    'topup-medium': { th: process.env.STRIPE_PRICE_TOPUP_MEDIUM_TH || '', intl: process.env.STRIPE_PRICE_TOPUP_MEDIUM_INTL || '' },
+  },
 };
 
 export const isLiveAI = () => config.geminiApiKey.length > 10;

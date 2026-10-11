@@ -1,35 +1,34 @@
-# Krai-a (demo) — AI Call Screener for Thai Phone Scams
+# Krai-a — AI Call Screener for Thai Phone Scams
 
-Unknown call → Thai AI receptionist answers → Gemini judges every turn
-(SCAM / LEGIT / UNSURE) → verdict + one-click police evidence. Built for
-the AI Builder Cup (BFSI theme).
+Unknown call → forwarded once via `**21*` → Thai AI receptionist answers →
+Gemini judges every turn (SCAM / LEGIT / UNSURE) → owner gets a LINE alert
+with tape + reasons. Built for the AI Builder Cup (BFSI theme).
 
-Live demo: https://demo.krai-a.com · backup:
-https://krai-a-demo-820054698900.asia-southeast1.run.app
+Live demo: https://krai-a-820054698900.asia-southeast1.run.app
 
-## Try it in 1 minute (judges)
+## Quick start (2 minutes, no keys)
 
-1. Open `/demo.html`, pick a scam script (fake police, parcel OTP…), press
-   **Start call** — or type freestyle as the caller.
-2. Watch the verdict update turn by turn, with reasons in Thai + English.
-3. When the call ends, download the evidence bundle (transcript + verdict
-   + integrity hash) — the same file a victim files with AOC 1441 / police.
-4. Real phone path: Twilio webhooks live at `/voice/*` — point a Thai
-   number at them and forwarded calls land in the same sessions.
+```sh
+cd app
+npm install
+npm test
+node src/server.js
+```
 
-No signup, no keys needed — without `GEMINI_API_KEY` the demo runs fully
-offline on the built-in rules engine.
+Open http://localhost:8080 — the demo console runs fully offline in rules
+mode. Add `GEMINI_API_KEY` to switch to live AI. Full guide: [app/README.md](app/README.md).
 
 ## Layout
 
-- `app/src` — verdict engine, Gemini adapter, Twilio voice adapter,
-  demo API, evidence export, privacy notice
-- `app/test` — node:test suite (31 tests: verdict, gates, store, privacy, demo loop)
-- `app/public` — landing + live demo console (Thai-first, EN toggle)
-- `deploy-demo.sh` — one-command Cloud Run deploy
+- `app/src` — product code: verdict engine, Twilio voice adapter, LINE
+  notify, member/call store, demo + self-service API
+- `app/test` — node:test suite (verdict, gates, auth, plans, privacy)
+- `app/public` — marketing site + member dashboard
+- `deploy-cloudrun.sh` — one-command Cloud Run deploy (`PROJECT_ID=… ./deploy-cloudrun.sh`)
+- `research/` — hackathon theme notes
 
-The full product (OTP signup, plans, LINE/WhatsApp alerts, LIFF, member
-dashboard) lives in a private repo — this repo is the lean hackathon build.
+Secrets (API keys, tokens) live in Secret Manager / `.env` only — never in
+this repo. See `app/.env.example`.
 
 ## License
 
