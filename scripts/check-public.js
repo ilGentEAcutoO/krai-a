@@ -1,5 +1,6 @@
-// Public-repo leak guard. Fails if private paths or secrets are tracked or
-// staged. Run: node scripts/check-public.js [--self-test]
+// Public-repo leak guard. Fails if private paths or secrets are tracked,
+// staged, or untracked-but-not-ignored (one `git add -A` away from a
+// commit). Run: node scripts/check-public.js [--self-test]
 // Enforced by: .git/hooks/pre-push (local) + .github/workflows (CI).
 import { execFileSync } from 'node:child_process';
 import { readFileSync, statSync } from 'node:fs';
@@ -93,7 +94,11 @@ function selfTest() {
 
 if (process.argv.includes('--self-test')) selfTest();
 
-const files = [...new Set([...git(['ls-files']), ...git(['diff', '--cached', '--name-only'])])];
+const files = [...new Set([
+  ...git(['ls-files']),
+  ...git(['diff', '--cached', '--name-only']),
+  ...git(['ls-files', '--others', '--exclude-standard']), // untracked, not ignored
+])];
 const hits = scanFiles(files.filter((f) => !f.startsWith('instruction/.git/')));
 if (hits.length) {
   console.error('public-guard FAILED:');

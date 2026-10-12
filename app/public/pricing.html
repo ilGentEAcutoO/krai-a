@@ -4,167 +4,136 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="color-scheme" content="light only">
-<link rel="icon" href="data:,">
+<link rel="icon" href="/favicon.ico">
 <title>ราคา — ใครอะ</title>
-<meta name="description" content="Starter ฿20 · Plus ฿100 · Family ฿149 — ทดลองฟรี 7 วันทุกแผน ยกเลิกได้ทุกเมื่อ">
+<meta name="description" content="ราคาใครอะ ต่อคนที่คุณดูแล รายปีหรือรายเดือน ทดลองฟรีก่อน ไม่ต้องผูกบัตร ยกเลิกเองได้ทุกเมื่อ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/site.css">
 <style>
-/* pricing overhaul — page-local (mint theme) */
-body{background:var(--paper)}
-.kp-hero{background:linear-gradient(160deg,#e8f8ee 0%,#f0f4f3 40%,#e0f2e9 100%);color:var(--ink);border-bottom:1px solid var(--line);padding:64px 0 58px;position:relative;overflow:hidden}
-.kp-hero::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);background-size:26px 26px}
-.kp-hero::after{content:"";position:absolute;left:-100px;bottom:-140px;width:340px;height:340px;border-radius:50%;background:radial-gradient(circle,rgba(6,199,85,.18),transparent 65%)}
-.kp-hero .wrap{position:relative;z-index:1}
-.kp-hero .kicker{color:var(--brand-deep)}
-.kp-hero .kicker::before{background:var(--brand)}
-.kp-hero h1{font-size:clamp(32px,4.6vw,52px);letter-spacing:-.02em;line-height:1.25}
-.kp-hero h1 .hl{background:linear-gradient(transparent 58%,rgba(6,199,85,.28) 58%,rgba(6,199,85,.28) 96%,transparent 96%);padding:0 6px}
-.kp-hero p{color:var(--ink2)}
-.kp-grid{margin-top:-34px;position:relative;z-index:2}
-.kp-grid .price{border-radius:20px;padding:34px 30px}
-.kp-grid .price.plus{border-top:5px solid var(--brand)}
-.kp-grid .price.hot{background:linear-gradient(180deg,#EDF7F0,#fff 60%);border:2px solid var(--brand);color:var(--ink);box-shadow:0 0 0 8px rgba(6,199,85,.1),var(--sh)}
-.kp-grid .price.hot .per,.kp-grid .price.hot li{color:var(--ink2)}
-.kp-grid .price.hot li::before{color:var(--ok)}
-.kp-grid .price.hot .amt small{color:var(--ink3)}
-.kp-grid .price.hot .pop{background:linear-gradient(135deg,#06c755,#05a647);color:#fff;top:-16px;font-size:14px;padding:6px 18px}
-.kp-grid .price.hot .ppp-note{color:var(--ink2)}
-.kp-grid .price.hot .fine a{color:var(--brand)}
-.kp-grid .price .amt{font-size:56px}
-.kp-save{display:inline-block;font-size:13px;font-weight:800;color:var(--ok);background:var(--ok-soft);border-radius:7px;padding:3px 11px;margin:4px 0 2px}
-.kp-grid .price.hot .kp-save{background:var(--ok-soft);color:var(--ok)}
-@media(max-width:920px){.kp-grid{margin-top:26px}}
+/* ---- pricing v2: focus = the recommended (Family) plan, yearly by default ---- */
+.pr-hero{padding:var(--sp-8) 0 var(--sp-6);text-align:center}
+.pr-hero h1{font-size:var(--fs-h1);font-variant-numeric:tabular-nums}
+.pr-hero p{margin:var(--sp-3) auto 0;max-width:34em;color:var(--ink2);font-size:var(--fs-lead)}
+.period{display:flex;justify-content:center;margin:0 0 var(--sp-6)}
+.period .lang-seg button{min-width:120px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.period .save{font-size:var(--fs-xs);font-weight:600;color:var(--brand-ink);background:var(--brand-soft);border-radius:var(--r-pill);padding:1px 8px}
+.period button.on .save{color:#fff;background:rgba(255,255,255,.18)}
+.period .save:empty{display:none}
+.plans{display:grid;grid-template-columns:repeat(var(--n,2),minmax(0,1fr));gap:var(--sp-4);align-items:stretch;max-width:860px;margin:0 auto}
+.plan{position:relative;display:flex;flex-direction:column;background:#fff;border-radius:var(--r-xl);padding:var(--sp-6) var(--sp-5);box-shadow:inset 0 0 0 1px var(--line)}
+.plan.rec{box-shadow:inset 0 0 0 2px var(--ink),var(--sh-3)}
+.plan .tag{position:absolute;top:-13px;left:var(--sp-5);background:var(--ink);color:#fff;font-size:var(--fs-xs);font-weight:600;border-radius:var(--r-pill);padding:3px 12px}
+.plan h2{font-size:var(--fs-h3)}
+.plan .for{color:var(--ink3);font-size:var(--fs-sm);margin-top:2px}
+.plan .amt{display:flex;align-items:baseline;gap:6px;margin:var(--sp-4) 0 0}
+.plan .amt b{font-size:clamp(44px,4.4vw,56px);font-weight:700;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.plan .amt span{color:var(--ink3);font-size:var(--fs-sm)}
+.plan .per{margin-top:2px;color:var(--ink3);font-size:var(--fs-sm);font-variant-numeric:tabular-nums;min-height:1.65em}
+.plan ul{list-style:none;margin:var(--sp-4) 0 var(--sp-5);flex:1}
+.plan li{position:relative;padding:7px 0 7px 26px;font-size:var(--fs-sm);color:var(--ink2);font-variant-numeric:tabular-nums}
+.plan li::before{content:"";position:absolute;left:4px;top:15px;width:11px;height:6px;border-left:1.5px solid var(--ink);border-bottom:1.5px solid var(--ink);transform:rotate(-45deg)}
+.plan .btn{width:100%}
+.plan .fine{margin-top:var(--sp-3);font-size:var(--fs-xs);color:var(--ink3);text-align:center}
+.plans-state{grid-column:1/-1;text-align:center;color:var(--ink3);padding:var(--sp-7) 0}
+.every{text-align:center;margin:var(--sp-5) auto 0;max-width:40em;color:var(--ink2);font-size:var(--fs-sm)}
+.rules{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--sp-6);max-width:1040px;margin:var(--sp-8) auto 0;list-style:none}
+.rules li{padding-top:var(--sp-4);box-shadow:inset 0 1px 0 var(--line)}
+.rules b{display:block}
+.rules span{display:block;color:var(--ink2);font-size:var(--fs-sm);margin-top:var(--sp-1)}
+.pay{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:var(--sp-2);margin:var(--sp-7) auto 0;color:var(--ink3);font-size:var(--fs-sm)}
+.pay .mark{display:inline-flex;align-items:center;min-height:32px;padding:0 12px;border-radius:var(--r-pill);background:var(--soft);color:var(--ink);font-weight:600;font-size:var(--fs-xs)}
+.gift{margin-top:var(--sp-9);padding:var(--sp-8) 0;background:var(--soft)}
+.gift-in{display:grid;grid-template-columns:.9fr 1.1fr;gap:var(--sp-7);align-items:center}
+.gift h2{font-size:var(--fs-h2)}
+.gift-in>div>p{color:var(--ink2);margin-top:var(--sp-3);max-width:28em}
+.gifts{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-4)}
+.gift-card{background:#fff;border-radius:var(--r-lg);padding:var(--sp-5);box-shadow:inset 0 0 0 1px var(--line);display:flex;flex-direction:column;gap:var(--sp-1)}
+.gift-card b{font-size:var(--fs-body)}
+.gift-card .gp{font-size:32px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;line-height:1.2;margin-top:var(--sp-2)}
+.gift-card .gp small{font-size:var(--fs-sm);font-weight:500;color:var(--ink3)}
+.gift-card span{color:var(--ink3);font-size:var(--fs-sm)}
+.gift-card .soon{align-self:flex-start;margin-top:var(--sp-3);font-size:var(--fs-xs);font-weight:600;color:var(--ink2);background:var(--soft);border-radius:var(--r-pill);padding:4px 12px}
+.gift-card .btn{margin-top:var(--sp-3)}
+.money{display:grid;grid-template-columns:.8fr 1.2fr;gap:var(--sp-8);align-items:start}
+.money h2{font-size:var(--fs-h2)}
+.money p.sub{color:var(--ink2);margin-top:var(--sp-3)}
+@media (max-width:920px){
+  .plans{grid-template-columns:1fr;max-width:480px;gap:var(--sp-6)}
+  .plan.rec{order:-1}
+  .rules{grid-template-columns:1fr;gap:0;max-width:480px;margin-top:var(--sp-7)}
+  .rules li{padding:var(--sp-4) 0}
+  .gift-in{grid-template-columns:1fr;gap:var(--sp-5)}
+  .money{grid-template-columns:1fr;gap:var(--sp-5)}
+}
+@media (max-width:720px){
+  .pr-hero{padding:var(--sp-6) 0 var(--sp-5)}
+  .plan{padding:var(--sp-5) var(--sp-4);border-radius:var(--r-lg)}
+  .gift{padding:var(--sp-7) 0;margin-top:var(--sp-8)}
+  .gifts{gap:var(--sp-3)}
+}
+@media (max-width:560px){
+  .gifts{grid-template-columns:1fr}
+  .gift-card{padding:var(--sp-4)}
+  .gift-card .gp{font-size:26px}
+}
 </style>
 </head>
-<body data-title-th="ราคา — ใครอะ" data-title-en="Pricing — Krai-a">
-<nav class="nav"><div class="nav-in">
-  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
-  <div class="nav-links">
-    <a data-page="features" href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
-    <a data-page="how" href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-    <a data-page="family" href="/family.html" data-th="Family" data-en="Family">Family</a>
-    <a data-page="pricing" href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
-    <a data-page="demo" href="/demo.html">Live demo</a>
+<body data-title-th="ราคา — ใครอะ" data-title-en="Pricing — Krai-A">
+<nav class="nav"></nav>
+
+<main>
+<header class="pr-hero"><div class="wrap">
+  <h1 id="prH1" data-th="จ่ายตามจำนวนคนที่คุณดูแล" data-en="Priced per person you look after">จ่ายตามจำนวนคนที่คุณดูแล</h1>
+  <p data-th="<span class='ch'>ราคาเท่าแอปเช็กเบอร์</span> <span class='ch'>แต่มี AI รับสายแทนพ่อแม่จริง ๆ</span> <span class='ch'>แล้วบอกคุณทันที</span>" data-en="The price of a caller-ID app — but an AI actually answers your parents’ calls and tells you right away."><span class="ch">ราคาเท่าแอปเช็กเบอร์</span> <span class="ch">แต่มี AI รับสายแทนพ่อแม่จริง ๆ</span> <span class="ch">แล้วบอกคุณทันที</span></p>
+</div></header>
+
+<section class="wrap" aria-label="Plans">
+  <div class="period" id="period" hidden>
+    <div class="lang-seg" role="group" aria-label="รอบการจ่าย / Billing period">
+      <button type="button" data-period="year" aria-pressed="true" class="on"><span data-th="รายปี" data-en="Yearly">รายปี</span><span class="save" id="saveTag"></span></button><button type="button" data-period="month" aria-pressed="false"><span data-th="รายเดือน" data-en="Monthly">รายเดือน</span></button>
+    </div>
   </div>
-  <div class="nav-right">
-    <div class="lang" id="langToggle"><button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language / ภาษา"><svg class="lang-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg><span class="lang-cur" data-lang-cur>ไทย</span><span class="lang-chev" aria-hidden="true"></span></button><ul class="lang-menu" role="listbox" aria-label="Language / ภาษา" hidden><li role="option" tabindex="-1" data-lang="th" aria-selected="true"><span class="lang-code">TH</span><span>ไทย</span><span class="lang-tick" aria-hidden="true">✓</span></li><li role="option" tabindex="-1" data-lang="en" aria-selected="false"><span class="lang-code">EN</span><span>English</span><span class="lang-tick" aria-hidden="true">✓</span></li></ul></div>
-    <span id="navAuth" style="display:flex;gap:10px"></span>
+  <div class="plans" id="plans" aria-live="polite">
+    <p class="plans-state" data-th="กำลังโหลดราคา…" data-en="Loading prices…">กำลังโหลดราคา…</p>
   </div>
-</div></nav>
+  <p class="every" id="every"></p>
 
-<div class="page-hero kp-hero"><div class="wrap">
-  <span class="kicker" data-th="ราคา · ทดลองฟรี 7 วันทุกแผน" data-en="Pricing · 7-day free trial on every plan">ราคา · ทดลองฟรี 7 วันทุกแผน</span>
-  <h1 data-th="เริ่ม <span class='hl'>฿20</span> ถูกกว่าค่าเสียหายครั้งเดียวเป็นแสนเท่า" data-en="From <span class='hl'>$2</span> — a fraction of one scam's damage">เริ่ม <span class="hl">฿20</span> ถูกกว่าค่าเสียหายครั้งเดียวเป็นแสนเท่า</h1>
-  <p data-th="คนร้ายหลอกสำเร็จครั้งเดียวเสียเป็นหมื่นเป็นแสน — ลองฟรี 7 วันก่อน ไม่ต้องผูกบัตร ไม่ชอบกดยกเลิกได้เองทันที" data-en="One successful scam costs tens of thousands — try free for 7 days first. No card required; cancel yourself in one tap.">คนร้ายหลอกสำเร็จครั้งเดียวเสียเป็นหมื่นเป็นแสน — ลองฟรี 7 วันก่อน ไม่ต้องผูกบัตร ไม่ชอบกดยกเลิกได้เองทันที</p>
-</div></div>
+  <ul class="rules">
+    <li><b id="ruleTrialHead" data-th="ทดลองฟรีก่อน" data-en="Try it free first">ทดลองฟรีก่อน</b><span data-th="ไม่ต้องผูกบัตร · หมดทดลองแล้วยังไม่เลือกแผน เราเตือนก่อน 2 วัน และ AI ยังรับสายให้อีก 3 วัน จากนั้นจึงหยุดรับสายแทน พร้อมส่ง SMS บอกทุกเครื่องให้กด ##002#" data-en="No card needed. Trial over and no plan picked? We remind you 2 days before, the AI keeps answering for 3 more days, then stops and texts every protected phone to dial ##002#.">ไม่ต้องผูกบัตร · หมดทดลองแล้วยังไม่เลือกแผน เราเตือนก่อน 2 วัน และ AI ยังรับสายให้อีก 3 วัน จากนั้นจึงหยุดรับสายแทน พร้อมส่ง SMS บอกทุกเครื่องให้กด ##002#</span></li>
+    <li><b data-th="ยกเลิกได้ทุกเมื่อ" data-en="Cancel any time">ยกเลิกได้ทุกเมื่อ</b><span data-th="ยกเลิกเองได้ในห้องของฉัน — AI หยุดรับสายแทนทันที ไม่มีค่าปรับ ไม่ตัดเงินอีก (กด ##002# ที่เครื่องที่ตั้งโอนไว้ด้วย)" data-en="Cancel yourself in My dashboard — the AI stops answering right away, no fees, no further charges (dial ##002# on forwarded phones too).">ยกเลิกเองได้ในห้องของฉัน — AI หยุดรับสายแทนทันที ไม่มีค่าปรับ ไม่ตัดเงินอีก (กด ##002# ที่เครื่องที่ตั้งโอนไว้ด้วย)</span></li>
+    <li><b data-th="ไม่ต่ออายุอัตโนมัติ" data-en="Nothing auto-renews">ไม่ต่ออายุอัตโนมัติ</b><span data-th="จ่ายครั้งละเดือนหรือครั้งละปี เราเตือนก่อนหมด 2 วัน · ไม่ตัดเงินอัตโนมัติ เว้นแต่คุณเปิดเติมนาทีอัตโนมัติเอง" data-en="Pay for a month or a year at a time; we remind you 2 days before it ends. Nothing is charged automatically unless you turn on auto top-up yourself.">จ่ายครั้งละเดือนหรือครั้งละปี เราเตือนก่อนหมด 2 วัน · ไม่ตัดเงินอัตโนมัติ เว้นแต่คุณเปิดเติมนาทีอัตโนมัติเอง</span></li>
+  </ul>
 
-<div class="wrap page-body">
-<div class="price-grid trio kp-grid">
-  <div class="price rv">
-    <div class="tagline" data-th="Starter" data-en="Starter">Starter</div>
-    <div class="amt" data-th="฿20<small>/เดือน</small>" data-en="$2<small>/mo</small>">฿20<small>/เดือน</small></div>
-    <p class="ppp-note" data-th="<span class='ppp'>PPP for Thai −71%</span> ปกติ $2 (~฿70)" data-en=""><span class="ppp">PPP for Thai −71%</span> ปกติ $2 (~฿70)</p>
-    <div class="per" data-th="สำหรับคนเดียว สายแปลกไม่เยอะ" data-en="Solo, light unknown-call volume">สำหรับคนเดียว สายแปลกไม่เยอะ</div>
-    <div><span class="trial" data-th="ทดลองฟรี 7 วัน" data-en="Free 7-day trial">ทดลองฟรี 7 วัน</span></div>
-    <ul>
-      <li data-th="ป้องกัน 1 เบอร์" data-en="1 protected number">ป้องกัน 1 เบอร์</li>
-      <li data-th="คัดกรอง 10 นาที/เดือน" data-en="10 screening min/month">คัดกรอง 10 นาที/เดือน</li>
-      <li data-th="ไม่เกิน 5 สาย/เดือน" data-en="Max 5 calls/month">ไม่เกิน 5 สาย/เดือน</li>
-      <li data-th="แจ้งผลแดง/เขียว/เหลือง (ไม่มีเทปเสียง)" data-en="Red/green/yellow verdict, no recordings">แจ้งผลแดง/เขียว/เหลือง (ไม่มีเทปเสียง)</li>
-      <li data-th="ดูย้อนหลัง 7 วัน" data-en="7-day history">ดูย้อนหลัง 7 วัน</li>
-      <li data-th="รายชื่อคนรู้จัก + safe word" data-en="Known contacts + safe word">รายชื่อคนรู้จัก + safe word</li>
-    </ul>
-    <a class="btn dark" href="/start.html?plan=starter-20" data-th="เริ่ม Starter" data-en="Start Starter">เริ่ม Starter</a>
+  <p class="pay"><span data-th="ชำระเงินด้วย" data-en="Pay with">ชำระเงินด้วย</span><span class="mark">PromptPay</span><span class="mark" data-th="บัตรเครดิต / เดบิต" data-en="Credit / debit card">บัตรเครดิต / เดบิต</span><span data-th="ผ่าน Stripe — เราไม่เห็นเลขบัตรของคุณ" data-en="via Stripe — we never see your card number. Prices in Thai baht.">ผ่าน Stripe — เราไม่เห็นเลขบัตรของคุณ</span></p>
+</section>
+
+<section class="gift" id="gift" hidden><div class="wrap gift-in">
+  <div>
+    <h2 data-th="ซื้อเป็นของขวัญ 1 ปี" data-en="Give it as a 1-year gift">ซื้อเป็นของขวัญ 1 ปี</h2>
+    <p data-th="ให้แม่ ให้พ่อ ให้ยาย — รวมการตั้งโอนสายให้ทางวิดีโอคอล และไม่ต่ออายุอัตโนมัติ" data-en="For Mom, Dad or Grandma — includes setting up call forwarding with them over a video call, and it never auto-renews.">ให้แม่ ให้พ่อ ให้ยาย — รวมการตั้งโอนสายให้ทางวิดีโอคอล และไม่ต่ออายุอัตโนมัติ</p>
   </div>
-  <div class="price plus rv">
-    <div class="tagline" data-th="Plus" data-en="Plus">Plus</div>
-    <div class="amt" data-th="฿100<small>/เดือน</small>" data-en="$6<small>/mo</small>">฿100<small>/เดือน</small></div>
-    <p class="ppp-note" data-th="<span class='ppp'>PPP for Thai −52%</span> ปกติ $6 (~฿210)" data-en=""><span class="ppp">PPP for Thai −52%</span> ปกติ $6 (~฿210)</p>
-    <div class="per" data-th="สำหรับคนเดียว สายแปลกเยอะ รู้เหตุผลทุกสาย" data-en="Solo heavy use — full reasons + tapes">สำหรับคนเดียว สายแปลกเยอะ รู้เหตุผลทุกสาย</div>
-    <div><span class="trial" data-th="ทดลองฟรี 7 วัน" data-en="Free 7-day trial">ทดลองฟรี 7 วัน</span></div>
-    <ul>
-      <li data-th="ป้องกัน 1 เบอร์" data-en="1 protected number">ป้องกัน 1 เบอร์</li>
-      <li data-th="คัดกรอง 50 นาที/เดือน" data-en="50 screening min/month">คัดกรอง 50 นาที/เดือน</li>
-      <li data-th="ไม่เกิน 25 สาย/เดือน" data-en="Max 25 calls/month">ไม่เกิน 25 สาย/เดือน</li>
-      <li data-th="เหตุผล + ประเภทกลโกง + %มั่นใจทุกสาย" data-en="Reason + scam type + confidence on every call">เหตุผล + ประเภทกลโกง + %มั่นใจทุกสาย</li>
-      <li data-th="เทปเสียง + transcript ทุกสาย" data-en="Tape + transcript on every call">เทปเสียง + transcript ทุกสาย</li>
-      <li data-th="ส่งออกหลักฐานแจ้งความ" data-en="Evidence export for police reports">ส่งออกหลักฐานแจ้งความ</li>
-      <li data-th="ประวัติ 90 วัน + สรุปรายสัปดาห์ + ล็อคราคา 12 เดือน" data-en="90-day history + weekly digest + 12-month price lock">ประวัติ 90 วัน + สรุปรายสัปดาห์ + ล็อคราคา 12 เดือน</li>
-      <li data-th="รายชื่อคนรู้จัก + safe word" data-en="Known contacts + safe word">รายชื่อคนรู้จัก + safe word</li>
-    </ul>
-    <a class="btn dark" href="/start.html?plan=plus-100" data-th="เริ่ม Plus" data-en="Start Plus">เริ่ม Plus</a>
+  <div class="gifts" id="gifts"></div>
+</div></section>
+
+<section class="section" id="faq"><div class="wrap money">
+  <div>
+    <h2 data-th="คำถามเรื่องเงิน" data-en="Money questions">คำถามเรื่องเงิน</h2>
+    <p class="sub" data-th="ตอบตรงตามที่ระบบทำจริง" data-en="Answered exactly as the system works today.">ตอบตรงตามที่ระบบทำจริง</p>
   </div>
-  <div class="price hot rv"><div class="pop" data-th="คุ้มสุด" data-en="Best value">คุ้มสุด</div>
-    <div class="tagline" data-th="Family" data-en="Family">Family</div>
-    <div class="amt" data-th="฿149<small>/เดือน</small>" data-en="$8<small>/mo</small>">฿149<small>/เดือน</small></div>
-    <p class="ppp-note" data-th="<span class='ppp'>PPP for Thai −47%</span> ปกติ $8 (~฿280)" data-en=""><span class="ppp">PPP for Thai −47%</span> ปกติ $8 (~฿280)</p>
-    <div class="per" data-th="2 เบอร์ทั้งบ้าน + ผู้ดูแล 2 คน" data-en="2 numbers for home + 2 watchers">2 เบอร์ทั้งบ้าน + ผู้ดูแล 2 คน</div>
-    <div><span class="trial" data-th="ทดลองฟรี 7 วัน" data-en="Free 7-day trial">ทดลองฟรี 7 วัน</span></div>
-    <ul>
-      <li data-th="ป้องกัน 2 เบอร์ (เช่น พ่อ แม่)" data-en="2 protected numbers (e.g. parents)">ป้องกัน 2 เบอร์ (เช่น พ่อ แม่)</li>
-      <li data-th="คัดกรอง 50 นาที/เดือน (รวมทั้งบ้าน)" data-en="50 screening min/month (shared)">คัดกรอง 50 นาที/เดือน (รวมทั้งบ้าน)</li>
-      <li data-th="ไม่เกิน 25 สาย/เดือน (รวมทั้งบ้าน)" data-en="Max 25 calls/month (shared)">ไม่เกิน 25 สาย/เดือน (รวมทั้งบ้าน)</li>
-      <li data-th="ผู้ดูแล 2 เบอร์ (ลูกหลานช่วยดู)" data-en="2 watcher numbers (family keeps watch)">ผู้ดูแล 2 เบอร์ (ลูกหลานช่วยดู)</li>
-      <li data-th="ทุกอย่างของ Plus: เหตุผล เทป ส่งออกหลักฐาน" data-en="Everything in Plus: reasons, tapes, evidence export">ทุกอย่างของ Plus: เหตุผล เทป ส่งออกหลักฐาน</li>
-      <li data-th="สรุปบ้านรายสัปดาห์ + ล็อคราคา 12 เดือน" data-en="Weekly household digest + 12-month price lock">สรุปบ้านรายสัปดาห์ + ล็อคราคา 12 เดือน</li>
-      <li data-th="เพิ่มคนในบ้าน +฿69/คน ได้อีก 50 นาที 25 สาย (สูงสุด 5 คน/บ้าน)" data-en="Extra member +$3/person: +50 min, +25 calls (max 5/household)">เพิ่มคนในบ้าน +฿69/คน ได้อีก 50 นาที 25 สาย (สูงสุด 5 คน/บ้าน)</li>
-      <li data-th="รายชื่อคนรู้จัก + safe word" data-en="Known contacts + safe word">รายชื่อคนรู้จัก + safe word</li>
-    </ul>
-    <a class="btn primary" href="/start.html?plan=family-149" data-th="เริ่ม Family" data-en="Start Family">เริ่ม Family</a>
-    <p class="fine"><a href="/family.html" data-th="รายละเอียด Family →" data-en="Family details →">รายละเอียด Family →</a></p>
+  <div class="faq">
+    <details><summary data-th="มีค่าอะไรแอบแฝงไหม?" data-en="Any hidden fees?">มีค่าอะไรแอบแฝงไหม?</summary><div data-th="ไม่มี ค่า AI รับสาย สรุป และแจ้งเตือน รวมในค่าสมาชิกแล้ว สิ่งเดียวที่อยู่นอกเราคือค่าโอนสาย ซึ่งคิดตามแพ็กเกจมือถือของเครื่องที่โอน" data-en="No. Answering, summaries and alerts are all in the membership. The only thing outside it is call forwarding, billed by the forwarding phone’s mobile plan.">ไม่มี ค่า AI รับสาย สรุป และแจ้งเตือน รวมในค่าสมาชิกแล้ว สิ่งเดียวที่อยู่นอกเราคือค่าโอนสาย ซึ่งคิดตามแพ็กเกจมือถือของเครื่องที่โอน</div></details>
+    <details><summary data-th="สายหรือนาทีหมดก่อนสิ้นเดือนทำยังไง?" data-en="What if calls or minutes run out early?">สายหรือนาทีหมดก่อนสิ้นเดือนทำยังไง?</summary><div id="faqTopup" data-th="เราเตือนก่อนใกล้หมด และคุณเติมเพิ่มได้เองในห้องของฉัน โควตารีเซ็ตทุกต้นเดือน" data-en="We warn you before you run low, and you can top up yourself in My dashboard. Quota resets every month.">เราเตือนก่อนใกล้หมด และคุณเติมเพิ่มได้เองในห้องของฉัน โควตารีเซ็ตทุกต้นเดือน</div></details>
+    <details><summary data-th="เก็บบทสนทนานานแค่ไหน?" data-en="How long are transcripts kept?">เก็บบทสนทนานานแค่ไหน?</summary><div id="faqKeep" data-th="เก็บตามผลของสาย และลบเองได้ทีละสายในห้องของฉัน" data-en="It depends on the verdict, and you can delete any call yourself in My dashboard.">เก็บตามผลของสาย และลบเองได้ทีละสายในห้องของฉัน</div></details>
+    <details><summary data-th="เปลี่ยนแผนได้ไหม?" data-en="Can I switch plans?">เปลี่ยนแผนได้ไหม?</summary><div data-th="ได้ กดเปลี่ยนเองในห้องของฉัน จำนวนเบอร์และโควตาปรับตามแผนใหม่" data-en="Yes — switch yourself in My dashboard. Phones and quota follow the new plan.">ได้ กดเปลี่ยนเองในห้องของฉัน จำนวนเบอร์และโควตาปรับตามแผนใหม่</div></details>
+    <details><summary data-th="ยกเลิกแล้วโดนเก็บเงินอีกไหม?" data-en="Will I be charged after cancelling?">ยกเลิกแล้วโดนเก็บเงินอีกไหม?</summary><div data-th="ไม่ เราไม่ต่ออายุอัตโนมัติ ยกเลิกแล้วไม่มีการเรียกเก็บรอบถัดไป" data-en="No. Nothing renews automatically, so cancelling means no next charge.">ไม่ เราไม่ต่ออายุอัตโนมัติ ยกเลิกแล้วไม่มีการเรียกเก็บรอบถัดไป</div></details>
+    <details><summary data-th="ธนาคาร ค่ายมือถือ หรือองค์กร ใช้ได้ไหม?" data-en="Banks, carriers or organisations?">ธนาคาร ค่ายมือถือ หรือองค์กร ใช้ได้ไหม?</summary><div data-th="ได้ ใครอะใช้เป็นบริการคุ้มครองลูกค้าผู้สูงอายุได้ โดยใช้เบอร์ AI กลางเบอร์เดียวกัน" data-en="Yes. Krai-A can run as a protection service for senior customers on the same central AI number.">ได้ ใครอะใช้เป็นบริการคุ้มครองลูกค้าผู้สูงอายุได้ โดยใช้เบอร์ AI กลางเบอร์เดียวกัน</div></details>
   </div>
-</div>
-<p class="ppp-full" data-th="ราคาบาทคือราคา PPP สำหรับประเทศไทย (อิงอัตรา $1 ≈ ฿35) — เปลี่ยนภาษาเป็น EN เพื่อดูราคา USD มาตรฐาน" data-en="USD global prices — switch to TH to see PPP-adjusted Thai baht pricing.">ราคาบาทคือราคา PPP สำหรับประเทศไทย (อิงอัตรา $1 ≈ ฿35) — เปลี่ยนภาษาเป็น EN เพื่อดูราคา USD มาตรฐาน</p>
-<div class="scope rv" data-th="<b>โปรดทราบ — ค่าโอนสายจ่ายตามจริงกับเครือข่าย:</b> ค่าบริการโทรศัพท์ในการโอนสาย ผู้ใช้จ่ายรายนาทีตามแพ็คเกจของผู้ใช้บริการเครือข่ายมือถือ" data-en="<b>Note — forwarding is billed by your carrier:</b> call-forwarding carrier charges apply: you pay per minute according to your mobile plan."><b>โปรดทราบ — ค่าโอนสายจ่ายตามจริงกับเครือข่าย:</b> ค่าบริการโทรศัพท์ในการโอนสาย ผู้ใช้จ่ายรายนาทีตามแพ็คเกจของผู้ใช้บริการเครือข่ายมือถือ</div>
+</div></section>
+</main>
 
-<div class="cancel-strip rv">
-  <div style="flex:1;min-width:220px"><b data-th="ยกเลิกได้ทุกเมื่อ — สองชั้น" data-en="Cancel anytime — two layers">ยกเลิกได้ทุกเมื่อ — สองชั้น</b><br><span data-th="ชั้น 1: กด" data-en="Layer 1: dial">ชั้น 1: กด</span> <code>##21#</code> <span data-th="จากมือถือเพื่อหยุดโอนสายทันที · ชั้น 2: กดปุ่มยกเลิกในห้องของฉัน ไม่ต้องโทรหาใคร ไม่มีค่าปรับ" data-en="to stop forwarding instantly · Layer 2: cancel in My account. No calls, no fees.">จากมือถือเพื่อหยุดโอนสายทันที · ชั้น 2: กดปุ่มยกเลิกในห้องของฉัน ไม่ต้องโทรหาใคร ไม่มีค่าปรับ</span></div>
-  <a class="btn sun" href="/start.html?plan=starter-20" data-th="ลองฟรี 7 วัน" data-en="Try free 7 days">ลองฟรี 7 วัน</a>
-</div>
-
-<div class="trust-row">
-  <div class="trust rv"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><polyline points="8.5 12.5 11 15 15.5 9.5"/></svg></span><h3 data-th="ทดลองโดยไม่ต้องผูกบัตร" data-en="Trial with no card">ทดลองโดยไม่ต้องผูกบัตร</h3><p data-th="สมัครด้วยเบอร์มือถือ + OTP เท่านั้น ครบ 7 วันค่อยตัดสินใจจ่าย — ไม่มีตัดเงินเงียบ" data-en="Sign up with mobile + OTP only. Decide after 7 days — never silently charged.">สมัครด้วยเบอร์มือถือ + OTP เท่านั้น ครบ 7 วันค่อยตัดสินใจจ่าย — ไม่มีตัดเงินเงียบ</p></div>
-  <div class="trust rv"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="5" y1="19" x2="5" y2="13"/><line x1="12" y1="19" x2="12" y2="8"/><line x1="19" y1="19" x2="19" y2="4"/></svg></span><h3 data-th="โควต้าโปร่งใส ดูได้สด" data-en="Transparent quota, live view">โควต้าโปร่งใส ดูได้สด</h3><p data-th="สายนาทีใช้ไปดูได้ในห้องของฉันตลอด สายที่ระบบตัดทิ้งว่าไม่ใช่สมาชิกไม่นับโควต้า" data-en="Minutes used are always visible in My account. Rejected non-member calls never count.">สายนาทีใช้ไปดูได้ในห้องของฉันตลอด สายที่ระบบตัดทิ้งว่าไม่ใช่สมาชิกไม่นับโควต้า</p></div>
-  <div class="trust rv"><span class="ic"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><h3 data-th="คลิปเสียงเป็นของคุณ" data-en="Your recordings, yours">คลิปเสียงเป็นของคุณ</h3><p data-th="ดูได้เฉพาะบัญชีคุณกับผู้ดูแลที่เพิ่มไว้ ขอลบทั้งหมดได้ทุกเมื่อ ไม่มีขายข้อมูล" data-en="Visible only to your account and watchers. Delete all on request. Never sold.">ดูได้เฉพาะบัญชีคุณกับผู้ดูแลที่เพิ่มไว้ ขอลบทั้งหมดได้ทุกเมื่อ ไม่มีขายข้อมูล</p></div>
-</div>
-
-<div class="scope rv" data-th="<b>พูดตรง ๆ — อะไรที่เงินนี้กันไม่ได้:</b> วิดีโอคอลไลน์ แชทแอปหลอกลงทุน SMS ลิงก์ปลอม อยู่นอกขอบเขตการรับสาย — แต่ทุกแผนใช้เบอร์ AI เป็น 'สายด่วนตรวจหลอก' ได้ โทรถาม AI ก่อนโอนเงินทุกครั้ง" data-en="<b>Honest scope — what this can't stop:</b> LINE video calls, investment-app chats, SMS phishing links are outside call screening — but every plan's AI number works as a scam hotline: call AI before any transfer."><b>พูดตรง ๆ — อะไรที่เงินนี้กันไม่ได้:</b> วิดีโอคอลไลน์ แชทแอปหลอกลงทุน SMS ลิงก์ปลอม อยู่นอกขอบเขตการรับสาย — แต่ทุกแผนใช้เบอร์ AI เป็น “สายด่วนตรวจหลอก” ได้ โทรถาม AI ก่อนโอนเงินทุกครั้ง</div>
-
-<div class="app-card rv" style="margin-top:22px"><h2 data-th="องค์กร ธนาคาร และค่ายมือถือ" data-en="Banks, carriers & enterprise">องค์กร ธนาคาร และค่ายมือถือ</h2>
-<p class="sub" data-th="ซื้อเป็นฟีเจอร์แถมบัญชีผู้สูงอายุทีละแสนราย — ลดเคสโกง ลดคอลเซ็นเตอร์รับเรื่องร้องเรียน ได้คลังสคริปต์มิจพร้อมคลิปเสียงประกอบ และเบอร์ไทยพร้อม zero-rate ค่าโอนสาย" data-en="Bundle it with senior accounts at hundred-thousand scale — fewer fraud cases, fewer complaint calls, plus a recorded scam-script library and zero-rated Thai numbers.">ซื้อเป็นฟีเจอร์แถมบัญชีผู้สูงอายุทีละแสนราย — ลดเคสโกง ลดคอลเซ็นเตอร์รับเรื่องร้องเรียน ได้คลังสคริปต์มิจพร้อมคลิปเสียงประกอบ และเบอร์ไทยพร้อม zero-rate ค่าโอนสาย</p>
-<a class="btn dark" href="/start.html" data-th="คุยกับทีมขาย" data-en="Talk to sales">คุยกับทีมขาย</a></div>
-
-<div class="app-card rv"><h2 data-th="คำถามเรื่องเงิน" data-en="Money questions">คำถามเรื่องเงิน</h2>
-<div class="faq">
-<details open><summary data-th="มีค่าอะไรแอบแฝงไหม?" data-en="Any hidden fees?">มีค่าอะไรแอบแฝงไหม?</summary><div data-th="ไม่มี — ค่าโทรเข้าเบอร์ AI ค่า AI ค่าแจ้งเตือน รวมในค่าสมาชิกหมดแล้ว ขาโอนสายคิดตามแพ็กเกจมือถือของคุณ (โทรไม่อั้น = 0 บาท)" data-en="None — inbound, AI, and alert costs are all inside the membership. The forwarding leg bills per your mobile plan (unlimited = $0).">ไม่มี — ค่าโทรเข้าเบอร์ AI ค่า AI ค่าแจ้งเตือน รวมในค่าสมาชิกหมดแล้ว ขาโอนสายคิดตามแพ็กเกจมือถือของคุณ (โทรไม่อั้น = 0 บาท)</div></details>
-<details><summary data-th="เกินโควต้าแล้วเป็นยังไง?" data-en="What happens past quota?">เกินโควต้าแล้วเป็นยังไง?</summary><div data-th="แจ้งเตือนก่อนหมดโควต้า เกินแล้วไม่ตัดการป้องกัน — เติมแพ็กเสริม (+10 นาที ฿29 / +30 นาที ฿69 ไม่หมดอายุ) หรือเปิดเติมอัตโนมัติ มีเพดานแข็ง 200 นาที/เดือนกันบั๊กและโดนยิงสายถล่ม" data-en="We warn before quota runs out, and protection never cuts past quota — top up with packs (+10 min $2 / +30 min $5, never expire) or enable auto top-up. 200-min/month hard cap against bugs and flood attacks.">แจ้งเตือนก่อนหมดโควต้า เกินแล้วไม่ตัดการป้องกัน — เติมแพ็กเสริม (+10 นาที ฿29 / +30 นาที ฿69 ไม่หมดอายุ) หรือเปิดเติมอัตโนมัติ มีเพดานแข็ง 200 นาที/เดือนกันบั๊กและโดนยิงสายถล่ม</div></details>
-<details><summary data-th="เปลี่ยนแผนกลางเดือนได้ไหม?" data-en="Can I switch plans mid-month?">เปลี่ยนแผนกลางเดือนได้ไหม?</summary><div data-th="ได้ กดเปลี่ยนในห้องของฉันได้เองทันที โควต้าและจำนวนเบอร์ปรับตามแผนใหม่" data-en="Yes — switch yourself anytime in My account. Quota and number limits follow the new plan.">ได้ กดเปลี่ยนในห้องของฉันได้เองทันที โควต้าและจำนวนเบอร์ปรับตามแผนใหม่</div></details>
-<details><summary data-th="ยกเลิกแล้วเงินคืนไหม?" data-en="Refunds on cancel?">ยกเลิกแล้วเงินคืนไหม?</summary><div data-th="รายเดือนยกเลิกได้ทุกเมื่อ ใช้ถึงสิ้นรอบบิล ไม่มีค่าปรับ คลิปเสียงลบได้ตามคำขอ" data-en="Monthly cancels anytime through the billing cycle. No fees. Recordings deleted on request.">รายเดือนยกเลิกได้ทุกเมื่อ ใช้ถึงสิ้นรอบบิล ไม่มีค่าปรับ คลิปเสียงลบได้ตามคำขอ</div></details>
-</div></div>
-</div>
-
-<footer class="foot"><div class="foot-grid">
-  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
-    <p style="margin-top:10px" data-th="AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ" data-en="AI answers unknown calls, sends scammers away, flags important calls back.">AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ</p></div>
-  <div><h4 data-th="ผลิตภัณฑ์" data-en="Product">ผลิตภัณฑ์</h4>
-    <a href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
-    <a href="/family.html" data-th="Family" data-en="Family">Family</a>
-    <a href="/" data-th="หน้าแรก" data-en="Home">หน้าแรก</a>
-    <a href="/demo.html">Live demo</a></div>
-  <div><h4 data-th="ช่วยเหลือ" data-en="Help">ช่วยเหลือ</h4>
-    <a href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-    <a href="/start.html" data-th="สมัครใช้งาน" data-en="Sign up">สมัครใช้งาน</a>
-    <a href="/dashboard.html" data-th="ห้องของฉัน" data-en="My account">ห้องของฉัน</a></div>
-  <div><h4 data-th="ความน่าเชื่อถือ" data-en="Trust">ความน่าเชื่อถือ</h4>
-    <a href="/pricing.html" data-th="ยกเลิกได้ทุกเมื่อ" data-en="Cancel anytime">ยกเลิกได้ทุกเมื่อ</a>
-    <a href="/how-it-works.html" data-th="ขอบเขตที่กันไม่ได้" data-en="Honest scope">ขอบเขตที่กันไม่ได้</a>
-    <a href="/dashboard.html" data-th="ลบข้อมูลของฉัน" data-en="Delete my data">ลบข้อมูลของฉัน</a>
-    <a href="/stats.html" data-th="สถิติโปร่งใส" data-en="Live stats">สถิติโปร่งใส</a></div>
-</div><div class="foot-base"><span>© 2026 Krai-a</span><span data-th="สายแปลกทุกสาย มี AI รับแทน" data-en="Every unknown call, answered by AI.">สายแปลกทุกสาย มี AI รับแทน</span></div></footer>
-<p class="foot-note" style="background:#fff;margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
-<script type="module">import { initNav, initReveal } from '/site.js'; initNav('pricing'); initReveal();</script>
+<footer class="foot"></footer>
+<script type="module" src="/js/pricing.js"></script>
 </body>
 </html>

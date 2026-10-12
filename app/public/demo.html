@@ -2,342 +2,146 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light only">
-<link rel="icon" href="data:,">
-<title>Live demo — ใครอะ</title>
-<meta name="description" content="เดโมสด: เลือกสคริปต์มิจฉาชีพ ดู AI รับสายและตัดสินแบบเรียลไทม์">
+<link rel="icon" href="/favicon.ico">
+<title>เดโม — ใครอะ</title>
+<meta name="description" content="ฟังสายมิจฉาชีพตัวอย่าง แล้วดู AI ใครอะ รับสายแทน ตัดสิน และส่งสรุปเข้า LINE">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@500&display=swap">
 <link rel="stylesheet" href="/site.css">
-<style>
-/* ---------- demo hero (verdict-led) ---------- */
-.demo-hero{background:linear-gradient(160deg,#e8f8ee 0%,#f0f4f3 40%,#e0f2e9 100%);border-bottom:1px solid var(--line);padding:64px 0 56px;position:relative;overflow:hidden}
-.demo-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:44px;align-items:center;position:relative;z-index:1}
-.demo-hero h1{font-size:clamp(40px,5.2vw,62px);line-height:1.22;letter-spacing:-.015em;margin:14px 0 14px;font-weight:800;text-wrap:balance}
-.demo-hero .hl{background:linear-gradient(transparent 58%,rgba(6,199,85,.28) 58%,rgba(6,199,85,.28) 96%,transparent 96%);padding:0 6px}
-.demo-hero .lede{font-size:19px;color:var(--ink2);max-width:34em}
-.demo-cta{display:flex;gap:12px;margin-top:24px;flex-wrap:wrap}
-.demo-cta .btn{border-radius:999px}
-.demo-proof{margin-top:16px;font-size:14.5px;color:var(--ink2);font-weight:600}
-.demo-status{margin-top:14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.engine-foot{font-family:var(--mono);font-size:12px;color:var(--ink3)}
-/* verdict board: light premium card, verdict chips first */
-.vboard{background:linear-gradient(180deg,#fff,#F2FAF5);border:1px solid var(--line);border-top:5px solid var(--brand);border-radius:20px;padding:24px 24px 20px;color:var(--ink2);box-shadow:0 0 0 8px rgba(6,199,85,.06),var(--sh);position:relative;overflow:hidden}
-.vboard::after{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line-soft) 1px,transparent 1px),linear-gradient(90deg,var(--line-soft) 1px,transparent 1px);background-size:26px 26px;pointer-events:none}
-.vboard>*{position:relative;z-index:1}
-.vboard .live-pill{color:var(--ink);margin-bottom:14px}
-.vchips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
-.vchip{display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:800;border-radius:10px;padding:7px 12px 7px 8px;border:1px solid var(--line);background:#fff;box-shadow:var(--sh-sm)}
-.vchip .badge{flex:none}
-.vchip span:last-child{color:var(--ink2);font-weight:600;font-size:13px}
-.vsteps{list-style:none;display:flex;flex-direction:column}
-.vsteps li{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-top:1px solid var(--line-soft);font-size:15px}
-.vsteps li b{color:var(--ink)}
-.vsteps .n{flex:none;width:26px;height:26px;border-radius:8px;background:var(--brand-soft);color:var(--brand-deep);font-size:13.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono)}
-.vboard .vfoot{margin-top:12px;font-size:13.5px;color:var(--ink3)}
-/* ---------- demo number strip ---------- */
-.demo-num{background:linear-gradient(180deg,#EDF7F0,#fff);border:1px solid #BDE5C8;color:var(--ink);border-radius:14px;padding:20px 26px;display:grid;grid-template-columns:auto auto;gap:6px 32px;margin-bottom:20px;align-items:center;box-shadow:var(--sh-sm)}
-.demo-num .num{font-family:var(--mono);font-size:26px;font-weight:700}
-.demo-num .code{font-family:var(--mono);font-size:21px;font-weight:700;color:var(--ok)}
-.demo-num p{grid-column:1/-1;font-size:14px;color:var(--ink2);margin:4px 0 0}
-/* ---------- console ---------- */
-#console{scroll-margin-top:96px}
-.console-head{display:flex;align-items:baseline;gap:12px;margin:6px 0 16px}
-.console-head h2{font-size:24px;font-weight:800;letter-spacing:-.01em}
-.console-head p{color:var(--ink2);font-size:15px}
-.app-card.console{padding:24px}
-.app-card.console h2.dstep{font-size:17px;display:flex;align-items:center;gap:10px;margin:16px 0 8px;border:none;box-shadow:none;background:none;padding:0}
-.app-card.console h2.dstep:first-of-type{margin-top:14px}
-.app-card.console h2.dstep .sn{flex:none;width:28px;height:28px;border-radius:9px;background:var(--ink);color:#fff;font-size:14.5px;font-weight:800;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono)}
-/* segmented tabs */
-.tabs{display:flex;gap:4px;margin-bottom:14px;background:var(--mist);border:1px solid var(--line);border-radius:12px;padding:4px}
-.tab{flex:1;background:transparent;border:none;border-radius:9px;padding:10px 12px;cursor:pointer;font-family:var(--font);font-weight:800;font-size:14.5px;color:var(--ink3);transition:background .2s,color .2s,box-shadow .2s}
-.tab.on{background:#fff;color:var(--ink);box-shadow:var(--sh-sm)}
-#tabVoice[hidden]{display:none}
-/* budget meter */
-.budget-wrap{margin:0 0 12px}
-.budget-line{font-size:13px;font-weight:700;color:var(--ink2);background:#fff;border:1px dashed var(--line);border-radius:10px 10px 0 0;border-bottom:none;padding:7px 12px;margin:0}
-.budget-line:empty{display:none}
-.budget-wrap:has(.budget-line:empty) .meter{display:none}
-.budget-wrap .meter{height:7px;background:var(--mist);border:1px solid var(--line);border-top:1px dashed var(--line);border-radius:0 0 10px 10px;overflow:hidden;margin:0}
-.budget-wrap .meter i{display:block;height:100%;width:0;background:var(--brand);border-radius:0 4px 4px 0;transition:width .5s cubic-bezier(.32,.72,0,1)}
-.budget-wrap .meter.hot i{background:var(--bad)}
-/* scenario picker */
-.scn-pick{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:6px}
-.scn-pick .script{text-align:left;background:#fff;border:1px solid var(--line);border-top:5px solid var(--line);border-radius:12px;padding:10px 12px;cursor:pointer;font-family:var(--font);box-shadow:var(--sh-sm);transition:border-color .15s,transform .3s cubic-bezier(.32,.72,0,1),box-shadow .3s cubic-bezier(.32,.72,0,1)}
-.scn-pick .script:hover{transform:translateY(-2px);box-shadow:var(--sh)}
-.scn-pick .script[data-exp="SCAM"]{border-top-color:var(--bad)}
-.scn-pick .script[data-exp="LEGIT"]{border-top-color:var(--ok)}
-.scn-pick .script[data-exp="UNSURE"]{border-top-color:var(--warn)}
-.scn-pick .script.on{border-color:var(--brand-deep);box-shadow:0 0 0 3px var(--brand-soft)}
-.scn-pick .script b{display:block;font-size:13.5px;line-height:1.4}
-.scn-pick .script .meta{display:block;font-size:11.5px;color:var(--ink3);margin-top:3px;font-family:var(--mono)}
-.tag{font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:.04em;padding:2px 8px;border-radius:6px;margin-left:6px;border:1px solid var(--line);white-space:nowrap}
-.tag.SCAM{background:var(--bad);color:#fff;border-color:var(--bad)}
-.tag.LEGIT{background:var(--ok);color:#fff;border-color:var(--ok)}
-.tag.UNSURE{background:var(--warn);color:var(--warn-ink);border-color:var(--warn)}
-.exp-label{display:block;font-size:11.5px;font-weight:800;margin-top:5px}
-.exp-label.SCAM{color:var(--bad)}
-.exp-label.LEGIT{color:var(--ok)}
-.exp-label.UNSURE{color:#92400E}
-/* caller lines */
-.lines{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;max-height:200px;overflow:auto}
-.line{text-align:left;background:#fff;border:1px solid var(--line);border-radius:9px;padding:8px 12px;font-size:13.5px;cursor:pointer;color:var(--ink2);font-family:var(--font);transition:border-color .15s,color .15s}
-.line:hover:not(:disabled){border-color:var(--brand-deep);color:var(--ink)}
-.line:disabled{opacity:.45;cursor:default}
-.muted{color:var(--ink3);font-size:14px}
-/* chat input row */
-.chatrow{display:flex;gap:8px}
-.chatrow input{flex:1;min-width:0;border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:15px;font-family:var(--font);background:#fff}
-.chatrow input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px var(--brand-soft)}
-.btnrow{display:flex;gap:8px;flex-wrap:wrap}
-/* status pill (console state) */
-.status-pill{display:inline-flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13.5px;font-weight:800;box-shadow:var(--sh-sm);color:var(--ink2)}
-.status-pill .dot{width:10px;height:10px;border-radius:50%;background:#c9c9c9}
-.status-pill.live .dot{background:#06C755;box-shadow:0 0 8px #06C755;animation:blink 1.8s infinite}
-.status-pill.mock .dot{background:var(--warn)}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-/* verdict panel */
-.verdict{border-radius:14px;padding:14px 16px;margin-bottom:12px;border:1px solid var(--line);background:var(--mist);transition:background .3s,border-color .3s}
-.verdict.SCAM{background:var(--bad-soft);border-color:#F3B8B8}
-.verdict.LEGIT{background:var(--ok-soft);border-color:#B7E4C9}
-.verdict.UNSURE{background:var(--warn-soft);border-color:#E7C77E}
-.verdict.pop{animation:vpop .45s cubic-bezier(.32,.72,0,1)}
-@keyframes vpop{from{transform:scale(.985)}to{transform:scale(1)}}
-.verdict .v-top{display:flex;align-items:center;gap:10px;margin-bottom:6px}
-.verdict .badge{font-size:13px;padding:4px 12px}
-.verdict .conf{font-size:12.5px;color:var(--ink2);font-family:var(--mono)}
-.verdict .v-reason{font-size:16.5px;font-weight:800;line-height:1.5}
-.verdict .v-reason-en{font-size:13.5px;color:var(--ink2)}
-.confbar{height:6px;background:rgba(0,0,0,.08);border-radius:4px;overflow:hidden;margin:8px 0 2px}
-.confbar i{display:block;height:100%;width:0;border-radius:4px;background:var(--ink);transition:width .5s cubic-bezier(.32,.72,0,1)}
-.verdict.SCAM .confbar i{background:var(--bad)}
-.verdict.LEGIT .confbar i{background:var(--ok)}
-.verdict.UNSURE .confbar i{background:var(--warn)}
-.signals{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
-.signals span{font-size:11.5px;font-weight:700;background:rgba(0,0,0,.07);padding:2px 9px;border-radius:6px}
-.signals:empty{display:none}
-/* transcript */
-.transcript{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow:auto;padding:2px}
-.bubble{max-width:88%;padding:9px 13px;border-radius:4px 14px 14px 14px;font-size:14.5px;border:1px solid var(--line);background:#fff;animation:bin .3s cubic-bezier(.32,.72,0,1)}
-.bubble.assistant{align-self:flex-start;background:var(--brand-soft);border-color:#BDE5C8}
-.bubble.caller{align-self:flex-end;background:var(--warn-soft);border-color:#E7C77E;border-radius:14px 14px 4px 14px}
-@keyframes bin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.bubble .who{display:block;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);margin-bottom:2px}
-/* notify preview (LINE-adapter card) */
-.notify{background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;font-size:13.5px;min-height:120px}
-.notify .n-head{display:flex;align-items:center;gap:8px;padding:9px 14px;font-weight:800;font-size:13px;border-bottom:1px solid var(--line);background:var(--mist);color:var(--ink2)}
-.notify .n-head .badge{margin-left:auto}
-.notify .n-body{padding:12px 14px;white-space:pre-wrap}
-.notify .n-dlv{padding:0 14px 12px;font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
-.notify.empty .n-body{color:var(--ink3)}
-.notify.SCAM{border-color:#F3B8B8}
-.notify.SCAM .n-head{background:var(--bad-soft);color:var(--bad)}
-.notify.LEGIT{border-color:#B7E4C9}
-.notify.LEGIT .n-head{background:var(--ok-soft);color:var(--ok)}
-.notify.UNSURE{border-color:#E7C77E}
-.notify.UNSURE .n-head{background:var(--warn-soft);color:#92400E}
-/* history */
-.history{display:flex;flex-direction:column;gap:2px;max-height:220px;overflow:auto}
-.hrow{display:flex;align-items:center;gap:10px;font-size:13.5px;border-bottom:1px dashed var(--line);padding:8px 2px;color:var(--ink2)}
-.hrow:last-child{border-bottom:none}
-.hrow .hdot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--ink3)}
-.hrow .hdot.SCAM{background:var(--bad)}
-.hrow .hdot.LEGIT{background:var(--ok)}
-.hrow .hdot.UNSURE{background:var(--warn)}
-.hrow b{margin-left:auto;font-family:var(--mono);font-size:12px;flex:none}
-/* mic */
-.mic-btn{width:64px;height:64px;border-radius:50%;border:1px solid var(--line);background:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:var(--sh-sm);flex:none;transition:border-color .2s,background .2s}
-.mic-btn:disabled{opacity:.45;cursor:default}
-.mic-btn.live{border-color:var(--bad);background:var(--bad-soft);animation:micpulse 1.6s ease-out infinite}
-@keyframes micpulse{0%{box-shadow:0 0 0 0 rgba(239,68,68,.35)}100%{box-shadow:0 0 0 14px rgba(239,68,68,0)}}
-.mic-btn svg{width:26px;height:26px;stroke:var(--ink);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.mic-btn.live svg{stroke:var(--bad)}
-.interim{min-height:22px;font-size:13.5px;color:var(--ink2);font-style:italic;margin:6px 0}
-.checkline{font-size:13.5px;color:var(--ink2);display:flex;gap:8px;align-items:center;margin-top:10px}
-.checkline input{width:18px;height:18px;accent-color:var(--brand-deep)}
-/* final CTA band */
-.demo-cta-band{margin-top:22px}
-@media(max-width:920px){
-  .demo-grid{grid-template-columns:1fr;gap:28px}
-  .demo-hero{padding:48px 0 40px}
-  .scn-pick{grid-template-columns:1fr 1fr}
-  .demo-num{grid-template-columns:1fr}
-  .console-head{flex-direction:column;gap:2px}
-}
-@media (prefers-reduced-motion:reduce){
-  .status-pill.live .dot,.mic-btn.live,.bubble,.verdict.pop{animation:none}
-  .scn-pick .script,.tab,.confbar i,.budget-wrap .meter i{transition:none}
-}
-</style>
+<link rel="stylesheet" href="/demo.css">
+<link rel="modulepreload" href="/demo-player.js">
 </head>
-<body data-title-th="Live demo — ใครอะ" data-title-en="Live demo — Krai-a">
-<nav class="nav"><div class="nav-in">
-  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
-  <div class="nav-links">
-    <a data-page="features" href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
-    <a data-page="how" href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-    <a data-page="family" href="/family.html" data-th="Family" data-en="Family">Family</a>
-    <a data-page="pricing" href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
-    <a data-page="demo" href="/demo.html">Live demo</a>
-  </div>
-  <div class="nav-right">
-    <div class="lang" id="langToggle"><button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language / ภาษา"><svg class="lang-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg><span class="lang-cur" data-lang-cur>ไทย</span><span class="lang-chev" aria-hidden="true"></span></button><ul class="lang-menu" role="listbox" aria-label="Language / ภาษา" hidden><li role="option" tabindex="-1" data-lang="th" aria-selected="true"><span class="lang-code">TH</span><span>ไทย</span><span class="lang-tick" aria-hidden="true">✓</span></li><li role="option" tabindex="-1" data-lang="en" aria-selected="false"><span class="lang-code">EN</span><span>English</span><span class="lang-tick" aria-hidden="true">✓</span></li></ul></div>
-    <span id="navAuth" style="display:flex;gap:10px"></span>
-  </div>
-</div></nav>
+<body data-title-th="เดโม — ใครอะ" data-title-en="Demo — Krai-A">
+<nav class="nav"></nav>
 
-<header class="demo-hero dots"><div class="wrap demo-grid">
-  <div>
-    <span class="kicker" data-th="Live demo · โค้ดชุดเดียวกับสายจริง" data-en="Live demo · Same code as real calls">Live demo · โค้ดชุดเดียวกับสายจริง</span>
-    <h1 data-th="มิจโทรมา <span class='hl'>AI รับให้ดูสด ๆ</span>" data-en="A scammer calls. <span class='hl'>Watch AI take it live.</span>">มิจโทรมา <span class="hl">AI รับให้ดูสด ๆ</span></h1>
-    <p class="lede" data-th="เลือกมุกมิจ → ปล่อยปลายสายพูด → AI ตอบและตัดสินทุกเทิร์น → สรุปพร้อมคลิปเสียงถึงเจ้าของ — เดโมนี้รันวงจรเดียวกับสายโทรจริง" data-en="Pick a scam playbook → let the caller talk → AI answers and judges every turn → brief plus recording to the owner — this demo runs the same loop as real phone calls.">เลือกมุกมิจ → ปล่อยปลายสายพูด → AI ตอบและตัดสินทุกเทิร์น → สรุปพร้อมคลิปเสียงถึงเจ้าของ — เดโมนี้รันวงจรเดียวกับสายโทรจริง</p>
-    <div class="demo-cta">
-      <a class="btn big primary" href="#console" data-th="เริ่มสายจำลอง <span class='arr'>↓</span>" data-en="Start a simulated call <span class='arr'>↓</span>">เริ่มสายจำลอง <span class="arr">↓</span></a>
-      <a class="btn big light" href="/start.html" data-th="รับเบอร์ AI จริง" data-en="Get a real AI number">รับเบอร์ AI จริง</a>
+<main class="dm" id="main">
+  <header class="dm-head">
+    <h1 data-th="มิจโทรมา AI รับแทน" data-en="Scam call? AI picks up.">มิจโทรมา AI รับแทน</h1>
+    <p class="dm-lede" data-th="แตะหนึ่งสาย แล้วฟัง AI รับสายแทนแม่" data-en="Tap a call and hear the AI answer it for Mom.">แตะหนึ่งสาย แล้วฟัง AI รับสายแทนแม่</p>
+  </header>
+
+  <div class="dm-chips" id="chips" role="group" aria-label="สายตัวอย่าง / Sample calls">
+    <button type="button" class="chip" data-id="scam-police" aria-pressed="true"><span data-th="ตำรวจปลอม" data-en="Fake police">ตำรวจปลอม</span></button>
+    <button type="button" class="chip" data-id="scam-parcel" aria-pressed="false"><span data-th="พัสดุตกค้าง" data-en="Stuck parcel">พัสดุตกค้าง</span></button>
+    <button type="button" class="chip" data-id="scam-bank" aria-pressed="false"><span data-th="ธนาคารปลอม" data-en="Fake bank">ธนาคารปลอม</span></button>
+    <button type="button" class="chip" data-id="legit-hospital" aria-pressed="false"><span data-th="โรงพยาบาล" data-en="Hospital">โรงพยาบาล</span><span class="chip-hint" data-th="คนจริง" data-en="real">คนจริง</span></button>
+    <button type="button" class="chip" data-id="unsure-survey" aria-pressed="false"><span data-th="แบบสอบถาม" data-en="Survey">แบบสอบถาม</span><span class="chip-hint" data-th="ไม่ชัวร์" data-en="unsure">ไม่ชัวร์</span></button>
+  </div>
+
+  <section class="stage" id="stage" data-phase="idle" aria-label="สายตัวอย่าง / Sample call">
+    <div class="linecard" id="lineCard" role="status" hidden>
+      <span class="lc-app" aria-hidden="true">ค</span>
+      <div class="lc-main">
+        <div class="lc-top"><b data-th="ใครอะ" data-en="Krai-A">ใครอะ</b><span>LINE</span><time data-th="เมื่อสักครู่" data-en="now">เมื่อสักครู่</time></div>
+        <b class="lc-title" id="lcTitle"></b>
+        <p class="lc-body" id="lcBody"></p>
+      </div>
     </div>
-    <p class="demo-proof" data-th="ไม่ต้องสมัคร · ไม่ต้องผูกบัตร · กดเริ่มสายได้เลย" data-en="No signup · No card · Just press start">ไม่ต้องสมัคร · ไม่ต้องผูกบัตร · กดเริ่มสายได้เลย</p>
-    <div class="demo-status">
-      <span class="status-pill" id="status"><span class="dot"></span><span id="statusText">connecting…</span></span>
-      <span class="engine-foot" id="engineFoot"></span>
+
+    <div class="st-head">
+      <span class="st-av" id="stAv" aria-hidden="true"></span>
+      <div class="st-who">
+        <b class="st-num" id="stNum">081-999-0001</b>
+        <span class="st-claim" id="stClaim"></span>
+      </div>
+      <span class="st-time" id="stTime" aria-hidden="true">00:00</span>
+      <button type="button" class="st-pp" id="stPause" aria-pressed="false" aria-label="หยุดชั่วคราว" title="หยุดชั่วคราว"><span class="pp-ic" aria-hidden="true"></span></button>
     </div>
-  </div>
-  <div class="vboard">
-    <div class="live-pill"><span class="rec"></span><span data-th="คำตัดสิน 3 สี · ทุกเทิร์น" data-en="3 verdicts · every turn">คำตัดสิน 3 สี · ทุกเทิร์น</span><span class="eq" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></span></div>
-    <div class="vchips">
-      <div class="vchip"><span class="badge SCAM">SCAM</span><span data-th="แดง · มิจ ตัดสายทิ้ง" data-en="Red · scammer, hung up">แดง · มิจ ตัดสายทิ้ง</span></div>
-      <div class="vchip"><span class="badge LEGIT">LEGIT</span><span data-th="เขียว · คนจริง ฝากข้อความ" data-en="Green · legit, message taken">เขียว · คนจริง ฝากข้อความ</span></div>
-      <div class="vchip"><span class="badge UNSURE">UNSURE</span><span data-th="เหลือง · ไม่ชัวร์ ส่งให้คุณชี้ขาด" data-en="Yellow · unsure, you decide">เหลือง · ไม่ชัวร์ ส่งให้คุณชี้ขาด</span></div>
+
+    <div class="st-body">
+      <p class="st-prev" id="stPrev" aria-hidden="true"></p>
+      <div class="st-now" id="stNow" aria-live="polite">
+        <div class="st-sp" id="stSp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="stSpName"></span></div>
+        <p class="st-tx" id="stTx"></p>
+        <p class="st-tx2" id="stTx2" lang="th"></p>
+      </div>
+      <button type="button" class="st-play" id="stPlay">
+        <span class="st-play-ic" aria-hidden="true"></span>
+        <span class="st-play-tx"><b data-th="ฟังสายนี้" data-en="Play this call">ฟังสายนี้</b><span id="stPlaySub"></span></span>
+      </button>
     </div>
-    <ol class="vsteps">
-      <li><span class="n">1</span><span data-th="<b>เลือกมุกมิจ</b> — ตำรวจปลอม พัสดุตกค้าง อ้างธนาคาร…" data-en="<b>Pick a scam playbook</b> — fake police, stuck parcel, fake bank…"><b>เลือกมุกมิจ</b> — ตำรวจปลอม พัสดุตกค้าง อ้างธนาคาร…</span></li>
-      <li><span class="n">2</span><span data-th="<b>ปลายสายพูด</b> — กดประโยค พิมพ์เอง หรือพูดใส่ไมค์" data-en="<b>The caller talks</b> — tap a line, type, or speak into the mic">ปลายสายพูด — กดประโยค พิมพ์เอง หรือพูดใส่ไมค์</span></li>
-      <li><span class="n">3</span><span data-th="<b>AI ตัดสินทุกเทิร์น</b> — จับสัญญาณขู่ เร่ง ขอโอน" data-en="<b>AI judges every turn</b> — catching threats, pressure, transfer demands"><b>AI ตัดสินทุกเทิร์น</b> — จับสัญญาณขู่ เร่ง ขอโอน</span></li>
-      <li><span class="n">4</span><span data-th="<b>สรุปถึงเจ้าของ</b> — แจ้งเตือนแดง/เขียว/เหลืองพร้อมหลักฐาน" data-en="<b>Brief to the owner</b> — red/green/yellow alert with evidence"><b>สรุปถึงเจ้าของ</b> — แจ้งเตือนแดง/เขียว/เหลืองพร้อมหลักฐาน</span></li>
-    </ol>
-    <p class="vfoot" data-th="เลื่อนลง กดเริ่มสาย แล้วดูแผงคำตัดสินเปลี่ยนสีแบบเรียลไทม์" data-en="Scroll down, press start, and watch the verdict panel change color live.">เลื่อนลง กดเริ่มสาย แล้วดูแผงคำตัดสินเปลี่ยนสีแบบเรียลไทม์</p>
-  </div>
-</div></header>
 
-<div class="wrap page-body">
-  <div class="demo-num">
-    <div><div class="fwd-cap" style="margin:0" data-th="เบอร์ AI ที่รับสายนี้" data-en="AI number answering this call">เบอร์ AI ที่รับสายนี้</div><div class="num" id="demoNum">…</div></div>
-    <div><div class="fwd-cap" style="margin:0" data-th="ของจริงกดแค่นี้จากมือถือ" data-en="In real life, just dial this">ของจริงกดแค่นี้จากมือถือ</div><div class="code" id="demoFwd">…</div></div>
-    <p data-th="เบอร์นี้คือเบอร์จำลองของเดโม — สมัครเพื่อรับเบอร์จริงประจำบ้านคุณ แล้วกดโอนสายด้วยรหัสแบบเดียวกัน" data-en="This is the demo's simulated number — sign up to get your real home number, then forward with the same kind of code.">เบอร์นี้คือเบอร์จำลองของเดโม — สมัครเพื่อรับเบอร์จริงประจำบ้านคุณ แล้วกดโอนสายด้วยรหัสแบบเดียวกัน</p>
-  </div>
+    <div class="st-foot">
+      <div class="st-v" aria-live="polite">
+        <b class="vword" id="stV" data-v="">—</b>
+        <span class="vwhy" id="stWhy">AI จะตัดสินระหว่างคุย</span>
+      </div>
+      <span class="st-dots" id="stDots" aria-hidden="true"></span>
+    </div>
 
-  <div class="console-head">
-    <h2 data-th="ห้องลองสาย" data-en="Call simulator">ห้องลองสาย</h2>
-    <p data-th="ซ้ายคุมสาย ขวาดู AI ตัดสินสด — ลองขู่ ลองเร่ง ลองขอโอน แล้วดูสีเปลี่ยน" data-en="Drive the call on the left, watch AI judge live on the right — threaten, pressure, demand a transfer, watch it turn red.">ซ้ายคุมสาย ขวาดู AI ตัดสินสด — ลองขู่ ลองเร่ง ลองขอโอน แล้วดูสีเปลี่ยน</p>
-  </div>
-  <div class="dash-grid" id="console">
-    <section class="app-card console">
-      <div class="tabs" role="tablist">
-        <button id="tabBtnScript" class="tab on" data-th="สคริปต์มิจ" data-en="Scam script">สคริปต์มิจ</button>
-        <button id="tabBtnVoice" class="tab" data-th="คุยด้วยเสียง" data-en="Voice chat">คุยด้วยเสียง</button>
-      </div>
-      <div class="budget-wrap"><p id="budgetLine" class="budget-line"></p><div class="meter" aria-hidden="true"><i id="budgetBar"></i></div></div>
-      <p id="callNotice" class="sub" style="color:var(--bad);font-weight:700"></p>
-      <div id="tabScript" role="tabpanel">
-      <h2 class="dstep"><span class="sn">1</span><span data-th="เลือกมุกที่จะลอง" data-en="Pick a scam playbook">เลือกมุกที่จะลอง</span></h2>
-      <div id="scripts" class="scn-pick"><p style="color:var(--ink3)">loading…</p></div>
-      <h2 class="dstep"><span class="sn">2</span><span data-th="ปล่อยให้ปลายสายพูด" data-en="Let the caller talk">ปล่อยให้ปลายสายพูด</span></h2>
-      <p class="sub" data-th="(หรือสวมบทเอง พิมพ์ด้านล่าง)" data-en="(or play the part yourself — type below)">(หรือสวมบทเอง พิมพ์ด้านล่าง)</p>
-      <div id="scriptLines" class="lines"><p style="color:var(--ink3)" data-th="เริ่มสายก่อน" data-en="Start a call first.">เริ่มสายก่อน</p></div>
-      <div class="chatrow" style="margin-bottom:8px">
-        <input id="freeText" type="text" data-th-ph="พิมพ์เป็นปลายสาย… (ไทย/อังกฤษ)" data-en-ph="Type as the caller… (Thai/English)" placeholder="พิมพ์เป็นปลายสาย… (ไทย/อังกฤษ)" autocomplete="off">
-        <button id="sendBtn" class="btn primary small" disabled data-th="ส่ง" data-en="Send">ส่ง</button>
-      </div>
-      <div class="btnrow">
-        <button id="startBtn" class="btn dark small" data-th="เริ่มสาย" data-en="Start call">เริ่มสาย</button>
-        <button id="autoBtn" class="btn light small" disabled data-th="เล่นสคริปต์อัตโนมัติ" data-en="Auto-play script">เล่นสคริปต์อัตโนมัติ</button>
-        <button id="endBtn" class="btn light small" disabled data-th="วางสาย" data-en="End call">วางสาย</button>
-      </div>
-      <label class="checkline"><input type="checkbox" id="ttsToggle" checked> <span data-th="อ่านเสียงตอบ AI (Thai TTS ในเบราว์เซอร์)" data-en="Speak AI replies (browser Thai TTS)">อ่านเสียงตอบ AI (Thai TTS ในเบราว์เซอร์)</span></label>
-      </div>
-      <div id="tabVoice" role="tabpanel" hidden>
-      <h2 class="dstep"><span class="sn">V</span><span data-th="สวมบทปลายสาย แล้วพูดสด" data-en="Play the caller, live">สวมบทปลายสาย แล้วพูดสด</span></h2>
-      <p class="sub" data-th="สวมบทมิจ (หรือคนปกติ) แล้วคุยกับ AI สด ๆ — วงจรเดียวกับสายโทรจริง" data-en="Play the scammer (or a normal caller) and talk to the AI live — the same loop as a real phone call.">สวมบทมิจ (หรือคนปกติ) แล้วคุยกับ AI สด ๆ — วงจรเดียวกับสายโทรจริง</p>
-      <p id="voiceSupport" class="sub"></p>
-      <div style="display:flex;gap:12px;align-items:center;margin:10px 0">
-        <button id="micBtn" class="mic-btn" disabled aria-label="mic"><svg viewBox="0 0 24 24"><rect x="9" y="2" width="6" height="12" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><path d="M12 19v3"/></svg></button>
-        <div><b id="micLabel" data-th="กดแล้วพูด" data-en="Tap and talk">กดแล้วพูด</b><p id="voiceInterim" class="interim"></p></div>
-      </div>
-      <div class="chatrow" style="margin-bottom:8px">
-        <input id="voiceText" type="text" data-th-ph="หรือพิมพ์แทน…" data-en-ph="Or type instead…" placeholder="หรือพิมพ์แทน…" autocomplete="off">
-        <button id="voiceSendBtn" class="btn primary small" disabled data-th="ส่ง" data-en="Send">ส่ง</button>
-      </div>
-      <div class="btnrow">
-        <button id="vStartBtn" class="btn dark small" data-th="เริ่มสายเสียง" data-en="Start voice call">เริ่มสายเสียง</button>
-        <button id="vEndBtn" class="btn light small" disabled data-th="วางสาย" data-en="End call">วางสาย</button>
-      </div>
-      <label class="checkline"><input type="checkbox" id="autoListen"> <span data-th="ฟังต่อเนื่อง (ถาม-ตอบยาว)" data-en="Keep listening (long back-and-forth)">ฟังต่อเนื่อง (ถาม-ตอบยาว)</span></label>
-      <label class="checkline"><input type="checkbox" id="ttsToggleVoice" checked> <span data-th="อ่านเสียงตอบ AI" data-en="Speak AI replies">อ่านเสียงตอบ AI</span></label>
-      </div>
-    </section>
+    <div class="st-end" id="stEnd" hidden>
+      <button type="button" class="btn light" id="stAgain"><span aria-hidden="true">↻</span> <span data-th="ฟังอีกครั้ง" data-en="Play again">ฟังอีกครั้ง</span></button>
+      <a class="btn primary" href="/start.html" data-th="ให้ AI รับสายแทนคนที่คุณรัก →" data-en="Let AI answer for your loved ones →">ให้ AI รับสายแทนคนที่คุณรัก →</a>
+    </div>
 
-    <section class="app-card console">
-      <h2 class="dstep"><span class="sn">◉</span><span data-th="ฟังสด + คำตัดสิน" data-en="Live transcript + verdict">ฟังสด + คำตัดสิน</span></h2>
-      <div id="verdict" class="verdict none">
-        <div class="v-top"><span id="vBadge" class="badge">—</span><span id="vConf" class="conf"></span></div>
-        <div id="vReason" class="v-reason" data-th="ยังไม่มีสาย — เลือกสคริปต์แล้วกดเริ่มสาย" data-en="No call yet. Pick a scenario and press Start call.">ยังไม่มีสาย — เลือกสคริปต์แล้วกดเริ่มสาย</div>
-        <div id="vReasonEn" class="v-reason-en"></div>
-        <div class="confbar" aria-hidden="true"><i id="vConfBar"></i></div>
-        <div id="vSignals" class="signals"></div>
-      </div>
-      <div id="transcript" class="transcript"><p style="color:var(--ink3)" data-th="บทสนทนาจะไหลมาทีละเทิร์น" data-en="Transcript will stream here turn by turn.">บทสนทนาจะไหลมาทีละเทิร์น</p></div>
-    </section>
+  </section>
+
+  <div class="dm-ctl" id="ctl" data-on="false">
+    <button type="button" class="ctl" id="ctlStop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/></svg><span data-th="หยุดเล่น" data-en="Stop">หยุดเล่น</span></button>
+    <button type="button" class="ctl" id="ctlMute" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ic-on" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z M15.5 9a4 4 0 0 1 0 6 M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="ic-off" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z M16 9.5l5 5 M21 9.5l-5 5"/></svg><span id="ctlMuteTx">ปิดเสียง</span></button>
+    <button type="button" class="ctl" id="ctlSkip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6l9 6-9 6z M18 6v12"/></svg><span data-th="ข้าม" data-en="Skip">ข้าม</span></button>
+    <button type="button" class="ctl" id="ctlReplay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3 M4.5 4.5v4h4"/></svg><span data-th="เริ่มใหม่" data-en="Restart">เริ่มใหม่</span></button>
   </div>
 
-  <div class="dash-grid">
-    <section class="app-card console">
-      <h2 class="dstep"><span class="sn">!</span><span data-th="แจ้งเตือนถึงเจ้าของ" data-en="Alert to the owner">แจ้งเตือนถึงเจ้าของ</span></h2>
-      <p class="sub" data-th="(ตัวอย่าง adapter — โปรดักชันส่งผ่าน LINE ได้)" data-en="(adapter preview — production pushes via LINE)">(ตัวอย่าง adapter — โปรดักชันส่งผ่าน LINE ได้)</p>
-      <div id="notify" class="notify empty"><div class="n-head"><span data-th="LINE → เจ้าของ" data-en="LINE → owner">LINE → เจ้าของ</span></div><div class="n-body"><p style="color:var(--ink3)" data-th="ปรากฏเมื่อสายจบ" data-en="Appears when the call ends.">ปรากฏเมื่อสายจบ</p></div></div>
-    </section>
-    <section class="app-card console">
-      <h2 class="dstep"><span class="sn">≣</span><span data-th="สายที่ลองไปแล้ว" data-en="Calls you've tried">สายที่ลองไปแล้ว</span></h2>
-      <div id="history" class="history"><p style="color:var(--ink3)" data-th="ยังไม่มีสาย" data-en="No calls yet.">ยังไม่มีสาย</p></div>
-    </section>
-  </div>
+  <p class="dm-honest">
+    <span id="honest">สายตัวอย่างบันทึกไว้ล่วงหน้า</span>
+    <span class="dm-credit" id="credit" hidden></span>
+  </p>
 
-  <div class="cancel-strip demo-cta-band">
-    <div style="flex:1;min-width:220px"><b data-th="ชอบแบบนี้?" data-en="Like this?">ชอบแบบนี้?</b> — <span data-th="สมัครรับเบอร์จริงประจำบ้าน ทดลองฟรี 7 วัน ยกเลิกได้ทุกเมื่อ" data-en="sign up for a real home number. Free 7-day trial, cancel anytime.">สมัครรับเบอร์จริงประจำบ้าน ทดลองฟรี 7 วัน ยกเลิกได้ทุกเมื่อ</span></div>
-    <a class="btn sun" href="/start.html" data-th="รับเบอร์ AI ของฉัน" data-en="Get my AI number">รับเบอร์ AI ของฉัน</a>
+  <div class="dm-live" id="liveBlock">
+    <button type="button" class="btn light live-open" id="liveOpen">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg>
+      <span data-th="คุยกับ AI เอง (สด · 2 นาที)" data-en="Talk to the AI yourself (live · 2 min)">คุยกับ AI เอง (สด · 2 นาที)</span>
+    </button>
+    <p class="dm-live-hint" data-th="สวมบทมิจฉาชีพ แล้วดูว่า AI จับได้ไหม" data-en="Play the scammer and see if the AI catches you">สวมบทมิจฉาชีพ แล้วดูว่า AI จับได้ไหม</p>
+    <p class="dm-live-off" id="liveOff" hidden><span data-th="ตอนนี้คุยสดเต็มแล้ว — ลองฟังสายตัวอย่างด้านบนก่อนนะ" data-en="Live calls are full right now — try a sample call above first.">ตอนนี้คุยสดเต็มแล้ว — ลองฟังสายตัวอย่างด้านบนก่อนนะ</span> <button type="button" class="dm-back" id="backToChips" data-th="เลือกสายตัวอย่าง" data-en="Pick a sample call">เลือกสายตัวอย่าง</button></p>
   </div>
-</div>
+</main>
 
-<footer class="foot"><div class="foot-grid">
-  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
-    <p style="margin-top:10px" data-th="AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ" data-en="AI answers unknown calls, sends scammers away, flags important calls back.">AI รับสายแปลกแทนคุณ ส่งมิจฉาชีพไปให้ไกล สายสำคัญแจ้งให้โทรกลับ</p></div>
-  <div><h4 data-th="ผลิตภัณฑ์" data-en="Product">ผลิตภัณฑ์</h4>
-    <a href="/" data-th="หน้าแรก" data-en="Home">หน้าแรก</a>
-    <a href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
-    <a href="/family.html" data-th="Family" data-en="Family">Family</a>
-    <a href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a></div>
-  <div><h4 data-th="ช่วยเหลือ" data-en="Help">ช่วยเหลือ</h4>
-    <a href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-    <a href="/start.html" data-th="สมัครใช้งาน" data-en="Sign up">สมัครใช้งาน</a>
-    <a href="/dashboard.html" data-th="ห้องของฉัน" data-en="My account">ห้องของฉัน</a></div>
-  <div><h4 data-th="ความน่าเชื่อถือ" data-en="Trust">ความน่าเชื่อถือ</h4>
-    <a href="/pricing.html" data-th="ยกเลิกได้ทุกเมื่อ" data-en="Cancel anytime">ยกเลิกได้ทุกเมื่อ</a>
-    <a href="/how-it-works.html" data-th="ขอบเขตที่กันไม่ได้" data-en="Honest scope">ขอบเขตที่กันไม่ได้</a>
-    <a href="/dashboard.html" data-th="ลบข้อมูลของฉัน" data-en="Delete my data">ลบข้อมูลของฉัน</a>
-    <a href="/stats.html" data-th="สถิติโปร่งใส" data-en="Live stats">สถิติโปร่งใส</a></div>
-</div><div class="foot-base"><span>© 2026 Krai-a</span><span data-th="สายแปลกทุกสาย มี AI รับแทน" data-en="Every unknown call, answered by AI.">สายแปลกทุกสาย มี AI รับแทน</span></div></footer>
-<p class="foot-note" style="background:#fff;margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
-<script src="/app.js"></script>
-<script type="module">
-import { initNav, api } from '/site.js';
-initNav('demo');
-try {
-  const st = await api('/api/status');
-  const num = st.demoNumber || '+6621000142';
-  document.getElementById('demoNum').textContent = num;
-  document.getElementById('demoFwd').textContent = `**21*${num}#`;
-} catch { /* keep placeholders */ }
-</script>
+<dialog class="live" id="liveDlg" aria-labelledby="lvTitle">
+  <div class="lv-in" data-state="intro" id="lvIn">
+    <div class="lv-top">
+      <h2 id="lvTitle" data-th="คุยกับ AI เอง" data-en="Talk to the AI">คุยกับ AI เอง</h2>
+      <button type="button" class="lv-x" id="lvClose" aria-label="ปิด / Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <div class="lv-ring" id="lvRing" aria-hidden="true">
+      <svg viewBox="0 0 120 120"><circle class="lv-track" cx="60" cy="60" r="54"/><circle class="lv-prog" id="lvProg" cx="60" cy="60" r="54"/></svg>
+      <span class="lv-time" id="lvTime">2:00</span>
+    </div>
+    <p class="sr-only" id="lvTimeSr" aria-live="off"></p>
+
+    <div class="lv-intro" id="lvIntro">
+      <p class="lv-lede" data-th="คุณเป็นมิจฉาชีพ — AI ใครอะ รับสาย ลองหลอกให้ได้" data-en="You are the scammer — Krai-A's AI answers. Try to fool it.">คุณเป็นมิจฉาชีพ — AI ใครอะ รับสาย ลองหลอกให้ได้</p>
+      <ul class="lv-tips">
+        <li data-th="“ผมโทรจากธนาคาร ขอรหัส OTP หน่อยครับ”" data-en="“I'm from the bank, read me the OTP code.”">“ผมโทรจากธนาคาร ขอรหัส OTP หน่อยครับ”</li>
+        <li data-th="“พัสดุคุณติดศุลกากร ต้องโอนค่าปรับวันนี้”" data-en="“Your parcel is stuck at customs, pay the fine today.”">“พัสดุคุณติดศุลกากร ต้องโอนค่าปรับวันนี้”</li>
+        <li data-th="หรือเป็นคนจริง: “โทรจากคลินิก ขอเลื่อนนัดค่ะ”" data-en="Or be real: “Calling from the clinic to move an appointment.”">หรือเป็นคนจริง: “โทรจากคลินิก ขอเลื่อนนัดค่ะ”</li>
+      </ul>
+    </div>
+
+    <div class="lv-talk" id="lvTalk" hidden>
+      <div class="lv-line" data-role="caller" id="lvCaller"><span class="lv-sp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span data-th="คุณ (ปลายสาย)" data-en="You (caller)">คุณ (ปลายสาย)</span></span><p id="lvCallerTx"></p></div>
+      <div class="lv-line" data-role="ai" id="lvAi"><span class="lv-sp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span data-th="AI ใครอะ" data-en="Krai-A AI">AI ใครอะ</span></span><p id="lvAiTx"></p></div>
+      <div class="lv-v" aria-live="polite"><b class="vword" id="lvV" data-v="">—</b><span class="vwhy" id="lvWhy"></span></div>
+    </div>
+
+    <p class="lv-msg" id="lvMsg" role="alert" hidden></p>
+    <p class="lv-consent" id="lvConsent" data-th="เสียงของคุณส่งไปให้ AI ฟังสด ๆ เพื่อคุยและตัดสิน — ไม่บันทึกเสียง ไม่เก็บบทสนทนา · แนะนำใส่หูฟัง" data-en="Your voice goes to the AI live, only to talk and decide — no recording, no transcript kept · headphones recommended">เสียงของคุณส่งไปให้ AI ฟังสด ๆ เพื่อคุยและตัดสิน — ไม่บันทึกเสียง ไม่เก็บบทสนทนา · แนะนำใส่หูฟัง</p>
+
+    <div class="lv-act">
+      <button type="button" class="btn primary big" id="lvStart"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg><span id="lvStartTx">เริ่มคุย</span></button>
+      <button type="button" class="btn light big" id="lvStop" hidden><span data-th="วางสาย" data-en="Hang up">วางสาย</span></button>
+    </div>
+    <p class="lv-mic" id="lvMic" data-th="สายจบเองใน 2 นาที" data-en="The call ends by itself in 2 minutes">สายจบเองใน 2 นาที</p>
+    <div class="lv-host" id="lvHost" hidden></div>
+  </div>
+</dialog>
+
+<footer class="foot"></footer>
+<script type="module" src="/demo.js"></script>
 </body>
 </html>

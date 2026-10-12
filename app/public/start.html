@@ -2,178 +2,62 @@
 <html lang="th">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light only">
 <link rel="icon" href="data:,">
-<title>เริ่มใช้งาน — ใครอะ</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
+<title>เริ่มใช้ฟรี — ใครอะ</title>
 <link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/member.css">
 </head>
-<body data-title-th="เริ่มใช้งาน — ใครอะ" data-title-en="Get started — Krai-a">
-<nav class="nav"><div class="nav-in">
-  <a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
-  <div class="nav-links">
-    <a data-page="features" href="/features.html" data-th="ฟีเจอร์" data-en="Features">ฟีเจอร์</a>
-    <a data-page="how" href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-    <a data-page="family" href="/family.html" data-th="Family" data-en="Family">Family</a>
-    <a data-page="pricing" href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
-    <a data-page="demo" href="/demo.html">Live demo</a>
-  </div>
-  <div class="nav-right">
-    <div class="lang" id="langToggle"><button type="button" class="lang-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Language / ภาษา"><svg class="lang-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.6 3.8 5.7 3.8 9s-1.3 6.4-3.8 9c-2.5-2.6-3.8-5.7-3.8-9S9.5 5.6 12 3z"/></svg><span class="lang-cur" data-lang-cur>ไทย</span><span class="lang-chev" aria-hidden="true"></span></button><ul class="lang-menu" role="listbox" aria-label="Language / ภาษา" hidden><li role="option" tabindex="-1" data-lang="th" aria-selected="true"><span class="lang-code">TH</span><span>ไทย</span><span class="lang-tick" aria-hidden="true">✓</span></li><li role="option" tabindex="-1" data-lang="en" aria-selected="false"><span class="lang-code">EN</span><span>English</span><span class="lang-tick" aria-hidden="true">✓</span></li></ul></div>
-    <span id="navAuth" style="display:flex;gap:10px"></span>
-  </div>
-</div></nav>
+<body data-title-th="เริ่มใช้ฟรี — ใครอะ" data-title-en="Start free — Krai-A">
+<nav class="nav"></nav>
 
-<div class="page-hero dots"><div class="narrow">
-  <span class="kicker" data-th="สมัคร / เข้าสู่ระบบ" data-en="Sign up / Log in">สมัคร / เข้าสู่ระบบ</span>
-  <h1 data-th="เริ่มด้วยเบอร์มือถือของคุณ" data-en="Start with your mobile number">เริ่มด้วยเบอร์มือถือของคุณ</h1>
-  <p data-th="ไม่มีรหัสผ่าน — ยืนยันตัวตนด้วยรหัส OTP ทาง SMS สมาชิกเดิมกรอกเบอร์เดิมเพื่อเข้าระบบได้เลย · ทุกแผนทดลองฟรี 7 วัน ไม่ต้องผูกบัตร" data-en="No passwords — verify with an SMS OTP. Existing members just enter the same number. · Every plan starts with a free 7-day trial, no card.">ไม่มีรหัสผ่าน — ยืนยันตัวตนด้วยรหัส OTP ทาง SMS สมาชิกเดิมกรอกเบอร์เดิมเพื่อเข้าระบบได้เลย · ทุกแผนทดลองฟรี 7 วัน ไม่ต้องผูกบัตร</p>
-</div></div>
+<main class="su">
+  <ol class="su-steps" id="suSteps" aria-label="ขั้นตอน / Steps">
+    <li data-step="phone" data-th="เบอร์ของคุณ" data-en="Your number">เบอร์ของคุณ</li>
+    <li data-step="otp" data-th="ยืนยันรหัส" data-en="Verify">ยืนยันรหัส</li>
+    <li data-step="setup" data-th="ตั้งโอนสาย" data-en="Forward calls">ตั้งโอนสาย</li>
+  </ol>
 
-<div class="narrow page-body">
-  <div class="hstep-rail" id="suRail">
-    <div class="hstep" style="cursor:default"><span class="n">1</span><span class="t" data-th="กรอกเบอร์" data-en="Enter number">กรอกเบอร์</span></div>
-    <div class="hstep" style="cursor:default"><span class="n">2</span><span class="t" data-th="ยืนยัน OTP" data-en="Verify OTP">ยืนยัน OTP</span></div>
-    <div class="hstep" style="cursor:default"><span class="n">3</span><span class="t" data-th="รับเบอร์ AI" data-en="Get AI number">รับเบอร์ AI</span></div>
-  </div>
-  <div class="app-card" id="stepPhone">
-    <h2 data-th="ขั้นที่ 1 · เลือกแผนและกรอกเบอร์" data-en="Step 1 · Pick a plan, enter your mobile">ขั้นที่ 1 · เลือกแผนและกรอกเบอร์</h2>
-    <div class="field"><label data-th="เลือกแผน (เปลี่ยนได้ทีหลัง)" data-en="Pick a plan (changeable later)">เลือกแผน (เปลี่ยนได้ทีหลัง)</label>
-      <div class="plan-pick" id="planPick">
-        <button data-plan="starter-20" data-th="Starter · ฿20" data-en="Starter · $2">Starter · ฿20</button>
-        <button data-plan="plus-100" data-th="Plus · ฿100" data-en="Plus · $6">Plus · ฿100</button>
-        <button data-plan="family-149" data-th="Family · ฿149" data-en="Family · $8">Family · ฿149</button>
+  <section class="su-panel" id="pPhone" aria-labelledby="hPhone">
+    <h1 class="m-h1" id="hPhone" data-th="เริ่มด้วยเบอร์มือถือของคุณ" data-en="Start with your mobile number">เริ่มด้วยเบอร์มือถือของคุณ</h1>
+    <p class="m-lead" data-th="ไม่มีรหัสผ่าน เราส่งรหัส 6 หลักทาง SMS · ทดลองฟรี 7 วัน ไม่ต้องผูกบัตร" data-en="No password — we text you a 6-digit code · 7-day free trial, no card.">ไม่มีรหัสผ่าน เราส่งรหัส 6 หลักทาง SMS · ทดลองฟรี 7 วัน ไม่ต้องผูกบัตร</p>
+    <form id="phoneForm" class="m-stack" novalidate>
+      <div>
+        <label class="m-label" for="phone" data-th="เบอร์มือถือ" data-en="Mobile number">เบอร์มือถือ</label>
+        <input id="phone" class="m-input" type="tel" inputmode="tel" autocomplete="tel" placeholder="08x-xxx-xxxx" required aria-describedby="phoneErr">
+        <p class="m-err" id="phoneErr" role="alert"></p>
       </div>
-      <div class="hint" data-th="ทดลองฟรี 7 วันทุกแผน · Starter 10 นาที ไม่เกิน 5 สาย / Plus 50 นาที + เทป / Family 50 นาที + 2 เบอร์ + ผู้ดูแล 2 คน" data-en="Free 7-day trial on every plan · Starter 10 min, max 5 calls / Plus 50 min + tapes / Family 50 min + 2 numbers + 2 watchers">ทดลองฟรี 7 วันทุกแผน · Starter 10 นาที ไม่เกิน 5 สาย / Plus 50 นาที + เทป / Family 50 นาที + 2 เบอร์ + ผู้ดูแล 2 คน</div>
-      <div class="hint" data-th="(ค่าบริการโทรศัพท์ในการโอนสาย ผู้ใช้จ่ายรายนาทีตามแพ็คเกจของผู้ใช้บริการเครือข่ายมือถือ)" data-en="(Call-forwarding carrier charges apply: you pay per minute according to your mobile plan.)">(ค่าบริการโทรศัพท์ในการโอนสาย ผู้ใช้จ่ายรายนาทีตามแพ็คเกจของผู้ใช้บริการเครือข่ายมือถือ)</div>
+      <button class="btn primary big m-btn-block" id="sendBtn" type="submit" data-th="รับรหัส" data-en="Get code">รับรหัส</button>
+    </form>
+    <div class="su-or" data-th="หรือ" data-en="or">หรือ</div>
+    <a class="btn secondary big m-btn-block su-line" href="/liff.html"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21 11.1C21 7 17 3.7 12 3.7S3 7 3 11.1c0 3.7 3.2 6.7 7.6 7.3.3.1.7.2.8.5.1.2.1.6 0 .8l-.1.8c0 .2-.2.9.8.5 1-.4 5.4-3.2 7.4-5.5 1-1.2 1.5-2.5 1.5-4.4z"/></svg><span data-th="ต่อด้วย LINE" data-en="Continue with LINE">ต่อด้วย LINE</span></a>
+    <p class="m-fine" style="margin-top:16px;text-align:center" data-th="สมาชิกเดิม กรอกเบอร์เดิมเพื่อเข้าระบบ" data-en="Already a member? Enter the same number to log in.">สมาชิกเดิม กรอกเบอร์เดิมเพื่อเข้าระบบ</p>
+  </section>
+
+  <section class="su-panel" id="pOtp" aria-labelledby="hOtp" hidden>
+    <h1 class="m-h1" id="hOtp" data-th="กรอกรหัส 6 หลัก" data-en="Enter the 6-digit code">กรอกรหัส 6 หลัก</h1>
+    <p class="m-lead"><span data-th="ส่งไปที่" data-en="Sent to">ส่งไปที่</span> <b class="tnum" id="otpPhone"></b> · <button type="button" class="m-link" id="changeBtn" data-th="เปลี่ยนเบอร์" data-en="Change number">เปลี่ยนเบอร์</button></p>
+    <div class="m-stack">
+      <div id="devCode"></div>
+      <div>
+        <label class="vh" for="otp" data-th="รหัส 6 หลัก" data-en="6-digit code">รหัส 6 หลัก</label>
+        <input id="otp" class="m-input m-otp" type="text" inputmode="numeric" autocomplete="one-time-code" placeholder="••••••" aria-describedby="otpErr">
+        <p class="m-err" id="otpErr" role="alert"></p>
+      </div>
+      <button type="button" class="btn ghost" id="resendBtn" disabled></button>
     </div>
-    <div class="field"><label data-th="เบอร์มือถือที่จะป้องกัน" data-en="Mobile number to protect">เบอร์มือถือที่จะป้องกัน</label>
-      <input id="phone" type="tel" placeholder="08x-xxx-xxxx" autocomplete="tel">
-      <div class="hint" data-th="เบอร์นี้คือเจ้าของบัญชี — สายแปลกที่โทรหาเบอร์นี้จะถูกโอนเข้า AI" data-en="This number owns the account — unknown calls to it get forwarded to AI.">เบอร์นี้คือเจ้าของบัญชี — สายแปลกที่โทรหาเบอร์นี้จะถูกโอนเข้า AI</div>
-    </div>
-    <div id="phoneErr"></div>
-    <button class="btn primary" id="sendOtpBtn" data-th="ส่งรหัส OTP" data-en="Send OTP">ส่งรหัส OTP</button>
-  </div>
+  </section>
 
-  <div class="app-card" id="stepOtp" style="display:none">
-    <h2 data-th="ขั้นที่ 2 · กรอกรหัส 6 หลัก" data-en="Step 2 · Enter the 6-digit code">ขั้นที่ 2 · กรอกรหัส 6 หลัก</h2>
-    <p class="sub"><span data-th="ส่งรหัสไปที่" data-en="Code sent to">ส่งรหัสไปที่</span> <b id="otpPhone"></b> <span data-th="(หมดอายุใน 5 นาที)" data-en="(expires in 5 min)">(หมดอายุใน 5 นาที)</span></p>
-    <div id="mockCode"></div>
-    <div class="field"><label>OTP</label>
-      <input id="otp" type="text" inputmode="numeric" placeholder="••••••" maxlength="6" autocomplete="one-time-code">
-    </div>
-    <div id="otpErr"></div>
-    <button class="btn primary" id="verifyBtn" data-th="ยืนยันและเข้าสู่ระบบ" data-en="Verify & continue">ยืนยันและเข้าสู่ระบบ</button>
-    <button class="btn light" id="backBtn" style="margin-left:8px" data-th="เปลี่ยนเบอร์" data-en="Change number">เปลี่ยนเบอร์</button>
-  </div>
+  <section class="su-panel" id="pDone" hidden>
+    <div class="su-verified" role="status"><span class="m-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 12.5l2.7 2.7L16 10"/></svg><span data-th="ยืนยันแล้ว" data-en="Verified">ยืนยันแล้ว</span></span></div>
+  </section>
 
-  <div class="app-card" id="stepSetup" style="display:none">
-    <h2 data-th="ยินดีต้อนรับ! นี่คือเบอร์ AI ประจำบ้านคุณ" data-en="Welcome! Your home AI number">ยินดีต้อนรับ! นี่คือเบอร์ AI ประจำบ้านคุณ</h2>
-    <div class="fwd-code" id="aiNumber"></div>
-    <p class="sub" data-th="ขั้นสุดท้าย: จากมือถือเครื่องเดิมของคุณ กดรหัสนี้แล้วโทรออก" data-en="Last step: from your own phone, dial this code and hit call.">ขั้นสุดท้าย: จากมือถือเครื่องเดิมของคุณ กดรหัสนี้แล้วโทรออก</p>
-    <div class="fwd-code" id="fwdCode"></div>
-    <p class="sub"><span data-th="กดแล้วทุกสายจะวิ่งเข้า AI ก่อน · ยกเลิกเมื่อไรก็ได้ด้วย ##21# · ทดลองฟรี 7 วันเริ่มนับแล้ววันนี้" data-en="Every call now reaches AI first · cancel anytime with ##21# · your free 7-day trial starts today.">กดแล้วทุกสายจะวิ่งเข้า AI ก่อน · ยกเลิกเมื่อไรก็ได้ด้วย ##21# · ทดลองฟรี 7 วันเริ่มนับแล้ววันนี้</span> · <a href="/how-it-works.html" data-th="อ่านวิธีทั้งหมด" data-en="Full guide">อ่านวิธีทั้งหมด</a></p>
-    <div id="setupErr"></div>
-    <button class="btn primary" id="doneBtn" data-th="ตั้งโอนสายแล้ว เข้าห้องของฉัน" data-en="Forwarded — open my account">ตั้งโอนสายแล้ว เข้าห้องของฉัน</button>
-  </div>
-</div>
+  <section class="su-panel" id="pSetup" aria-live="polite" hidden></section>
+</main>
 
-<footer class="foot"><div class="foot-grid">
-  <div><a class="brand" href="/"><span class="dot">ค</span><span data-th="ใครอะ" data-en="Krai-a">ใครอะ</span></a>
-    <p style="margin-top:10px" data-th="AI รับสายแปลกแทนคุณ จับแก๊งคอลเซ็นเตอร์" data-en="AI answers unknown calls, catches call-center gangs.">AI รับสายแปลกแทนคุณ จับแก๊งคอลเซ็นเตอร์</p></div>
-  <div><h4 data-th="ผลิตภัณฑ์" data-en="Product">ผลิตภัณฑ์</h4>
-    <a href="/" data-th="หน้าแรก" data-en="Home">หน้าแรก</a>
-    <a href="/family.html" data-th="Family" data-en="Family">Family</a>
-    <a href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
-    <a href="/demo.html">Live demo</a></div>
-  <div><h4 data-th="ช่วยเหลือ" data-en="Help">ช่วยเหลือ</h4>
-    <a href="/how-it-works.html" data-th="วิธีใช้งาน" data-en="How it works">วิธีใช้งาน</a>
-    <a href="/dashboard.html" data-th="ห้องของฉัน" data-en="My account">ห้องของฉัน</a></div>
-  <div><h4 data-th="ความน่าเชื่อถือ" data-en="Trust">ความน่าเชื่อถือ</h4>
-    <a href="/pricing.html" data-th="ยกเลิกได้ทุกเมื่อ" data-en="Cancel anytime">ยกเลิกได้ทุกเมื่อ</a>
-    <a href="/how-it-works.html" data-th="ขอบเขตที่กันไม่ได้" data-en="Honest scope">ขอบเขตที่กันไม่ได้</a>
-    <a href="/dashboard.html" data-th="ลบข้อมูลของฉัน" data-en="Delete my data">ลบข้อมูลของฉัน</a>
-    <a href="/stats.html" data-th="สถิติโปร่งใส" data-en="Live stats">สถิติโปร่งใส</a></div>
-</div><div class="foot-base"><span>© 2026 Krai-a</span><span data-th="สายแปลกทุกสาย มี AI รับแทน" data-en="Every unknown call, answered by AI.">สายแปลกทุกสาย มี AI รับแทน</span></div></footer>
-<p class="foot-note" style="background:#fff;margin:0;padding:0 20px 24px;max-width:none;text-align:center" data-th="คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า" data-en="Recordings are kept for alerts and police evidence only, deletable on request · The system never listens to calls outside forwarded ones.">คลิปเสียงเก็บเพื่อแจ้งเตือนและหลักฐานแจ้งความเท่านั้น ลบได้ตามคำขอ · ระบบไม่ฟังสายของคุณที่นอกเหนือสายโอนเข้า</p>
-<script type="module">
-import { api, session, i18n, initNav } from '/site.js';
-initNav('start');
-if (session.loggedIn) location.href = '/dashboard.html';
+<footer class="foot"></footer>
 
-const suNodes = [...document.querySelectorAll('#suRail .hstep')];
-const paintSu = (id) => {
-  const i = ['stepPhone', 'stepOtp', 'stepSetup'].indexOf(id);
-  suNodes.forEach((n, k) => { n.classList.toggle('on', k === i); n.classList.toggle('done', k < i); });
-};
-const show = (id) => { ['stepPhone', 'stepOtp', 'stepSetup'].forEach((s) => document.getElementById(s).style.display = s === id ? 'block' : 'none'); paintSu(id); };
-paintSu('stepPhone');
-const err = (id, msg) => { document.getElementById(id).innerHTML = msg ? `<div class="alert err">${msg}</div>` : ''; };
-let phone = '';
-const PLANS = ['starter-20', 'plus-100', 'family-149'];
-let plan = PLANS.includes(new URLSearchParams(location.search).get('plan')) ? new URLSearchParams(location.search).get('plan') : 'starter-20';
-const paintPlan = () => document.querySelectorAll('#planPick button').forEach((b) => b.classList.toggle('on', b.dataset.plan === plan));
-document.querySelectorAll('#planPick button').forEach((b) => { b.onclick = () => { plan = b.dataset.plan; paintPlan(); }; });
-paintPlan();
-
-const TH = {
-  'invalid-phone': { th: 'รูปแบบเบอร์ไม่ถูกต้อง — ใช้ 08x-xxx-xxxx หรือ +66…', en: 'Invalid number — use 08x-xxx-xxxx or +66…' },
-  'too-many-requests': { th: 'ขอรหัสบ่อยเกินไป กรุณารอ 1 ชม.', en: 'Too many requests — wait 1 hour.' },
-  'sms-failed': { th: 'ส่ง SMS ไม่สำเร็จ กรุณาลองใหม่', en: 'SMS failed — try again.' },
-  'wrong-code': { th: 'รหัสไม่ถูกต้อง', en: 'Wrong code.' },
-  'code-expired': { th: 'รหัสหมดอายุ กรุณาขอใหม่', en: 'Code expired — request a new one.' },
-  'too-many-attempts': { th: 'กรอกผิดเกินกำหนด กรุณาขอรหัสใหม่', en: 'Too many attempts — request a new code.' },
-  'pool-exhausted': { th: 'เบอร์ AI หมดชั่วคราว กรุณาติดต่อทีมงาน', en: 'AI numbers run out — contact support.' },
-  generic: { th: 'เกิดข้อผิดพลาด กรุณาลองใหม่', en: 'Something went wrong — try again.' },
-  left: { th: 'เหลือ', en: 'left' },
-  times: { th: 'ครั้ง', en: 'tries' },
-  mockNote: { th: 'โหมดทดสอบ — รหัสของคุณคือ', en: 'Test mode — your code is' },
-  mockSub: { th: '(โปรดักชันจะส่งทาง SMS)', en: '(production sends via SMS)' },
-};
-const t = (k) => (TH[k] || TH.generic)[i18n.lang];
-
-document.getElementById('sendOtpBtn').onclick = async () => {
-  phone = document.getElementById('phone').value.trim();
-  err('phoneErr', '');
-  try {
-    const r = await api('/api/auth/request-otp', { method: 'POST', body: { phone } });
-    document.getElementById('otpPhone').textContent = phone;
-    document.getElementById('mockCode').innerHTML = r.devCode
-      ? `<div class="alert info">${t('mockNote')} <code>${r.devCode}</code> ${t('mockSub')}</div>` : '';
-    show('stepOtp');
-  } catch (e) { err('phoneErr', t(e.message)); }
-};
-
-document.getElementById('backBtn').onclick = () => show('stepPhone');
-
-document.getElementById('verifyBtn').onclick = async () => {
-  const code = document.getElementById('otp').value.trim();
-  err('otpErr', '');
-  try {
-    const r = await api('/api/auth/verify-otp', { method: 'POST', body: { phone, code, plan } });
-    session.token = r.token;
-    if (r.isNew) {
-      document.getElementById('aiNumber').textContent = r.member.aiNumber;
-      document.getElementById('fwdCode').textContent = `**21*${r.member.aiNumber}#`;
-      show('stepSetup');
-    } else {
-      location.href = '/dashboard.html';
-    }
-  } catch (e) {
-    const left = e.data?.attemptsLeft;
-    err('otpErr', t(e.message) + (left !== undefined ? ` (${t('left')} ${left} ${t('times')})` : ''));
-  }
-};
-
-document.getElementById('doneBtn').onclick = async () => {
-  try {
-    await api('/api/me/forwarding', { method: 'POST', auth: true, body: { confirmed: true } });
-    location.href = '/dashboard.html?welcome=1';
-  } catch { err('setupErr', t('generic')); }
-};
-</script>
+<script type="module" src="/start.js"></script>
 </body>
 </html>

@@ -1,12 +1,24 @@
-# Krai-a — AI Call Screener for Thai Phone Scams
+# ใครอะ · Krai-A — ops & developer guide
 
-Unknown call → forwarded once via `**21*` → Thai AI receptionist answers →
-Gemini judges every turn (SCAM / LEGIT / UNSURE) → owner gets a notification
-with tape + reasons. Built for the AI Builder Cup (BFSI theme).
+Team SORNKan's AI call screener for Thai phone scams. Project overview, measured results and
+limitations are in the [root README](../README.md). This file covers running and operating the app.
 
-One Cloud Run service: marketing site + member app + Twilio voice webhooks
-+ demo API + judge console. Product pages are Thai-first; the judge surface
-(`/demo.html`, code, docs) is English.
+**Flow (v2).** A protected phone forwards unknown calls once (`**61*` unanswered, `**67*` busy,
+`**21*` all) to **one central AI number per country**. Calls not forwarded from an active member
+are rejected unanswered ($0). A Thai AI receptionist answers. On every caller turn:
+1. Hard rules flag OTP and app-install demands as candidates.
+2. **TypeSafe Jev** (`jev-latest`) returns one typed verdict (SCAM / LEGIT / UNSURE) plus 9 signals.
+3. **Gemini 3.5 Flash-Lite** decides only when Jev is unsure, and writes the reasons and the receptionist's lines.
+4. The policy in code hangs up, takes a message, or keeps asking.
+
+The family gets a LINE card. Transcripts are stored, not audio.
+
+**Demo surface.** `/demo.html` replays 5 calls recorded once from the real engine and voiced with
+**Gemini 3.8 Flash TTS**, so visitors trigger zero API calls. "Talk to the AI" opens a 2-minute
+**Gemini 3.8 Live** native-audio session (reCAPTCHA plus per-IP and daily caps).
+
+One Cloud Run service serves the site, the member app (`/start.html`, `/dashboard.html`, LINE LIFF),
+the Twilio voice webhooks, the demo and the live WebSocket. Product pages are Thai-first with an EN toggle.
 
 ## Quick start (2 minutes, no keys)
 
@@ -14,38 +26,68 @@ One Cloud Run service: marketing site + member app + Twilio voice webhooks
 cd app
 npm install
 npm test
-npm start
+npm start          # http://localhost:8080
 ```
 
-Open http://localhost:8080 — the landing page with a live verdict widget.
-Sign up at `/start.html` (OTP is shown in-browser in mock-SMS mode), get an AI
-number, and manage everything in `/dashboard.html`. Judges: `/demo.html` runs
-the scripted 3-scam live-call console. This runs on the built-in rules engine,
-no network needed.
+- `/demo.html`: the 5 recorded calls play from static files, with no keys and no network.
+  "Talk to the AI" shows *unavailable* until a Gemini key is set.
+- `/start.html` → `/dashboard.html`: sign up with a phone OTP. Outside production, mock SMS shows
+  the code in the browser. Add Mom and Dad and follow the forwarding instructions.
+- **Offline rules mode.** With no keys, or `AI_OFFLINE=1`, the judge runs on hard rules plus
+  keyword rules (`engine: rules-fallback`) and the receptionist uses canned Thai lines. `npm test`
+  always runs this way unless `AI_LIVE_TESTS=1`.
 
-## Live AI mode (Gemini)
+## Live AI mode (Jev + Gemini)
 
 ```sh
-cp .env.example .env   # set GEMINI_API_KEY
+cp .env.example .env   # set GEMINI_API_KEY and TYPESAFE_API_KEY
 npm start
 ```
 
-The console status pill switches from MOCK to LIVE. Every verdict reports its
-`engine` (`gemini` / `rules` / `hard-rule`) so judges can see what decided.
-
-Get a key: https://aistudio.google.com/apikey (free tier is enough for demo).
+`GET /api/status` reports `engineStatus.mode`: `live` means Jev and Gemini are both up, and
+`degraded` means Gemini plus rules without Jev. Every verdict reports its `engine`
+(`rule` / `jev` / `gemini` / `rules-fallback`), so you can see what decided.
+Gemini key: https://aistudio.google.com/apikey. Use a paid-tier project for anything that carries
+strangers' voices, such as the live demo. The TypeSafe key comes from typesafe.ai.
 
 ## Real phone loop (Twilio)
 
 1. Twilio Console → buy a number, upgrade from trial.
-2. Phone number → Voice → webhook `POST https://<cloud-run-url>/voice/incoming`,
-   status callback `POST https://<cloud-run-url>/voice/status`.
+2. Phone number → Voice → "A call comes in" webhook `POST https://krai-a.com/voice/incoming`
+   and "Call status changes" `POST https://krai-a.com/voice/status` (events: completed,
+   no-answer, busy, failed). The status callback is required: it settles calls whose
+   caller hangs up mid-call (verdict + owner alert + billing). Use the same host as
+   `PUBLIC_BASE_URL` — every `/voice/*` request must carry a valid X-Twilio-Signature.
 3. Set `TWILIO_ACCOUNT_SID`, `DEMO_NUMBER` in env, redeploy.
 4. From your phone dial `**21*<ai-number>#` (all calls) or `**61*<ai-number>#`
    (unanswered only). Call your own number from another phone — the AI answers.
 
 Production note: the AI number must be Thai, otherwise owners pay IDD rates on
 every forwarded leg.
+
+## Voice
+
+- **Public demo = pre-rendered.** `node scripts/render-demo.mjs` (run locally,
+  needs ffmpeg) plays each script in `src/demoScripts.js` through the real
+  engine once — `judgeTurn` after every caller line, `personaReply` for the AI —
+  voices every line with Gemini TTS (`gemini-3.8-flash-tts`; AI = Achernar),
+  checks each clip against its subtitle (transcript + Jev), and writes
+  `public/demo/scenarios.json` + `public/demo/audio/*.mp3`. Visitors replay
+  static files: zero API calls. Clips are cached by
+  sha1(model|voice|style|text) in `agent-temp/tts-cache`, so a re-run only pays
+  for changed lines. `--dry` prints the conversations without audio.
+- **Phone prompts.** The same script renders the fixed phone lines (record
+  notice, greeting, gather, no-speech, 3 closings) as 8 kHz mp3 in
+  `public/voice-audio/` (`--prompts-only`). `src/twilio/voice.js` `<Play>`s a
+  clip only while its text still equals the live string, else falls back to
+  `<Say>` — re-render after changing any of those texts.
+- **Known limitation: two voices on real calls.** Fixed lines are Gemini
+  Achernar; dynamic replies use Twilio `<Say>` with
+  `Google.th-TH-Chirp3-HD-Aoede` (Twilio has no Achernar), so a caller hears a
+  slightly different voice for generated sentences. Fix later by streaming
+  Gemini TTS into the call (Media Streams).
+- `GET /api/tts?call=&turn=` (`src/ttsRoutes.js`) streams Gemini TTS for a
+  stored demo AI line (~1 s to first audio); off unless `DEMO_TEXT_API=1`.
 
 ## LINE Login + LIFF setup (alerts inside LINE)
 
@@ -73,50 +115,57 @@ LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_DEFAULT_TO (push only).
 ## Deploy (live: https://krai-a.com, Google Cloud Run)
 
 ```sh
-PROJECT_ID=krai-a REGION=asia-southeast1 ./deploy-cloudrun.sh   # from repo root (needs gcloud)
+DRY_RUN=1 PROJECT_ID=krai-a ./deploy-cloudrun.sh   # print every command, run nothing
+PROJECT_ID=krai-a ./deploy-cloudrun.sh             # deploy (repo root; needs gcloud + curl)
+JUDGING=1 PROJECT_ID=krai-a ./deploy-cloudrun.sh   # judging window: 1 warm instance, CPU always on
 ```
 
 One Cloud Run service: marketing site + member app + Twilio voice webhooks
-+ demo API. Secrets come from Secret Manager (see script header); public
-config via `--set-env-vars`. Scales to zero — first hit after idle takes a
-few seconds (cold start), Firestore snapshots preserve state.
++ live demo. The script deploys a new image with **targeted** env updates
+(`--update-env-vars`; the rest of the live env is kept) and secrets from
+Secret Manager only (it stops and prints the `gcloud secrets create` command
+for any missing one — `typesafe-api-key`, `trial-tombstone-secret`, …). It runs
+a single instance (`--max-instances 1 --session-affinity --timeout 900`:
+snapshots, rate limits and live sessions are in-memory), prints the previous
+revision + the rollback command, and smoke-tests `/api/status`, `/api/members`
+(404), `/demo.html` and the CSP header. After a deploy, check the logs for
+`[csp]` and `bad twilio signature` lines.
 
 ## Pages
 
 | Path | Purpose |
 |---|---|
-| `/` | landing + live verdict widget + forwarding simulator |
-| `/features.html`, `/how-it-works.html`, `/family.html`, `/pricing.html` | sales pages (Family = 2 protected numbers) |
-| `/start.html` | signup/login via phone OTP (`?plan=` preselects tier) |
-| `/dashboard.html` | member app (plan, usage, family numbers, LINE, tapes, whitelist, watchers, cancel) |
-| `/demo.html` | judge live-call console (5 scenarios + AI-number banner) |
-| `/stats.html` | public trust stats (live counters + method notes) |
+| `/` | one-page site: hero, how it works (`#setup`), who it protects (`#family`), trust, FAQ, price (TH/EN) |
+| `/demo.html` | demo stage: 5 recorded calls + "Talk to the AI" (2-min Gemini Live) |
+| `/pricing.html` | pricing v2 (rendered from `GET /api/plans`) |
+| `/start.html` | sign up / log in with phone OTP (`?plan=` preselects) |
+| `/dashboard.html` | member app: Home · My people (protected phones, forwarding codes) · Settings (plan, LINE, account erasure, cancel) |
+| `/liff.html` | the same member app inside LINE (LIFF), incl. linking the family's LINE for alerts |
+| `/withdraw.html` | PDPA consent withdrawal for protected people (own OTP purpose + captcha) |
 
-## Plans (trial-first, USD + Thai PPP)
+Retired v1 pages (`/features.html`, `/how-it-works.html`, `/family.html`, `/stats.html`) 301-redirect to
+the one-page site (`src/redirects.js`).
 
-| Plan | USD (EN) | THB PPP (TH) | Min/mo | Calls/mo | Protected | Watchers | Tapes |
-|---|---|---|---|---|---|---|---|
-| Starter | $2 | ฿20 (−71%) | 10 | 5 | 1 | 0 | — |
-| Plus | $6 | ฿100 (−52%) | 50 | 25 | 1 | 0 | ✓ |
-| Family | $8 | ฿149 (−47%) | 50 | 25 | 2 | 2 | ✓ |
+## Plans (pricing v2)
 
-Extra Family seat: +฿69/mo (+1 protected number, +50 min, +25 calls, pooled).
-Max 5 seats per household — beyond that, start a new household.
+Source of truth: `PLANS`, `GIFTS`, `ADDON_SEAT`, `TOPUP_PACKS` in `src/store.js`, served by `GET /api/plans`.
 
-EN mode shows USD global prices; TH mode shows PPP-adjusted baht (≈$1=฿35).
-Every plan starts with a free 7-day trial, no card. Cancel anytime in two
-layers: dial `##21#` to stop forwarding, then cancel in the dashboard.
+| Plan | TH / month | TH / year | EN (USD) / month | Protected phones | Calls / minutes per month | LINE watchers |
+|---|---|---|---|---|---|---|
+| Solo (`solo-99`) | ฿99 | ฿890 | $3 | 1 | 30 / 60 | 3 |
+| Family (`family-199`) | ฿199 | ฿1,790 | $6 | 3 | 90 / 180 pooled | unlimited |
 
-AI numbers are always Thai (`02-100-01xx` in demo, real Thai numbers via
-Twilio in production) — forwarding stays domestic, never IDD.
-
-Sessions are browser-locked: OTP login issues a token kept in `localStorage`
-(30 days). No passwords yet.
+- **Extra phone on Family:** +฿59 / $2 per month each, with its own 30 calls / 60 min. Max 5 protected phones per household.
+- **1-year gift:** ฿990 (Solo) / ฿1,990 (Family). One-time payment, no auto-renew.
+- **Top-ups:** ฿29 (5 calls / 10 min) · ฿69 (15 calls / 30 min). Never expire, never auto-charged unless the member arms auto-top-up on a saved card.
+- **Trial:** 7 days / 5 calls on Family, no card. Off-sale v1 plan ids (`starter-20`, `plus-100`, `family-149`) map to their successor (`LEGACY_PLANS`).
+- **Cancel** in Settings. To stop forwarding, dial `##002#` on each protected phone.
+- Sessions: OTP login issues a token kept in `localStorage` (30 days). No passwords.
 
 ## Quota + topup + auto-billing
 
-Quota pools per household: plan minutes + paid seats (+50 each) + topup
-packs. `minutesUsed` resets on the 1st of each month (UTC); topup minutes
+Quota pools per household: plan minutes + paid seats (each ฿59 seat adds
++60 min / 30 calls) + topup packs. `minutesUsed` resets on the 1st of each month (UTC); topup minutes
 never expire or reset. Every call burn goes through `consumeMinutes()`
 (demo, force-end, and Twilio paths), and `GET /api/me/quota` returns the
 full meter (`remaining/used/resetAt`, calls, packs, auto-topup flags).
@@ -140,9 +189,8 @@ Auto-billing split (by payment method — Stripe limitation, not our rule):
 Card saving (so auto-charge works end-to-end): card checkouts set
 `payment_intent_data[setup_future_usage]=off_session` and reuse the known
 Stripe customer, or `customer_creation=always` for first-time payers (the
-webhook stamps `session.customer` onto the member). The PromptPay-only
-checkout (Starter ฿20 TH) sets neither — Stripe rejects off-session setup
-on PromptPay. Off-session charges pass the newest saved card id
+webhook stamps `session.customer` onto the member). PromptPay checkouts set
+neither, because Stripe rejects off-session setup on PromptPay. Off-session charges pass the newest saved card id
 explicitly (Stripe's no-`payment_method` fallback is the legacy
 `default_source`, which Checkout never sets).
 
@@ -162,10 +210,10 @@ live apart from call records, so PDPA retention purges never shrink them, and
 they ride the Firestore snapshot (`stats` key; legacy snapshots backfill once
 from restored calls).
 
-`GET /api/stats` returns aggregate-only figures for the landing strip and
-`/stats.html`. Each metric carries a `shown` flag: below its minimum the
-frontend hides it entirely, above it the figure floors to a round tier and
-renders with "กว่า/X+". Current minimums (`STATS_MIN`): calls 100, scams 50,
+`/stats.html` is retired (301 → `/`). `GET /api/stats` still returns the
+aggregate-only figures, but no public page renders them right now. Each
+metric carries a `shown` flag: below its minimum a client must hide it
+entirely, above it the figure floors to a round tier ("กว่า/X+"). Current minimums (`STATS_MIN`): calls 100, scams 50,
 legit 50, minutes 500, households 50; the scam-rate ratio shows once the call
 base clears 100.
 
@@ -177,15 +225,16 @@ base clears 100.
 | POST | `/voice/incoming` | Twilio inbound (member gate → TwiML) |
 | POST | `/voice/turn` | Twilio speech turn (`?callId=`) |
 | POST | `/voice/status` | Twilio status callback |
-| POST | `/api/analyze` | single-shot verdict `{text}` |
+| POST | `/api/analyze` | single-shot verdict `{text}` (404 unless `DEMO_TEXT_API=1`) |
 | POST | `/api/auth/request-otp` | send OTP `{phone}` |
 | POST | `/api/auth/verify-otp` | verify → `{token, member, isNew}` |
 | POST | `/api/auth/logout` | invalidate token |
-| GET | `/api/me` | own profile (auth) |
+| GET / DELETE | `/api/me` | own profile · erase the account and its data, `{confirm:true}` (auth) |
 | POST | `/api/me/forwarding` | confirm `**21*` setup (auth) |
 | GET/POST/DELETE | `/api/me/whitelist` | known numbers + safe word (auth) |
 | GET/POST/DELETE | `/api/me/watchers` | family watchers (auth) |
-| GET | `/api/me/calls`, `/api/me/usage` | tapes + quota (auth) |
+| GET | `/api/me/calls`, `/api/me/usage` | call transcripts + verdicts, quota (auth) |
+| GET / DELETE | `/api/me/calls/:id/export`, `/api/me/calls/:id` | evidence bundle for an AOC 1441 / police report · delete one call (auth) |
 | GET | `/api/me/quota` | quota meter: remaining/used/reset + packs (auth) |
 | POST | `/api/me/auto-topup` | auto-billing toggle `{enabled, threshold?, pack?}` (auth) |
 | POST | `/api/billing/checkout` | Stripe Checkout: plan/seat/topup `{kind, plan?, pack?, region?, from?}` (auth) |
@@ -199,60 +248,86 @@ base clears 100.
 | POST | `/api/auth/line-verify` | LIFF login `{idToken}` -> session, or `{needsLink:true}` |
 | POST | `/api/me/cancel`, `/api/me/reactivate` | cancel / resume membership (auth) |
 | GET | `/api/status` | engine / mode / adapters |
-| GET | `/api/stats` | public trust stats (aggregate-only, brag-gated) |
-| GET | `/api/demo/scripts` | 5 judge scenarios |
-| POST | `/api/demo/call` | start simulated call `{scriptId?}` |
-| POST | `/api/demo/turn` | caller line `{callId, text}` → reply + verdict |
-| POST | `/api/demo/end` | force-end `{callId}` → notify |
-| GET | `/api/calls`, `/api/calls/:id` | history + tapes |
+| POST | `/api/withdraw/request-otp`, `/api/withdraw` | protected person withdraws consent (OTP + captcha) |
+| POST · WS | `/api/live/session` · `/ws/live` | Gemini Live freestyle (captcha + caps, 2-min) |
+| GET | `/api/stats` | aggregate trust counters (brag-gated; no page renders them now) |
+| GET | `/api/demo/scripts` | 5 judge scenarios ¹ |
+| POST | `/api/demo/call` | start simulated text call `{scriptId?}` ¹ |
+| POST | `/api/demo/turn` | caller line `{callId, text}` → reply + verdict ¹ |
+| POST | `/api/demo/end` | force-end `{callId}` → notify ¹ |
+| GET | `/api/calls`, `/api/calls/:id` | demo-session call transcripts + verdicts ¹ |
+| GET | `/api/tts` | Gemini TTS for a stored demo AI line ¹ |
 | WS | `/ws` | live call updates (second-screen judging) |
+
+¹ The text/turn demo API answers 404 unless `DEMO_TEXT_API=1` (`src/textDemoGate.js`). The public demo is
+the pre-rendered `/demo.html` plus `/api/live`.
 
 ## Architecture
 
-```
-caller ──PSTN──▶ carrier (**21*) ──▶ Twilio number ──TwiML/Gather──▶ Cloud Run
-                                                                        │
-                                                     ┌──────────────────┼──────────────────┐
-                                                     │  member gate     │  persona (Thai)  │
-                                                     │  To/ForwardedFrom│  Gemini / canned │
-                                                     │  reject ~10s     │  never accuses   │
-                                                     └────────┬─────────┴─────────┬────────┘
-                                                              │  verdict authority (code only)
-                                                              │  hard rules → Gemini → 0.8 gate
-                                                              ▼
-                                                     notify adapters (console / LINE / …)
+```mermaid
+flowchart LR
+  C[Unknown caller] --> P[Mom's phone forwards] --> G{Member gate}
+  G -- not a member --> R[Reject, $0]
+  G -- member --> J[Hard rules → Jev] -- unsure --> M[Gemini 3.5 Flash-Lite]
+  J --> Po[Policy in code] --> L[LINE alert to family]
+  M --> Po
 ```
 
-Key invariants (see `instruction/work` briefs for rationale):
+| Piece | Where |
+|---|---|
+| Twilio voice webhooks, member gate, `<Reject>` | `src/twilio/voice.js`, `src/twilio/signature.js` |
+| Per-turn judge: hard rules → Jev → Gemini escalation | `src/judge/index.js` (`rules.js`, `jev.js`, `gemini.js`) |
+| Thresholds, actions, guards | `src/judge/policy.js` |
+| Gemini Live freestyle relay (`/ws/live`) | `src/liveVoice.js` |
+| Pre-rendered demo + phone prompts (Gemini TTS) | `scripts/render-demo.mjs` → `public/demo/`, `public/voice-audio/` |
+| LINE alerts / Firestore snapshots | `src/notify/`, `src/persist/firestore.js` |
 
-- Only `src/verdict.js` decides outcomes; the voice persona can never order a
-  transfer or hangup.
-- Requests beat numbers: even whitelisted callers asking for money/OTP/remote
-  access enter safe-word + callback verification.
-- Thin evidence = UNSURE, never an accusation. False alarms kill trust.
-- Rejects cost ~10s of inbound audio and zero AI.
-- Secrets live in env / Secret Manager only. `.env.example` lists everything.
+Key invariants:
 
-## Costs (demo)
+- **Policy lives in code, not a prompt.** Jev P ≥ 0.8 decides alone, and any risk signal ≥ 0.5 blocks a LEGIT verdict.
+  The scam hang-up fires only on a policy SCAM verdict.
+- **A hard-rule hit is only a candidate.** An OTP or app-install regex match becomes SCAM only when Jev's matching signal confirms it.
+- **Gemini may raise suspicion, never clear it.** It cannot turn a call into LEGIT when Jev saw a sensitive request,
+  an identity probe or an injection attempt (`guardGemini`).
+- **Guarded voice.** Gemini drafts each receptionist line. Jev checks that it never complies, reveals the owner or
+  fakes a bad line before Twilio speaks it.
+- **Thin evidence means UNSURE plus a transcript**, never an accusation. Caller text is data, never instructions.
+- **Fail-safe timing.** Judge (5 s) + reply (3 s) budgets keep every turn under Twilio's 15 s webhook limit.
+  If Jev or Gemini is down, the judge falls back to rules.
+- **Non-member calls cost $0** (`<Reject>`, no AI). Secrets live in env or Secret Manager only, and `.env.example` lists every name.
 
-Free tier covers Cloud Run + Gemini free quota + 1 Twilio number (~$1.15/mo).
-A ~2-minute screened call stays under ~฿3 all-in; see
-`instruction/work/f4-costmodel.html` for the per-line model.
+## Costs
+
+| Item | Cost | Source |
+|---|---|---|
+| Text AI per call (Jev judge + Gemini escalation + receptionist line + guard) | ≈ ฿0.03 (measured) | `npm run eval`, final run 12 Oct 2026 |
+| AI + speech per call (hybrid path) | ≈ ฿0.41 (model) | biz-v2 unit-economics calculator |
+| Telephony per call (Thai number pool, 1.2 min) | ≈ ฿0.13 (model) | biz-v2 |
+| Per protected person per month (10 unknown calls) | ≈ ฿9 (model) | biz-v2 |
+| Public demo replay | ฿0 (static files) | `scripts/render-demo.mjs` |
+| Live "Talk to the AI" session | ≈ ฿2 per 2-min session, capped at 300 sessions/day and 3 per IP/hour | `LIVE_MAX_*` env |
+
+Base case (biz-v2 calculator: annual PromptPay, mix 50/45/5) gives an 84% blended gross margin and break-even at
+≈ 740 paying households on ~฿72K/month fixed (infra + one founder salary).
 
 ## เริ่มต้นเร็ว (ไทย)
 
-1. `cd app && npm install && npm start` แล้วเปิด http://localhost:8080
-2. เลือกสคริปต์ กด Start call → Auto-play script ดู verdict แดง/เขียว/เหลือง
-3. อยากใช้ AI จริง: ใส่ `GEMINI_API_KEY` ใน `.env` (ขอฟรีที่ AI Studio)
-4. อยากโทรจริง: ซื้อเบอร์ Twilio ชี้ webhook มาที่ Cloud Run แล้วกด `**21*`
-   จากเครื่องตัวเอง
+1. `cd app && npm install && npm start` แล้วเปิด http://localhost:8080/demo.html
+2. กดสายตัวอย่าง (ตำรวจปลอม · พัสดุ · ธนาคาร · โรงพยาบาล · แบบสอบถาม) ฟัง AI รับสาย แล้วดูผลตัดสินทีละประโยคกับการ์ด LINE
+3. ถ้าจะใช้ AI จริง ให้ใส่ `GEMINI_API_KEY` และ `TYPESAFE_API_KEY` ใน `.env` (ถ้าไม่มีคีย์ ระบบจะทำงานแบบ rules ออฟไลน์)
+4. ถ้าจะโทรจริง ให้ตั้งเบอร์กลาง Twilio กับ webhook ตามหัวข้อ Real phone loop แล้วกด `**61*<เบอร์กลาง>#` บนเครื่องที่ต้องการปกป้อง
 
 ## Demo script for judges (3 minutes)
 
-1. (0:00) One line: "Every unknown call is answered by AI before it can reach
-   you." Show the console.
-2. (0:20) Auto-play script 1 (fake police) → red verdict + LINE-style alert.
-3. (1:20) Auto-play legit hospital case → green verdict + callback number.
-4. (2:00) Freestyle-type a vague line → yellow UNSURE, owner decides.
-5. (2:30) Show `/api/calls` tape + verdict authority code; close with cost
-   (<฿3/call) and the WhatsApp/Zalo adapter plan for JAPAC.
+1. **(0:00)** Open https://krai-a.com/demo.html. Use the footer language switch for English.
+   One line: "Unknown calls to Mom reach an AI first, and the family hears about it on LINE."
+2. **(0:15)** Play **Fake police** (~40 s). Turn 1: Jev is unsure, Gemini escalates, SCAM. Turn 2: Jev
+   alone at 99% → the AI hangs up → red LINE card "Scam call cut off for Mom".
+3. **(1:00)** Play **Hospital**: a real person, message and callback number taken, green LINE card.
+   Optionally **Survey**: unsure (amber), the family decides.
+4. **(1:30)** Click **Talk to the AI** (2-min Gemini Live, mic + reCAPTCHA). Play a fake officer who demands a
+   transfer and secrecy → Scam 99%, the AI ends the call. Thai works best.
+5. **(2:30)** Point out the engine label on each verdict (`rule` / `jev` / `gemini`), `GET /api/status`, and the
+   results table in the [root README](../README.md).
+
+The 5 recorded calls are frozen outputs of the real engine (`public/demo/scenarios.json`), so replays cost nothing.

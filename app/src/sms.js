@@ -23,11 +23,11 @@ export function toLocalMsisdn(phone) {
 
 // One segment: Thai UCS-2 counts 70 chars — this stays ~30.
 export function otpMessage(code) {
-  return `ใครอ่ะ: รหัส OTP ของคุณคือ ${code}`;
+  return `ใครอะ: รหัส OTP ของคุณคือ ${code}`;
 }
 
-async function sendThsms({ phone, code, fetchImpl, apiKey, sender }) {
-  const payload = { msisdn: [toLocalMsisdn(phone)], message: otpMessage(code) };
+async function sendThsms({ phone, message, fetchImpl, apiKey, sender }) {
+  const payload = { msisdn: [toLocalMsisdn(phone)], message };
   if (sender) payload.sender = sender;
   let res;
   try {
@@ -59,11 +59,16 @@ export async function thsmsAccount({ fetchImpl = fetch, apiKey = config.thsmsApi
   return { ok: true, data };
 }
 
-export async function sendOtpSms(phone, code, { fetchImpl = fetch } = {}) {
+// `text` (optional): purpose-specific wording built by the server around the
+// code (e.g. "consent code — not a login code"). Twilio Verify ignores it.
+export async function sendOtpSms(phone, code, { fetchImpl = fetch, text = '' } = {}) {
   if (config.thsmsApiKey) {
-    return sendThsms({ phone, code, fetchImpl, apiKey: config.thsmsApiKey, sender: config.thsmsSender });
+    return sendThsms({ phone, message: text || otpMessage(code), fetchImpl, apiKey: config.thsmsApiKey, sender: config.thsmsSender });
   }
-  if (config.twilioVerifySid && config.twilioAccountSid && config.twilioAuthToken) {
+  if (config.twilioVerifySid) {
+    // Verify configured but its credentials missing: fail closed — never
+    // fall through to mock (that would hand the code to the browser).
+    if (!config.twilioAccountSid || !config.twilioAuthToken) return { ok: false, mode: 'twilio-verify', detail: 'twilio-unconfigured' };
     const body = new URLSearchParams({ To: phone, Channel: 'sms' });
     const res = await fetch(
       `https://verify.twilio.com/v2/Services/${config.twilioVerifySid}/Verifications`,
@@ -81,6 +86,17 @@ export async function sendOtpSms(phone, code, { fetchImpl = fetch } = {}) {
   }
   console.log(`[sms:mock → ${phone}] OTP ${code} (mock mode — shown in browser)`);
   return { ok: true, mode: 'mock', devCode: code };
+}
+
+// Plain notice SMS (no code), e.g. "link LINE to get alerts". THSMS only:
+// Twilio Verify cannot carry free text; mock mode just logs locally.
+export async function sendTextSms(phone, text, { fetchImpl = fetch } = {}) {
+  if (config.thsmsApiKey) {
+    return sendThsms({ phone, message: text, fetchImpl, apiKey: config.thsmsApiKey, sender: config.thsmsSender });
+  }
+  if (config.twilioVerifySid) return { ok: false, mode: 'twilio-verify', detail: 'unsupported' };
+  console.log(`[sms:mock → ${phone}] ${text}`);
+  return { ok: true, mode: 'mock' };
 }
 
 // Live verification against Twilio Verify. The code the user received came

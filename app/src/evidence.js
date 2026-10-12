@@ -36,14 +36,21 @@ export function buildEvidenceBundle(call) {
 }
 
 // Short-form notice read/disclosed to callers (PDPA ม.23: purpose + basis +
-// data + retention). Full policy lives here until a lawyer drafts the final.
+// data + processors + recipients + retention + rights). Accurate to what the
+// system does today: TEXT transcripts only (no audio is stored), alerts go
+// to the household payer and the family watchers they added, and Twilio /
+// Google Gemini / TypeSafe Jev process the conversation to answer and judge
+// it. The final policy is pending a lawyer's draft.
 export function privacyNoticeTh() {
+  const site = (config.publicBaseUrl || 'https://krai-a.com').replace(/^https?:\/\//, '');
   return [
-    'นโยบายความเป็นส่วนตัว ใครอ่ะ (Krai-a) — ฉบับย่อสำหรับผู้โทร',
-    `1. เราเก็บอะไร: เบอร์โทร เสียง/ข้อความถอดเสียง และผลการคัดกรองสาย`,
+    'นโยบายความเป็นส่วนตัว ใครอะ (Krai-A) — ฉบับย่อสำหรับผู้โทร',
+    '1. เราเก็บอะไร: เบอร์ที่โทรมา บทสนทนาเป็นข้อความ (ถอดจากเสียงระหว่างสาย ไม่เก็บไฟล์เสียง) และผลการคัดกรองสาย',
     '2. ทำไม (ฐานกฎหมาย PDPA): ประโยชน์โดยชอบด้วยกฎหมาย (legitimate interests) — ป้องกันภัยมิจฉาชีพ และป้องกันอันตรายต่อชีวิต/ทรัพย์สิน (vital interests)',
-    `3. เก็บนานแค่ไหน: สายปกติ ${config.retentionLegitDays} วัน สายไม่ชัวร์ ${config.retentionUnsureDays} วัน สายต้องสงสัย ${config.retentionScamDays} วัน แล้วลบอัตโนมัติ`,
-    '4. ใครเห็นบ้าง: เจ้าของสายที่ท่านโทรเข้าเท่านั้น ไม่แชร์ป้ายเตือนข้ามผู้ใช้',
-    '5. สิทธิของคุณ: คัดค้าน/ขอลบข้อมูลได้ ติดต่อผ่านหน้าเว็บ krai-a.com (ช่องทางติดต่อจะประกาศก่อนเปิดจริง)',
+    '3. ผู้ประมวลผลข้อมูล: Twilio (รับสายและแปลงเสียงพูดเป็นข้อความ) · Google Gemini และ TypeSafe Jev (ตอบและวิเคราะห์บทสนทนา) · LINE (แจ้งเตือน) · THSMS (SMS) · Stripe (ชำระเงินของสมาชิก)',
+    `4. เก็บนานแค่ไหน: สายปกติ ${config.retentionLegitDays} วัน สายไม่ชัวร์ ${config.retentionUnsureDays} วัน สายต้องสงสัย ${config.retentionScamDays} วัน แล้วลบอัตโนมัติ`,
+    '5. ใครเห็นบ้าง: สมาชิกที่ดูแลเบอร์ที่ท่านโทรเข้า และผู้ดูแลครอบครัวที่สมาชิกเพิ่มไว้ (ต้องยืนยันตัวตนเอง ได้รับแจ้งเตือนทาง LINE) — ไม่แชร์ป้ายเตือนข้ามบ้าน',
+    '6. เมื่อลบบัญชี: เราเก็บเพียงค่าแฮชของเบอร์ (ถอดกลับเป็นเบอร์ไม่ได้) 12 เดือน เพื่อป้องกันการใช้ช่วงทดลองฟรีซ้ำ (ประโยชน์โดยชอบด้วยกฎหมาย — ป้องกันการทุจริต)',
+    `7. สิทธิของคุณ: คัดค้าน/ขอลบข้อมูลได้ทางหน้าเว็บ ${site} · สมาชิกลบบัญชีและข้อมูลทั้งหมดได้เองในห้องของฉัน · เจ้าของเบอร์ที่ถูกปกป้องถอนความยินยอมได้ที่ ${site}/withdraw.html`,
   ].join('\n');
 }

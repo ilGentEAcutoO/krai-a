@@ -34,6 +34,7 @@ export function applyLang() {
   }
   document.querySelectorAll('#langToggle button[data-lang]').forEach((b) => {
     b.classList.toggle('on', b.dataset.lang === lang);
+    b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
   });
   document.querySelectorAll('#langToggle select').forEach((s) => {
     if (s.value !== lang) s.value = lang;
@@ -124,14 +125,105 @@ export async function api(path, { method = 'GET', body, auth = false } = {}) {
 }
 
 export function logout() {
-  if (session.token) api('/api/auth/logout', { method: 'POST', auth: true }).catch(() => {});
+  // keepalive: the request must outlive the navigation below.
+  if (session.token) {
+    fetch('/api/auth/logout', { method: 'POST', keepalive: true, headers: { Authorization: `Bearer ${session.token}` } }).catch(() => {});
+  }
   session.token = null;
   location.href = '/';
 }
 
+// Site chrome: every public page shares one nav + one footer, rendered here.
+// Pages ship `<nav class="nav"></nav>` / `<footer class="foot"></footer>`
+// shells (or this exact markup, data-v="2", which is left untouched).
+// Nav = brand · เดโม · ราคา · [เริ่มใช้ฟรี]; login is a small text link and
+// the language switch lives in the footer.
+const CHROME_V = '2';
+
+const NAV_HTML = `<div class="nav-in">
+  <a class="brand" href="/"><span class="dot" aria-hidden="true">ค</span><span data-th="ใครอะ" data-en="Krai-A">ใครอะ</span></a>
+  <div class="nav-links" id="navLinks">
+    <a data-page="demo" href="/demo.html" data-th="เดโม" data-en="Demo">เดโม</a>
+    <a data-page="pricing" href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
+    <span id="navSheetAuth" class="nav-sheet-slot"></span>
+  </div>
+  <div class="nav-right" id="navAuth"></div>
+  <button type="button" class="hamb" aria-controls="navLinks" aria-expanded="false" aria-label="เมนู / Menu"><span></span><span></span></button>
+</div>`;
+
+const FOOT_HTML = `<div class="foot-in">
+  <div class="foot-brand">
+    <a class="brand" href="/"><span class="dot" aria-hidden="true">ค</span><span data-th="ใครอะ" data-en="Krai-A">ใครอะ</span></a>
+    <p data-th="AI รับสายแปลกแทนคนที่คุณรัก คุยสุภาพ จับมุกมิจ แล้วสรุปให้คุณ" data-en="AI answers unknown calls for the people you love — politely, catching scam scripts, then briefing you.">AI รับสายแปลกแทนคนที่คุณรัก คุยสุภาพ จับมุกมิจ แล้วสรุปให้คุณ</p>
+  </div>
+  <nav class="foot-links" aria-label="Footer">
+    <a href="/demo.html" data-th="เดโม" data-en="Demo">เดโม</a>
+    <a href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
+    <a href="/#faq" data-th="คำถามที่พบบ่อย" data-en="FAQ">คำถามที่พบบ่อย</a>
+    <a href="/start.html" data-th="สมัคร / เข้าสู่ระบบ" data-en="Sign up / Log in">สมัคร / เข้าสู่ระบบ</a>
+  </nav>
+  <div class="lang-seg" id="langToggle" role="group" aria-label="ภาษา / Language">
+    <button type="button" data-lang="th" lang="th" aria-pressed="true">ไทย</button><button type="button" data-lang="en" lang="en" aria-pressed="false">English</button>
+  </div>
+</div>
+<div class="foot-base"><span>© 2026 Krai-A</span><span data-th="รับเฉพาะสายที่คุณโอนมา ไม่ยุ่งกับสายอื่นในมือถือคุณ" data-en="Only calls you forward reach us — nothing else on your phone.">รับเฉพาะสายที่คุณโอนมา ไม่ยุ่งกับสายอื่นในมือถือคุณ</span></div>`;
+
+function renderChrome() {
+  const nav = document.querySelector('nav.nav');
+  if (nav && nav.dataset.v !== CHROME_V) {
+    nav.innerHTML = NAV_HTML;
+    nav.dataset.v = CHROME_V;
+  }
+  const foot = document.querySelector('footer.foot');
+  if (foot && foot.dataset.v !== CHROME_V) {
+    foot.innerHTML = FOOT_HTML;
+    foot.dataset.v = CHROME_V;
+  }
+}
+
+function renderNavAuth(page) {
+  const slot = document.getElementById('navAuth');
+  const sheet = document.getElementById('navSheetAuth');
+  if (!slot) return;
+  if (session.loggedIn) {
+    slot.innerHTML = `<button type="button" class="nav-text" data-logout data-th="ออกจากระบบ" data-en="Log out">ออกจากระบบ</button>
+      <a class="btn small secondary" href="/dashboard.html" data-th="ห้องของฉัน" data-en="My dashboard">ห้องของฉัน</a>`;
+    if (sheet) sheet.innerHTML = `<button type="button" class="nav-sheet-only nav-text" data-logout data-th="ออกจากระบบ" data-en="Log out">ออกจากระบบ</button>`;
+  } else {
+    // The signup page is its own CTA: no second primary button above it.
+    // Secondary style: each page's own CTA is the one ink primary on screen.
+    const cta = page === 'start' ? '' : `<a class="btn small secondary" href="/start.html" data-th="เริ่มใช้ฟรี" data-en="Start free">เริ่มใช้ฟรี</a>`;
+    slot.innerHTML = `<a class="nav-text" href="/start.html" data-th="เข้าสู่ระบบ" data-en="Log in">เข้าสู่ระบบ</a>${cta}`;
+    if (sheet) sheet.innerHTML = `<a class="nav-sheet-only" href="/start.html" data-th="เข้าสู่ระบบ" data-en="Log in">เข้าสู่ระบบ</a>`;
+  }
+  document.querySelectorAll('[data-logout]').forEach((b) => { b.onclick = logout; });
+}
+
+function wireMenu() {
+  const hamb = document.querySelector('.nav .hamb');
+  const links = document.getElementById('navLinks');
+  if (!hamb || !links || hamb.dataset.wired) return;
+  hamb.dataset.wired = '1';
+  const set = (open) => {
+    document.body.classList.toggle('menu-open', open);
+    hamb.setAttribute('aria-expanded', String(open));
+  };
+  hamb.onclick = (e) => { e.stopPropagation(); set(!document.body.classList.contains('menu-open')); };
+  links.addEventListener('click', (e) => { if (e.target.closest('a,button')) set(false); });
+  document.addEventListener('click', (e) => {
+    if (document.body.classList.contains('menu-open') && !e.target.closest('.nav')) set(false);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.body.classList.contains('menu-open')) { set(false); hamb.focus(); }
+  });
+}
+
 export function initNav(page) {
+  renderChrome();
   document.querySelectorAll('.nav-links a').forEach((a) => {
-    if (a.dataset.page === page) a.classList.add('on');
+    const on = a.dataset.page === page;
+    a.classList.toggle('on', on);
+    if (on) a.setAttribute('aria-current', 'page');
   });
   document.querySelectorAll('#langToggle button[data-lang]').forEach((b) => {
     b.onclick = () => { i18n.lang = b.dataset.lang; };
@@ -140,35 +232,8 @@ export function initNav(page) {
     s.onchange = () => { i18n.lang = s.value; };
   });
   document.querySelectorAll('#langToggle').forEach(wireLangMenu);
-  const slot = document.getElementById('navAuth');
-  if (slot) {
-    if (session.loggedIn) {
-      slot.innerHTML = `<a class="btn small dark" href="/dashboard.html" data-th="ห้องของฉัน" data-en="My account">ห้องของฉัน</a>
-        <button class="btn small light" id="logoutBtn" data-th="ออกจากระบบ" data-en="Log out">ออกจากระบบ</button>`;
-      document.getElementById('logoutBtn').onclick = logout;
-    } else {
-      slot.innerHTML = `<a class="btn small light" href="/start.html" data-th="เข้าสู่ระบบ" data-en="Log in">เข้าสู่ระบบ</a>
-        <a class="btn small primary" href="/start.html" data-th="เริ่มใช้งาน" data-en="Get started">เริ่มใช้งาน</a>`;
-    }
-  }
-  const navIn = document.querySelector('.nav-in');
-  const links = document.querySelector('.nav-links');
-  if (navIn && links && !document.querySelector('.hamb')) {
-    const hamb = document.createElement('button');
-    hamb.className = 'hamb';
-    hamb.setAttribute('aria-label', 'Menu');
-    hamb.setAttribute('aria-expanded', 'false');
-    hamb.innerHTML = '<span></span><span></span><span></span>';
-    hamb.onclick = () => {
-      const open = document.body.classList.toggle('menu-open');
-      hamb.setAttribute('aria-expanded', String(open));
-    };
-    navIn.insertBefore(hamb, navIn.querySelector('.nav-right'));
-    links.querySelectorAll('a').forEach((a) => a.addEventListener('click', () => {
-      document.body.classList.remove('menu-open');
-      hamb.setAttribute('aria-expanded', 'false');
-    }));
-  }
+  renderNavAuth(page);
+  wireMenu();
   applyLang();
 }
 
@@ -199,7 +264,7 @@ export function bragFigure(display) {
 }
 
 // reCAPTCHA v3 (invisible): one token per demo start, verified server-side.
-// Same shape as the classic-script twin in app.js (demo.html): '' means
+// Used by the demo stage (demo.js) and live session start: '' means
 // "no token" (gate disabled, script blocked, or execute failed) and the
 // caller omits the field — the server then fails closed with a friendly
 // client-side message, never silently.
@@ -245,7 +310,7 @@ export async function captchaToken(action) {
   }
 }
 
-// Demo-start errors mapped to honest user copy (mirrors app.js wording).
+// Demo-start errors mapped to honest user copy (shared by demo.js).
 export function demoStartMessage(e) {
   const m = String(e?.data?.error || e?.message || e || '');
   if (m.includes('demo-rate-limited')) {

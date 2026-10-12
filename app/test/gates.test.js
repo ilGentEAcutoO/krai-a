@@ -8,6 +8,10 @@ import { config } from '../src/config.js';
 import { addMember, getMemberByOwner, countReject, setReputation, getReputation, clearReputation } from '../src/store.js';
 import { voiceIncoming, voiceTurn } from '../src/twilio/voice.js';
 
+// Legacy per-household-number flow (identify by To): pin mode A so the
+// suite doesn't depend on IDENTIFY_MODE in .env (B is the default now).
+config.identifyMode = 'A';
+
 const AI = '+6621000999'; // dedicated test number (never the demo seed)
 const OWNER = '+6681000999';
 addMember({ ownerPhone: OWNER, aiNumber: AI });

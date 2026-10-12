@@ -32,7 +32,7 @@ describe('store snapshot round-trip', () => {
 });
 
 describe('auth snapshot round-trip', () => {
-  it('sessions and pending OTPs survive serialize/restore', () => {
+  it('sessions survive serialize/restore; live OTP codes are never persisted', () => {
     requestOtp('+6681400003');
     const t = createSession('m_persist');
     const snap = serializeAuth();
@@ -42,7 +42,7 @@ describe('auth snapshot round-trip', () => {
 
     restoreAuth(JSON.parse(JSON.stringify(snap)));
     assert.equal(getSession(t).memberId, 'm_persist');
-    assert.equal(verifyOtp('+6681400003', '000000').error, 'wrong-code'); // record present
+    assert.equal(verifyOtp('+6681400003', '000000').error, 'code-expired'); // codes stay out of snapshots
   });
 });
 

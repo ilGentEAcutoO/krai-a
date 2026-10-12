@@ -4,6 +4,9 @@
 import { describe, it, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { config } from '../src/config.js';
 import {
   addMember, getMemberByOwner, createCall, getCall, addTurn, setVerdict, endCall,
@@ -12,6 +15,10 @@ import {
 import { voiceIncoming, voiceTurn } from '../src/twilio/voice.js';
 import { buildMessage, buildFlexMessage, notifyOwner } from '../src/notify/index.js';
 import { buildEvidenceBundle, privacyNoticeTh } from '../src/evidence.js';
+
+// Legacy per-household-number flow (identify by To): pin mode A so the
+// suite doesn't depend on IDENTIFY_MODE in .env (B is the default now).
+config.identifyMode = 'A';
 
 const AI_A = '+6621000881'; const OWNER_A = '+6681000881';
 const AI_B = '+6621000882'; const OWNER_B = '+6681000882';
@@ -35,14 +42,23 @@ const savedAdapters = [...config.notifyAdapters];
 afterEach(() => { config.notifyAdapters = [...savedAdapters]; });
 
 describe('recording notice', () => {
+  // The notice is spoken either as <Say> text or as the pre-rendered clip
+  // whose prompts.json text is exactly config.recordNotice.
+  const PROMPTS = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public', 'voice-audio', 'prompts.json');
+  const recordClip = () => {
+    const { prompts = {} } = fs.existsSync(PROMPTS) ? JSON.parse(fs.readFileSync(PROMPTS, 'utf8')) : {};
+    return Object.values(prompts).find((p) => p.text === config.recordNotice)?.file || null;
+  };
+  const announces = (xml) => xml.includes(config.recordNotice) || (recordClip() !== null && xml.includes(recordClip()));
+
   it('first answer announces recording once; later turns do not repeat', async () => {
     const r = res();
     voiceIncoming(req({ To: AI_A, From: '+6681300001', ForwardedFrom: '' }), r);
-    assert.match(r.payload, /บันทึกเสียง/);
+    assert.ok(announces(r.payload), r.payload);
     const callId = /callId=([^"&]+)/.exec(r.payload)[1];
     const t = res();
     await voiceTurn(req({ SpeechResult: 'สวัสดีครับ' }, { callId }), t);
-    assert.doesNotMatch(t.payload, /บันทึกเสียง/);
+    assert.ok(!announces(t.payload), t.payload);
   });
 });
 
@@ -138,6 +154,18 @@ describe('evidence export + erasure + retention', () => {
     deleteCall(live.id);
   });
 
+  it('privacy notice is accurate: transcripts not audio, watchers, AI processors, withdrawal', () => {
+    const t = privacyNoticeTh();
+    assert.doesNotMatch(t, /เสียง\/ข้อความ|คลิปเสียง|บันทึกเสียง/); // no audio is stored
+    assert.match(t, /บทสนทนา/);
+    assert.match(t, /ผู้ดูแล/); // family watchers receive alerts
+    assert.match(t, /Gemini/);
+    assert.match(t, /Jev/);
+    assert.match(t, /withdraw/);
+    assert.match(t, /แฮช/); // erased accounts keep only a one-way hash (trial re-use)
+    assert.match(t, /12 เดือน/);
+  });
+
   it('privacy notice discloses basis + retention windows', () => {
     const t = privacyNoticeTh();
     assert.match(t, /legitimate interests/);
@@ -156,7 +184,7 @@ describe('LINE flex alert', () => {
     assert.equal(b.type, 'bubble');
     assert.equal(b.header.contents[0].color, '#E5484D');
     assert.match(b.header.contents[0].text, /สายต้องสงสัย/);
-    assert.match(JSON.stringify(b.body.contents), /\+6681300010/);
+    assert.match(JSON.stringify(b.body.contents), /081300010/); // shown like the app, not raw E.164
     const legit = buildFlexMessage({ call, member, verdict: { ...verdict, verdict: 'LEGIT' } });
     assert.equal(legit.header.contents[0].color, '#0E9D80');
   });
@@ -181,7 +209,8 @@ describe('LINE flex alert', () => {
     let got = null;
     global.fetch = async (url, opts) => { got = { url, body: JSON.parse(opts.body) }; return { ok: true }; };
     try {
-      const { results } = await notifyOwner({ call, member, verdict });
+      // Only a LINE id the owner linked is pushed (no operator fallback).
+      const { results } = await notifyOwner({ call, member: { ...member, lineUserId: 'Uowner_a' }, verdict });
       assert.equal(results[0].ok, true);
       const msg = got.body.messages[0];
       assert.equal(msg.type, 'flex');

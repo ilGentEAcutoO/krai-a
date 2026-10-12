@@ -4,5 +4,7 @@ worker-src
 wrangler.jsonc
 test
 .env
+.env.*
+!.env.example
 .gcloudignore
 README.md

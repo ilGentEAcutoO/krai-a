@@ -9,25 +9,29 @@ import { shouldEndNow, talkBudgetMinutes } from '../src/verdict.js';
 import { personaReply } from '../src/ai.js';
 import { voiceIncoming, voiceTurn } from '../src/twilio/voice.js';
 
+// Legacy per-household-number flow (identify by To): pin mode A so the
+// suite doesn't depend on IDENTIFY_MODE in .env (B is the default now).
+config.identifyMode = 'A';
+
 const savedFraction = config.talkBudgetFraction;
 const savedKey = config.geminiApiKey;
 afterEach(() => { config.talkBudgetFraction = savedFraction; config.geminiApiKey = savedKey; });
 
 describe('talkBudgetMinutes()', () => {
-  it('maps plans to 20% of quota (2 / 10 / 10)', () => {
-    assert.equal(talkBudgetMinutes({ plan: 'starter-20' }), 2);
-    assert.equal(talkBudgetMinutes({ plan: 'plus-100' }), 10);
-    assert.equal(talkBudgetMinutes({ plan: 'family-149' }), 10);
+  it('maps plans to 20% of quota (solo 12 / family 36)', () => {
+    assert.equal(talkBudgetMinutes({ plan: 'solo-99' }), 12);
+    assert.equal(talkBudgetMinutes({ plan: 'family-199' }), 36);
+    assert.equal(talkBudgetMinutes({ plan: 'starter-20' }), 12, 'off-sale plan = its successor');
   });
 
   it('fails closed to the smallest plan for unknown members', () => {
-    assert.equal(talkBudgetMinutes(null), 2);
-    assert.equal(talkBudgetMinutes({ plan: 'nope' }), 2);
+    assert.equal(talkBudgetMinutes(null), 12);
+    assert.equal(talkBudgetMinutes({ plan: 'nope' }), 12);
   });
 
   it('returns Infinity when the fraction is 0 (disabled)', () => {
     config.talkBudgetFraction = 0;
-    assert.equal(talkBudgetMinutes({ plan: 'starter-20' }), Infinity);
+    assert.equal(talkBudgetMinutes({ plan: 'solo-99' }), Infinity);
   });
 });
 
@@ -63,7 +67,7 @@ describe('personaReply() wrap-up mode', () => {
 describe('real phone loop: budget cut still concludes', () => {
   const AI = '+6621000988'; // dedicated test number (never the demo seed)
   const OWNER = '+6681000988';
-  addMember({ ownerPhone: OWNER, aiNumber: AI }); // starter-20 → 2min budget
+  addMember({ ownerPhone: OWNER, aiNumber: AI }); // solo-99 → 12 min budget
 
   const req = (body, query = {}) => ({ body, query, headers: {}, protocol: 'https', get: () => 'test.local' });
   const res = () => {
@@ -88,7 +92,7 @@ describe('real phone loop: budget cut still concludes', () => {
 
   it('over-budget call hangs up with a closing line (verdict kept)', async () => {
     const callId = startCall();
-    getCall(callId).startedAt = new Date(Date.now() - 3 * 60000).toISOString(); // 3min > 2min budget
+    getCall(callId).startedAt = new Date(Date.now() - 13 * 60000).toISOString(); // 13 min > 12 min budget
     const t = res();
     await voiceTurn(req({ SpeechResult: 'สวัสดีครับ มีเรื่องสอบถาม' }, { callId }), t);
     assert.match(t.payload, /<Hangup/);

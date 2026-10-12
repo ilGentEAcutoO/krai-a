@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
-    "test": "node --test test/verdict.test.js test/store.test.js test/auth.test.js test/plans.test.js test/gates.test.js test/privacy.test.js test/persist.test.js test/line.test.js test/budget.test.js test/captcha.test.js test/billing.test.js test/line-link.test.js test/quota.test.js test/quota-warn.test.js test/sms.test.js test/stats.test.js test/captcha-client.test.js"
+    "test": "node --test test/verdict.test.js test/store.test.js test/auth.test.js test/plans.test.js test/gates.test.js test/privacy.test.js test/persist.test.js test/line.test.js test/budget.test.js test/captcha.test.js test/billing.test.js test/line-link.test.js test/quota.test.js test/quota-warn.test.js test/sms.test.js test/stats.test.js test/captcha-client.test.js test/public-api.test.js test/demo-isolation.test.js test/captcha-gate.test.js test/hardening.test.js test/judge.test.js test/judge-engine.test.js test/household.test.js test/member-routes.test.js test/live-voice.test.js test/tts.test.js test/voice-twiml.test.js test/demo-player.test.js test/otp-purpose.test.js test/notify-privacy.test.js test/central-gate.test.js test/lifecycle.test.js test/jobs.test.js test/ratelimit.test.js test/text-demo-gate.test.js test/sec-review.test.js test/check-public.test.js test/voice-status.test.js test/quota-alerts.test.js test/deploy-script.test.js test/qa-fixes.test.js test/pricing-v2.test.js",
+    "eval": "node scripts/eval.mjs"
   },
   "engines": {
     "node": ">=20"

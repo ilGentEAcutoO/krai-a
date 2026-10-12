@@ -15,28 +15,28 @@ import {
 import { billingRouter } from '../src/billingRoutes.js';
 
 // Fake price IDs for mapping tests (never real Stripe IDs).
-config.stripePrices['starter-20'] = { th: 'price_starter_th', intl: 'price_starter_intl' };
-config.stripePrices['plus-100'] = { th: 'price_plus_th', intl: 'price_plus_intl' };
-config.stripePrices['family-149'] = { th: 'price_family_th', intl: 'price_family_intl' };
+config.stripePrices['solo-99'] = { th: 'price_solo_th', intl: 'price_solo_intl', th_year: 'price_solo_th_yr', intl_year: '' };
+config.stripePrices['family-199'] = { th: 'price_family_th', intl: 'price_family_intl', th_year: 'price_family_th_yr', intl_year: '' };
 config.stripePrices.seat = { th: 'price_seat_th', intl: 'price_seat_intl' };
 
 describe('price + payment-method mapping', () => {
   it('resolves TH (THB) and INTL (USD) price IDs per plan and seat', () => {
-    assert.equal(priceIdFor('plan', 'plus-100', 'th'), 'price_plus_th');
-    assert.equal(priceIdFor('plan', 'family-149', 'intl'), 'price_family_intl');
+    assert.equal(priceIdFor('plan', 'solo-99', 'th'), 'price_solo_th');
+    assert.equal(priceIdFor('plan', 'family-199', 'intl'), 'price_family_intl');
+    assert.equal(priceIdFor('plan', 'family-199', 'th', 'year'), 'price_family_th_yr');
     assert.equal(priceIdFor('seat', undefined, 'th'), 'price_seat_th');
     assert.equal(priceIdFor('seat', undefined, 'intl'), 'price_seat_intl');
     assert.equal(priceIdFor('plan', 'nope', 'th'), '');
   });
 
-  it('makes starter-20 PromptPay-only in TH, card+PromptPay otherwise', () => {
-    assert.deepEqual(paymentMethodsFor('plan', 'starter-20', 'th'), ['promptpay']);
-    assert.deepEqual(paymentMethodsFor('plan', 'plus-100', 'th'), ['card', 'promptpay']);
+  it('offers card + PromptPay on every TH checkout', () => {
+    assert.deepEqual(paymentMethodsFor('plan', 'solo-99', 'th'), ['card', 'promptpay']);
+    assert.deepEqual(paymentMethodsFor('plan', 'family-199', 'th'), ['card', 'promptpay']);
     assert.deepEqual(paymentMethodsFor('seat', undefined, 'th'), ['card', 'promptpay']);
   });
 
   it('uses card-only for INTL (PromptPay is THB-only)', () => {
-    assert.deepEqual(paymentMethodsFor('plan', 'starter-20', 'intl'), ['card']);
+    assert.deepEqual(paymentMethodsFor('plan', 'solo-99', 'intl'), ['card']);
     assert.deepEqual(paymentMethodsFor('seat', undefined, 'intl'), ['card']);
   });
 });
@@ -49,28 +49,29 @@ describe('createCheckoutSession (mocked Stripe)', () => {
       return { ok: true, json: async () => ({ id: 'cs_test_1', url: 'https://checkout.stripe.com/c/pay/cs_test_1' }) };
     };
     const s = await createCheckoutSession(
-      { memberId: 'm_1', kind: 'plan', plan: 'starter-20', region: 'th', successUrl: 'https://x/s', cancelUrl: 'https://x/c' },
+      { memberId: 'm_1', kind: 'plan', plan: 'solo-99', region: 'th', successUrl: 'https://x/s', cancelUrl: 'https://x/c' },
       { fetchImpl, secretKey: 'sk_test_fake_key_123' },
     );
     assert.equal(s.url, 'https://checkout.stripe.com/c/pay/cs_test_1');
     assert.equal(got.url, 'https://api.stripe.com/v1/checkout/sessions');
     assert.match(got.opts.headers.Authorization, /^Basic /);
     assert.equal(got.form.get('mode'), 'payment');
-    assert.equal(got.form.get('line_items[0][price]'), 'price_starter_th');
-    assert.deepEqual(got.form.getAll('payment_method_types[]'), ['promptpay']);
+    assert.equal(got.form.get('line_items[0][price]'), 'price_solo_th');
+    assert.deepEqual(got.form.getAll('payment_method_types[]'), ['card', 'promptpay']);
     assert.equal(got.form.get('metadata[memberId]'), 'm_1');
-    assert.equal(got.form.get('metadata[plan]'), 'starter-20');
+    assert.equal(got.form.get('metadata[plan]'), 'solo-99');
+    assert.equal(got.form.get('metadata[interval]'), 'month');
     assert.equal(got.form.get('locale'), 'th');
   });
 
-  it('sends card+promptpay for plus TH and card-only, no locale, for INTL seat', async () => {
+  it('sends card+promptpay for family TH and card-only, no locale, for INTL seat', async () => {
     const forms = [];
     const fetchImpl = async (url, opts) => {
       forms.push(new URLSearchParams(opts.body));
       return { ok: true, json: async () => ({ id: 'cs_x', url: 'https://checkout.stripe.com/u' }) };
     };
     await createCheckoutSession(
-      { memberId: 'm_1', kind: 'plan', plan: 'plus-100', region: 'th', successUrl: 's', cancelUrl: 'c' },
+      { memberId: 'm_1', kind: 'plan', plan: 'family-199', region: 'th', successUrl: 's', cancelUrl: 'c' },
       { fetchImpl, secretKey: 'sk_test_fake_key_123' },
     );
     await createCheckoutSession(
@@ -84,7 +85,7 @@ describe('createCheckoutSession (mocked Stripe)', () => {
   });
 
   it('saves the card on card checkouts: reuses the known customer', async () => {
-    const m = addMember({ ownerPhone: '+66810000711', aiNumber: '+66210001711', plan: 'plus-100' });
+    const m = addMember({ ownerPhone: '+66810000711', aiNumber: '+66210001711', plan: 'solo-99' });
     m.stripeCustomerId = 'cus_known_1';
     let form = null;
     const fetchImpl = async (url, opts) => {
@@ -92,7 +93,7 @@ describe('createCheckoutSession (mocked Stripe)', () => {
       return { ok: true, json: async () => ({ id: 'cs_save_1', url: 'https://checkout.stripe.com/u' }) };
     };
     await createCheckoutSession(
-      { memberId: m.id, kind: 'plan', plan: 'plus-100', region: 'th', successUrl: 's', cancelUrl: 'c' },
+      { memberId: m.id, kind: 'plan', plan: 'solo-99', region: 'th', successUrl: 's', cancelUrl: 'c' },
       { fetchImpl, secretKey: 'sk_test_fake_key_123' },
     );
     assert.equal(form.get('customer'), 'cus_known_1');
@@ -101,7 +102,7 @@ describe('createCheckoutSession (mocked Stripe)', () => {
   });
 
   it('lets Checkout create the customer for first-time card payers', async () => {
-    const m = addMember({ ownerPhone: '+66810000712', aiNumber: '+66210001712', plan: 'starter-20' });
+    const m = addMember({ ownerPhone: '+66810000712', aiNumber: '+66210001712', plan: 'solo-99' });
     let form = null;
     const fetchImpl = async (url, opts) => {
       form = new URLSearchParams(opts.body);
@@ -116,19 +117,20 @@ describe('createCheckoutSession (mocked Stripe)', () => {
     assert.equal(form.get('payment_intent_data[setup_future_usage]'), 'off_session');
   });
 
-  it('never sets customer/save flags on the PromptPay-only checkout', async () => {
+  it('an annual TH plan checkout keeps PromptPay and still saves a card if one is used', async () => {
     let form = null;
     const fetchImpl = async (url, opts) => {
       form = new URLSearchParams(opts.body);
       return { ok: true, json: async () => ({ id: 'cs_save_3', url: 'https://checkout.stripe.com/u' }) };
     };
     await createCheckoutSession(
-      { memberId: 'm_1', kind: 'plan', plan: 'starter-20', region: 'th', successUrl: 's', cancelUrl: 'c' },
+      { memberId: 'm_1', kind: 'plan', plan: 'solo-99', interval: 'year', region: 'th', successUrl: 's', cancelUrl: 'c' },
       { fetchImpl, secretKey: 'sk_test_fake_key_123' },
     );
-    assert.equal(form.get('customer'), null);
-    assert.equal(form.get('customer_creation'), null);
-    assert.equal(form.get('payment_intent_data[setup_future_usage]'), null);
+    assert.equal(form.get('line_items[0][price]'), 'price_solo_th_yr');
+    assert.deepEqual(form.getAll('payment_method_types[]'), ['card', 'promptpay']);
+    assert.equal(form.get('metadata[interval]'), 'year');
+    assert.equal(form.get('payment_intent_data[setup_future_usage]'), 'off_session');
   });
 
   it('throws 503 without a secret key and 502 on Stripe errors', async () => {
@@ -163,19 +165,19 @@ describe('webhook signature verification', () => {
 describe('fulfillment grants', () => {
   it('grants plan (and reactivates), seat, rejects dupes and unknowns', () => {
     __resetFulfilled();
-    const m = addMember({ ownerPhone: '+66810000701', aiNumber: '+6621000171', plan: 'starter-20' });
+    const m = addMember({ ownerPhone: '+66810000701', aiNumber: '+6621000171', plan: 'solo-99' });
     cancelMember(m.id);
-    const plan = fulfillCheckoutSession({ id: 'cs_plan_1', metadata: { memberId: m.id, kind: 'plan', plan: 'family-149' } });
-    assert.deepEqual(plan, { granted: true, kind: 'plan', plan: 'family-149' });
-    assert.equal(getMemberById(m.id).plan, 'family-149');
+    const plan = fulfillCheckoutSession({ id: 'cs_plan_1', metadata: { memberId: m.id, kind: 'plan', plan: 'family-199' } });
+    assert.deepEqual(plan, { granted: true, kind: 'plan', plan: 'family-199', interval: 'month' });
+    assert.equal(getMemberById(m.id).plan, 'family-199');
     assert.equal(getMemberById(m.id).active, true);
-    assert.equal(fulfillCheckoutSession({ id: 'cs_plan_1', metadata: { memberId: m.id, kind: 'plan', plan: 'plus-100' } }).reason, 'duplicate');
-    assert.equal(getMemberById(m.id).plan, 'family-149'); // replay changes nothing
+    assert.equal(fulfillCheckoutSession({ id: 'cs_plan_1', metadata: { memberId: m.id, kind: 'plan', plan: 'solo-99' } }).reason, 'duplicate');
+    assert.equal(getMemberById(m.id).plan, 'family-199'); // replay changes nothing
 
     const seat = fulfillCheckoutSession({ id: 'cs_seat_1', client_reference_id: m.id, metadata: { kind: 'seat' } });
     assert.deepEqual(seat, { granted: true, kind: 'seat', seatsPaid: 1 });
 
-    assert.equal(fulfillCheckoutSession({ id: 'cs_x', metadata: { memberId: 'm_nope', kind: 'plan', plan: 'plus-100' } }).reason, 'unknown-member');
+    assert.equal(fulfillCheckoutSession({ id: 'cs_x', metadata: { memberId: 'm_nope', kind: 'plan', plan: 'solo-99' } }).reason, 'unknown-member');
     assert.equal(fulfillCheckoutSession({ id: 'cs_y', metadata: { memberId: m.id, kind: 'plan', plan: 'yearly-999' } }).reason, 'unknown-kind');
     assert.equal(fulfillCheckoutSession({ metadata: {} }).reason, 'no-session-id');
   });
@@ -186,7 +188,7 @@ describe('billing routes (HTTP)', () => {
   app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
   app.use('/api/billing', billingRouter());
   let server, base;
-  const member = addMember({ ownerPhone: '+66810000702', aiNumber: '+6621000172', plan: 'starter-20' });
+  const member = addMember({ ownerPhone: '+66810000702', aiNumber: '+6621000172', plan: 'solo-99' });
   const token = createSession(member.id);
   const prevSecret = config.stripeSecretKey;
   const prevWh = config.stripeWebhookSecret;
@@ -214,7 +216,7 @@ describe('billing routes (HTTP)', () => {
   });
 
   it('rejects unsigned webhooks, fulfills signed checkout.session.completed once', async () => {
-    const event = { id: 'evt_route_1', type: 'checkout.session.completed', data: { object: { id: 'cs_route_1', metadata: { memberId: member.id, kind: 'plan', plan: 'plus-100' } } } };
+    const event = { id: 'evt_route_1', type: 'checkout.session.completed', data: { object: { id: 'cs_route_1', metadata: { memberId: member.id, kind: 'plan', plan: 'family-199' } } } };
     const body = JSON.stringify(event);
     let r = await fetch(`${base}/api/billing/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body });
     assert.equal(r.status, 400);
@@ -222,8 +224,8 @@ describe('billing routes (HTTP)', () => {
     const sig = `t=${t},v1=${createHmac('sha256', 'whsec_route_test').update(Buffer.concat([Buffer.from(`${t}.`), Buffer.from(body)])).digest('hex')}`;
     r = await fetch(`${base}/api/billing/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': sig }, body });
     assert.equal(r.status, 200);
-    assert.deepEqual(await r.json(), { received: true, granted: true, kind: 'plan', plan: 'plus-100' });
-    assert.equal(getMemberById(member.id).plan, 'plus-100');
+    assert.deepEqual(await r.json(), { received: true, granted: true, kind: 'plan', plan: 'family-199', interval: 'month' });
+    assert.equal(getMemberById(member.id).plan, 'family-199');
     r = await fetch(`${base}/api/billing/webhook`, { method: 'POST', headers: { 'Content-Type': 'application/json', 'stripe-signature': sig }, body });
     assert.equal((await r.json()).reason, 'duplicate');
   });

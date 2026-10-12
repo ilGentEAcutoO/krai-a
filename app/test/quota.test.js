@@ -11,7 +11,9 @@ import {
   quotaSummary, consumeMinutes, grantTopup, setAutoTopup, quotaTotal,
   callsQuotaTotal, quotaPeriodKey, quotaResetAt,
   AUTO_TOPUP_MIN_THRESHOLD, AUTO_TOPUP_MAX_THRESHOLD, AUTO_TOPUP_DEFAULT_THRESHOLD,
+  PLANS, ADDON_SEAT,
 } from '../src/store.js';
+
 import { talkBudgetMinutes } from '../src/verdict.js';
 import { createSession } from '../src/auth.js';
 import {
@@ -22,24 +24,30 @@ import {
 import { billingRouter } from '../src/billingRoutes.js';
 import { demoRouter } from '../src/routes.js';
 
+// Quota mechanics run on two small fixture plans with round numbers (the real
+// catalog — Solo 99 / Family 199 — is pinned in plans.test.js and
+// pricing-v2.test.js). Added to PLANS in this test process only.
+PLANS['fixture-small'] = { name: 'Fixture S', price: 20, usd: 2, annual: 200, quota: 10, calls: 5, numbers: 1, watchers: 0 };
+PLANS['fixture-mid'] = { name: 'Fixture M', price: 100, usd: 6, annual: 1000, quota: 50, calls: 25, numbers: 1, watchers: 0 };
+
 // Fake price IDs (never real Stripe IDs).
-config.stripePrices['starter-20'] = { th: 'price_starter_th', intl: 'price_starter_intl' };
-config.stripePrices['plus-100'] = { th: 'price_plus_th', intl: 'price_plus_intl' };
-config.stripePrices['family-149'] = { th: 'price_family_th', intl: 'price_family_intl' };
+config.stripePrices['fixture-small'] = { th: 'price_starter_th', intl: 'price_starter_intl' };
+config.stripePrices['fixture-mid'] = { th: 'price_plus_th', intl: 'price_plus_intl' };
+config.stripePrices['family-199'] = { th: 'price_family_th', intl: 'price_family_intl' };
 config.stripePrices.seat = { th: 'price_seat_th', intl: 'price_seat_intl' };
 config.stripePrices['topup-small'] = { th: 'price_topup_small_th', intl: 'price_topup_small_intl' };
 config.stripePrices['topup-medium'] = { th: 'price_topup_medium_th', intl: 'price_topup_medium_intl' };
 
 let seq = 0;
-const freshMember = (plan = 'starter-20') => {
+const freshMember = (plan = 'fixture-small') => {
   seq += 1;
   return addMember({ ownerPhone: `+668100008${String(seq).padStart(2, '0')}`, aiNumber: `+662100018${String(seq).padStart(2, '0')}`, plan });
 };
 
 describe('quota model', () => {
   it('summarizes a fresh member from its plan (used 0, full remaining)', () => {
-    const q = quotaSummary(freshMember('starter-20'));
-    assert.equal(q.plan, 'starter-20');
+    const q = quotaSummary(freshMember('fixture-small'));
+    assert.equal(q.plan, 'fixture-small');
     assert.equal(q.quota, 10);
     assert.equal(q.used, 0);
     assert.equal(q.remaining, 10);
@@ -60,19 +68,19 @@ describe('quota model', () => {
   });
 
   it('pools plan + paid seats + topups, and burns via consumeMinutes', () => {
-    const m = freshMember('plus-100');
+    const m = freshMember('fixture-mid');
     m.seatsPaid = 1;
     grantTopup(m, 'topup-small');
-    assert.equal(quotaTotal(m), 50 + 50 + 10);
-    assert.equal(callsQuotaTotal(m), 25 + 25 + 5); // topup-small also adds 5 calls
+    assert.equal(quotaTotal(m), 50 + ADDON_SEAT.quota + 10);
+    assert.equal(callsQuotaTotal(m), 25 + ADDON_SEAT.calls + 5); // topup-small also adds 5 calls
     const q = consumeMinutes(m, 7);
     assert.equal(q.used, 7);
-    assert.equal(q.remaining, 103);
+    assert.equal(q.remaining, 50 + ADDON_SEAT.quota + 10 - 7);
     assert.equal(getMemberById(m.id).minutesUsed, 7);
   });
 
   it('clamps remaining at 0 and ignores negative burns', () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     consumeMinutes(m, -5);
     assert.equal(quotaSummary(m).used, 0);
     const q = consumeMinutes(m, 999);
@@ -81,7 +89,7 @@ describe('quota model', () => {
   });
 
   it('rolls used minutes into a new period but keeps topupMinutes', () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     m.quotaPeriod = '2000-01';
     m.minutesUsed = 7;
     m.topupMinutes = 10;
@@ -94,16 +102,15 @@ describe('quota model', () => {
   });
 
   it('counts only this-period calls toward callsUsed', () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     const c1 = createCall({ memberId: m.id, callerPhone: '+6681300001', aiNumber: m.aiNumber, source: 'demo' });
-    const c2 = createCall({ memberId: m.id, callerPhone: '+6681300002', aiNumber: m.aiNumber, source: 'demo' });
-    getCall(c2.id).startedAt = '2000-01-15T00:00:00.000Z';
+    m.callsUsed['2000-01'] = 3; // calls answered in an old period never count now
     assert.ok(c1.id);
     assert.equal(quotaSummary(m).callsUsed, 1);
   });
 
   it('grants topup minutes AND calls together (coupled packs)', () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     const g = grantTopup(m, 'topup-small');
     assert.deepEqual(g, { granted: true, pack: 'topup-small', minutes: 10, calls: 5, topupMinutes: 10, topupCalls: 5 });
     assert.equal(quotaTotal(m), 20); // 10 plan + 10 topup
@@ -115,7 +122,7 @@ describe('quota model', () => {
   });
 
   it('grows the per-call talk budget with pooled quota', () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     assert.equal(talkBudgetMinutes(m), 2); // 20% of 10
     grantTopup(m, 'topup-medium');
     assert.equal(talkBudgetMinutes(m), 8); // 20% of 40
@@ -156,7 +163,7 @@ describe('topup packs', () => {
 
   it('grants topup minutes once (webhook retries dedupe)', () => {
     __resetFulfilled();
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     const first = fulfillCheckoutSession({
       id: 'cs_topup_grant_1',
       payment_method_types: ['promptpay'],
@@ -175,14 +182,14 @@ describe('topup packs', () => {
 
   it('rejects unknown packs and stamps card customer IDs', () => {
     __resetFulfilled();
-    const m = freshMember('plus-100');
+    const m = freshMember('fixture-mid');
     assert.equal(
       fulfillCheckoutSession({ id: 'cs_bad_pack', metadata: { memberId: m.id, kind: 'topup', pack: 'topup-huge' } }).reason,
       'unknown-kind',
     );
     const ok = fulfillCheckoutSession({
       id: 'cs_card_stamp', customer: 'cus_test_1', payment_method_types: ['card'],
-      metadata: { memberId: m.id, kind: 'plan', plan: 'plus-100', region: 'intl' },
+      metadata: { memberId: m.id, kind: 'plan', plan: 'fixture-mid', region: 'intl' },
     });
     assert.equal(ok.granted, true);
     assert.equal(getMemberById(m.id).payMethod, 'card');
@@ -199,7 +206,7 @@ describe('topup packs', () => {
 
 describe('auto-topup toggle + charge decision', () => {
   it('toggles with threshold clamp and pack validation', () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     assert.deepEqual(setAutoTopup(m, { enabled: true }), { enabled: true, threshold: 5, pack: 'topup-small' });
     assert.equal(setAutoTopup(m, { threshold: 99 }).threshold, AUTO_TOPUP_MAX_THRESHOLD);
     assert.equal(setAutoTopup(m, { threshold: -3 }).threshold, AUTO_TOPUP_MIN_THRESHOLD);
@@ -210,20 +217,20 @@ describe('auto-topup toggle + charge decision', () => {
   });
 
   it('flags due for saved cards, manualPrompt for PromptPay when low', () => {
-    const card = freshMember('starter-20');
+    const card = freshMember('fixture-small');
     card.payMethod = 'card';
     card.stripeCustomerId = 'cus_test_2';
     setAutoTopup(card, { enabled: true, threshold: 30 });
     consumeMinutes(card, 5); // remaining 5 <= 30
     assert.deepEqual(quotaSummary(card).autoTopup, { enabled: true, threshold: 30, pack: 'topup-small', due: true, manualPrompt: false });
 
-    const pp = freshMember('starter-20');
+    const pp = freshMember('fixture-small');
     pp.payMethod = 'promptpay';
     setAutoTopup(pp, { enabled: true, threshold: 30 });
     consumeMinutes(pp, 5);
     assert.deepEqual(quotaSummary(pp).autoTopup, { enabled: true, threshold: 30, pack: 'topup-small', due: false, manualPrompt: true });
 
-    const healthy = freshMember('plus-100');
+    const healthy = freshMember('fixture-mid');
     healthy.payMethod = 'card';
     healthy.stripeCustomerId = 'cus_test_3';
     setAutoTopup(healthy, { enabled: true, threshold: 5 });
@@ -232,7 +239,7 @@ describe('auto-topup toggle + charge decision', () => {
   });
 
   it('flags auto-topup when calls run low even with minutes left', () => {
-    const m = freshMember('starter-20'); // 10 min / 5 calls
+    const m = freshMember('fixture-small'); // 10 min / 5 calls
     m.payMethod = 'card';
     m.stripeCustomerId = 'cus_test_calls';
     setAutoTopup(m, { enabled: true, threshold: 5 });
@@ -246,14 +253,14 @@ describe('auto-topup toggle + charge decision', () => {
   });
 
   it('maybeAutoTopup short-circuits disabled / healthy / manual states', async () => {
-    const off = freshMember('starter-20');
+    const off = freshMember('fixture-small');
     assert.equal((await maybeAutoTopup(off)).reason, 'auto-topup-disabled');
 
-    const healthy = freshMember('plus-100');
+    const healthy = freshMember('fixture-mid');
     setAutoTopup(healthy, { enabled: true, threshold: 5 });
     assert.equal((await maybeAutoTopup(healthy)).reason, 'quota-healthy');
 
-    const manual = freshMember('starter-20');
+    const manual = freshMember('fixture-small');
     manual.payMethod = 'promptpay';
     setAutoTopup(manual, { enabled: true, threshold: 30 });
     consumeMinutes(manual, 9);
@@ -265,7 +272,7 @@ describe('auto-topup toggle + charge decision', () => {
 
   it('charges the saved card off-session (mocked) and grants minutes', async () => {
     __resetFulfilled();
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     m.payMethod = 'card';
     m.stripeCustomerId = 'cus_test_4';
     setAutoTopup(m, { enabled: true, threshold: 30, pack: 'topup-small' });
@@ -317,7 +324,7 @@ describe('auto-topup toggle + charge decision', () => {
   });
 
   it('prompts manual top-up when the customer has no saved card on file', async () => {
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     m.payMethod = 'card';
     m.stripeCustomerId = 'cus_test_nocard';
     setAutoTopup(m, { enabled: true, threshold: 30 });
@@ -338,7 +345,7 @@ describe('auto-topup toggle + charge decision', () => {
   });
 
   it('falls back to manual on Stripe errors and missing cards', async () => {
-    const declined = freshMember('starter-20');
+    const declined = freshMember('fixture-small');
     declined.payMethod = 'card';
     declined.stripeCustomerId = 'cus_test_5';
     setAutoTopup(declined, { enabled: true, threshold: 30 });
@@ -348,7 +355,7 @@ describe('auto-topup toggle + charge decision', () => {
     assert.equal(r.charged, false);
     assert.equal(r.manual, true);
 
-    const noCard = freshMember('starter-20');
+    const noCard = freshMember('fixture-small');
     setAutoTopup(noCard, { enabled: true, threshold: 30 });
     const r2 = await createAutoTopupPayment(noCard, { secretKey: 'sk_test_fake_key_123' });
     assert.equal(r2.reason, 'no-saved-card');
@@ -357,7 +364,7 @@ describe('auto-topup toggle + charge decision', () => {
 
   it('fulfills payment_intent.succeeded once, rejects the rest', () => {
     __resetFulfilled();
-    const m = freshMember('starter-20');
+    const m = freshMember('fixture-small');
     const md = { memberId: m.id, kind: 'topup', pack: 'topup-medium' };
     assert.equal(fulfillAutoTopup({ id: 'pi_x', status: 'requires_payment_method', metadata: md }).reason, 'not-succeeded');
     const ok = fulfillAutoTopup({ id: 'pi_ok_1', status: 'succeeded', customer: 'cus_test_6', metadata: md });
@@ -375,7 +382,7 @@ describe('quota + auto-topup routes (HTTP)', () => {
   app.use('/api', demoRouter(() => {}));
   app.use('/api/billing', billingRouter());
   let server, base;
-  const member = addMember({ ownerPhone: '+66810000891', aiNumber: '+66210001891', plan: 'plus-100' });
+  const member = addMember({ ownerPhone: '+66810000891', aiNumber: '+66210001891', plan: 'fixture-mid' });
   const token = createSession(member.id);
   const prevSecret = config.stripeSecretKey;
   const prevWh = config.stripeWebhookSecret;
@@ -400,7 +407,7 @@ describe('quota + auto-topup routes (HTTP)', () => {
     r = await fetch(`${base}/api/me/quota`, { headers: auth });
     assert.equal(r.status, 200);
     const q = await r.json();
-    assert.equal(q.plan, 'plus-100');
+    assert.equal(q.plan, 'fixture-mid');
     assert.equal(q.quota, 50);
     assert.equal(q.remaining, 50);
     assert.deepEqual(Object.keys(q.packs), ['topup-small', 'topup-medium']);
@@ -459,7 +466,7 @@ describe('quota + auto-topup routes (HTTP)', () => {
     m.payMethod = 'promptpay';
     m.stripeCustomerId = '';
     setAutoTopup(m, { enabled: true, threshold: 30 });
-    consumeMinutes(m, 49); // plus-100 + 10 topup = 60 total, remaining 11 <= 30
+    consumeMinutes(m, 49); // fixture-mid + 10 topup = 60 total, remaining 11 <= 30
     const r = await fetch(`${base}/api/billing/auto-topup/charge`, { method: 'POST', headers: auth });
     assert.equal(r.status, 200);
     const j = await r.json();

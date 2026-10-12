@@ -5,29 +5,32 @@
 // (Stripe does not support recurring PromptPay).
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { config } from './config.js';
-import { PLANS, TOPUP_PACKS, setPlan, getMemberById, grantTopup, quotaSummary } from './store.js';
+import {
+  PLANS, GIFTS, TOPUP_PACKS, setPlan, getMemberById, grantTopup, quotaSummary,
+  isFulfilled, markFulfilled, resetFulfilled, addSeatPeriod, quotaPeriodKey, currentPlanId,
+} from './store.js';
+import { take } from './ratelimit.js';
 
 export const STRIPE_API = 'https://api.stripe.com/v1';
 const WEBHOOK_TOLERANCE_SEC = 300;
 
-// kind: 'plan' | 'seat' | 'topup'. region: 'th' (THB, card + PromptPay) | 'intl' (USD, card).
-// For kind 'topup', `plan` carries the pack id ('topup-small' | 'topup-medium').
-export function priceIdFor(kind, plan, region) {
+// kind: 'plan' | 'seat' | 'topup' | 'gift'. region: 'th' (THB, card +
+// PromptPay) | 'intl' (USD, card). `plan` carries the plan id, the pack id
+// (topup) or the gift id (gift). interval 'year' = the annual plan price.
+// Only items on sale (PLANS / GIFTS / TOPUP_PACKS) have a price.
+export function priceIdFor(kind, plan, region, interval = 'month') {
   const r = region === 'intl' ? 'intl' : 'th';
   if (kind === 'seat') return config.stripePrices.seat[r] || '';
-  if (kind === 'topup') {
-    if (!TOPUP_PACKS[plan]) return '';
-    return config.stripePrices[plan]?.[r] || '';
-  }
+  if (kind === 'topup') return TOPUP_PACKS[plan] ? config.stripePrices[plan]?.[r] || '' : '';
+  if (kind === 'gift') return GIFTS[plan] ? config.stripePrices[plan]?.[r] || '' : '';
   if (!PLANS[plan]) return '';
-  return config.stripePrices[plan]?.[r] || '';
+  return config.stripePrices[plan]?.[interval === 'year' ? `${r}_year` : r] || '';
 }
 
-// Starter ฿20 is PromptPay-only (keeps the ฿20 entry card-free and above
-// PromptPay's ฿20 minimum); other TH checkouts offer card + PromptPay.
+// TH checkouts offer card + PromptPay (annual PromptPay is the cheapest
+// rail); intl is card only.
 export function paymentMethodsFor(kind, plan, region) {
   if (region === 'intl') return ['card'];
-  if (kind === 'plan' && plan === 'starter-20') return ['promptpay'];
   return ['card', 'promptpay'];
 }
 
@@ -38,14 +41,13 @@ export const billingConfigured = () => config.stripeSecretKey.length > 10;
 // known Stripe customer is reused, otherwise Checkout creates one
 // (customer_creation=always — the default if_required would NOT create
 // one in payment mode) and the webhook stamps session.customer onto the
-// member. PromptPay-only checkouts (starter-20 TH) set neither — Stripe
-// rejects off_session setup on PromptPay, and PromptPay can never be
-// charged off-session anyway.
+// member. (A PromptPay-only checkout would set neither — Stripe rejects
+// off_session setup on PromptPay, which can never be charged off-session.)
 export async function createCheckoutSession(
-  { memberId, kind, plan, region = 'th', successUrl, cancelUrl },
+  { memberId, kind, plan, interval = 'month', region = 'th', successUrl, cancelUrl },
   { fetchImpl = fetch, secretKey = config.stripeSecretKey, member = null } = {},
 ) {
-  const price = priceIdFor(kind, plan, region);
+  const price = priceIdFor(kind, plan, region, interval);
   if (!secretKey) throw Object.assign(new Error('billing-unconfigured'), { status: 503 });
   if (!price) throw Object.assign(new Error('price-unconfigured'), { status: 503 });
   const methods = paymentMethodsFor(kind, plan, region);
@@ -64,8 +66,12 @@ export async function createCheckoutSession(
   body.set('metadata[memberId]', memberId);
   body.set('metadata[kind]', kind);
   body.set('metadata[region]', region === 'intl' ? 'intl' : 'th');
-  if (kind === 'plan') body.set('metadata[plan]', plan);
+  if (kind === 'plan') {
+    body.set('metadata[plan]', plan);
+    body.set('metadata[interval]', interval === 'year' ? 'year' : 'month');
+  }
   if (kind === 'topup') body.set('metadata[pack]', plan);
+  if (kind === 'gift') body.set('metadata[gift]', plan);
   body.set('success_url', successUrl);
   body.set('cancel_url', cancelUrl);
   if (region !== 'intl') body.set('locale', 'th');
@@ -107,40 +113,67 @@ export function verifyWebhookSignature(rawBody, sigHeader, secret, { toleranceSe
   });
 }
 
-// Fulfilled checkout session IDs (idempotency for webhook retries).
-// In-memory for the demo; production persists this in Firestore.
-const fulfilledSessions = new Set();
-export const __resetFulfilled = () => fulfilledSessions.clear();
+// Monthly plan = 30 days; annual (metadata[interval]=year) = 365.
+const planPeriodDays = (md = {}) => (md.interval === 'year' ? 365 : 30);
+
+// Paid period: renewals and gifts stack from the later of now / current
+// paid-until. The trial lifecycle counts a household as paid only while
+// this is in the future. Top-ups and seats never touch it.
+function grantPaidPlan(member, planId, days) {
+  setPlan(member.id, planId);
+  const now = Date.now();
+  const from = Math.max(now, Date.parse(member.planPaidUntil || '') || 0);
+  member.planPaidAt = new Date(now).toISOString();
+  member.planPaidUntil = new Date(from + days * 86400000).toISOString();
+  member.active = true;
+  member.cancelledAt = null;
+}
+
+// Fulfilled Stripe ids (idempotency for webhook retries) live in store.js
+// so they persist with the snapshot — a redelivery after a restart is a no-op.
+export const __resetFulfilled = resetFulfilled;
 
 // Grant plan/seat/topup from a checkout.session.completed session object.
 // Returns { granted, reason } — never throws for unknown payloads.
 export function fulfillCheckoutSession(session = {}) {
   const id = session.id;
   if (!id) return { granted: false, reason: 'no-session-id' };
-  if (fulfilledSessions.has(id)) return { granted: false, reason: 'duplicate' };
+  if (isFulfilled(id)) return { granted: false, reason: 'duplicate' };
+  // Async methods complete Checkout before the money lands: grant only when
+  // paid (checkout.session.async_payment_succeeded re-sends the session).
+  if (session.payment_status && !['paid', 'no_payment_required'].includes(session.payment_status)) {
+    return { granted: false, reason: 'unpaid' };
+  }
   const md = session.metadata || {};
   const memberId = md.memberId || session.client_reference_id || '';
   const kind = md.kind || '';
   const member = memberId ? getMemberById(memberId) : null;
   if (!member) return { granted: false, reason: 'unknown-member' };
   if (kind === 'seat') {
-    member.seatsPaid = (member.seatsPaid || 0) + 1;
+    const seatsPaid = addSeatPeriod(member); // one-time ฿69 = one 30-day seat period
     stampPaymentOrigin(member, session, md);
-    fulfilledSessions.add(id);
-    return { granted: true, kind: 'seat', seatsPaid: member.seatsPaid };
+    markFulfilled(id);
+    return { granted: true, kind: 'seat', seatsPaid };
   }
-  if (kind === 'plan' && PLANS[md.plan]) {
-    setPlan(member.id, md.plan);
-    member.active = true;
-    member.cancelledAt = null;
+  const planId = kind === 'plan' ? currentPlanId(md.plan) : null; // sessions from before v2 map to the successor
+  if (planId) {
+    grantPaidPlan(member, planId, planPeriodDays(md));
     stampPaymentOrigin(member, session, md);
-    fulfilledSessions.add(id);
-    return { granted: true, kind: 'plan', plan: md.plan };
+    markFulfilled(id);
+    return { granted: true, kind: 'plan', plan: planId, interval: md.interval === 'year' ? 'year' : 'month' };
+  }
+  if (kind === 'gift' && GIFTS[md.gift]) {
+    const gift = GIFTS[md.gift];
+    grantPaidPlan(member, gift.plan, gift.days); // one-time: nothing renews it
+    member.lastGift = { id: md.gift, at: new Date().toISOString() };
+    stampPaymentOrigin(member, session, md);
+    markFulfilled(id);
+    return { granted: true, kind: 'gift', gift: md.gift, plan: gift.plan };
   }
   if (kind === 'topup' && TOPUP_PACKS[md.pack]) {
     grantTopup(member, md.pack);
     stampPaymentOrigin(member, session, md);
-    fulfilledSessions.add(id);
+    markFulfilled(id);
     return { granted: true, kind: 'topup', pack: md.pack, topupMinutes: member.topupMinutes, topupCalls: member.topupCalls };
   }
   return { granted: false, reason: 'unknown-kind' };
@@ -160,16 +193,17 @@ function stampPaymentOrigin(member, session, md = {}) {
 export function fulfillAutoTopup(pi = {}) {
   const id = pi.id;
   if (!id) return { granted: false, reason: 'no-payment-intent-id' };
-  if (fulfilledSessions.has(id)) return { granted: false, reason: 'duplicate' };
+  if (isFulfilled(id)) return { granted: false, reason: 'duplicate' };
   const md = pi.metadata || {};
   if (md.kind !== 'topup' || !TOPUP_PACKS[md.pack]) return { granted: false, reason: 'unknown-kind' };
   const member = md.memberId ? getMemberById(md.memberId) : null;
   if (!member) return { granted: false, reason: 'unknown-member' };
   if (pi.status && pi.status !== 'succeeded') return { granted: false, reason: 'not-succeeded' };
+  member.autoTopupPendingUntil = null; // the pending charge resolved
   grantTopup(member, md.pack);
   if (pi.customer) member.stripeCustomerId = String(pi.customer).slice(0, 64);
   member.payMethod = 'card';
-  fulfilledSessions.add(id);
+  markFulfilled(id);
   return { granted: true, kind: 'topup', pack: md.pack, topupMinutes: member.topupMinutes, topupCalls: member.topupCalls };
 }
 
@@ -193,9 +227,14 @@ export function topupAmountFor(packId, region) {
 // explicitly provide the payment_method"). Lists are newest-first, so
 // limit=1 returns the latest card.
 export async function latestSavedCard(customerId, { fetchImpl = fetch, secretKey = config.stripeSecretKey } = {}) {
-  const res = await fetchImpl(`${STRIPE_API}/payment_methods?customer=${encodeURIComponent(customerId)}&type=card&limit=1`, {
-    headers: { Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}` },
-  });
+  let res;
+  try {
+    res = await fetchImpl(`${STRIPE_API}/payment_methods?customer=${encodeURIComponent(customerId)}&type=card&limit=1`, {
+      headers: { Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}` },
+    });
+  } catch {
+    return { ok: false, detail: 'transport-error' };
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) return { ok: false, detail: data?.error?.message || '' };
   return { ok: true, paymentMethodId: data?.data?.[0]?.id || '' };
@@ -229,18 +268,32 @@ export async function createAutoTopupPayment(
   body.set('metadata[memberId]', member.id);
   body.set('metadata[kind]', 'topup');
   body.set('metadata[pack]', auto.pack);
-  const res = await fetchImpl(`${STRIPE_API}/payment_intents`, {
-    method: 'POST',
-    headers: {
-      Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`,
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: body.toString(),
-  });
+  // One key per attempt: a network retry of THIS request can never create
+  // a second charge; a later attempt (new card, next low) gets a new key.
+  const period = quotaPeriodKey();
+  if (member.autoTopupAttempts?.period !== period) member.autoTopupAttempts = { period, n: 0 };
+  member.autoTopupAttempts.n += 1;
+  let res;
+  try {
+    res = await fetchImpl(`${STRIPE_API}/payment_intents`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${secretKey}:`).toString('base64')}`,
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Idempotency-Key': `auto-${member.id}-${period}-${member.autoTopupAttempts.n}`,
+      },
+      body: body.toString(),
+    });
+  } catch {
+    return { charged: false, reason: 'stripe-error', manual: true, detail: 'transport-error' };
+  }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     return { charged: false, reason: 'stripe-error', manual: true, detail: data?.error?.message || '' };
   }
+  // Not settled yet (bank auth / processing): quota still reads "due", so
+  // block new charges until the webhook resolves it or the hold expires.
+  if (PENDING_STATUSES.has(data.status)) member.autoTopupPendingUntil = new Date(Date.now() + PENDING_HOLD_MS).toISOString();
   // Webhook payment_intent.succeeded grants the minutes (idempotent); grant
   // here too for the synchronous success path — fulfillAutoTopup dedupes.
   if (data.status === 'succeeded') fulfillAutoTopup({ ...data, metadata: { memberId: member.id, kind: 'topup', pack: auto.pack } });
@@ -249,10 +302,27 @@ export async function createAutoTopupPayment(
 
 // Decide + charge when quota runs low. Called by POST /api/billing/auto-topup/charge
 // (LIFF "charge now" button / cron). Never throws for routine states.
+// Off-session charges are single-flight per member, held while a previous
+// intent is still pending, and capped per member per day.
+const PENDING_STATUSES = new Set(['processing', 'requires_action', 'requires_confirmation', 'requires_capture']);
+const PENDING_HOLD_MS = 30 * 60 * 1000;
+const AUTO_CHARGES_PER_DAY = 3;
+const chargesInFlight = new Set(); // member ids
+
 export async function maybeAutoTopup(member, opts = {}) {
   const q = quotaSummary(member);
   if (!q.autoTopup.enabled) return { charged: false, reason: 'auto-topup-disabled', quota: q };
   if (!q.autoTopup.due && !q.autoTopup.manualPrompt) return { charged: false, reason: 'quota-healthy', quota: q };
   if (q.autoTopup.manualPrompt) return { charged: false, reason: 'manual-topup-required', manual: true, quota: q };
-  return createAutoTopupPayment(member, opts);
+  if (chargesInFlight.has(member.id)) return { charged: false, reason: 'charge-in-flight', quota: q };
+  if (Date.parse(member.autoTopupPendingUntil || '') > Date.now()) return { charged: false, reason: 'charge-pending', quota: q };
+  if (!take(`autotopup:member:${member.id}`, AUTO_CHARGES_PER_DAY, 86400000).ok) {
+    return { charged: false, reason: 'daily-cap', manual: true, quota: q };
+  }
+  chargesInFlight.add(member.id);
+  try {
+    return await createAutoTopupPayment(member, opts);
+  } finally {
+    chargesInFlight.delete(member.id);
+  }
 }

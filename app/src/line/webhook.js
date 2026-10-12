@@ -23,7 +23,7 @@ async function reply(replyToken, messages) {
   if (!res.ok) throw new Error(`line-reply-${res.status}`);
 }
 
-const linkFlex = (title, text, state, label = 'เปิดใครอ่ะ') => ({
+const linkFlex = (title, text, state, label = 'เปิดใครอะ') => ({
   type: 'flex',
   altText: title,
   contents: {
@@ -42,11 +42,11 @@ const linkFlex = (title, text, state, label = 'เปิดใครอ่ะ') 
   },
 });
 
-const HELP_TEXT = 'พิมพ์: สถานะ (เบอร์ AI + วิธีโอนสาย) · สาย (สายล่าสุด) · หรือกดปุ่มเปิดใครอ่ะตั้งค่าทุกอย่างได้เลยค่ะ';
+const HELP_TEXT = 'พิมพ์: สถานะ (เบอร์ AI + วิธีโอนสาย) · สาย (สายล่าสุด) · หรือกดปุ่มเปิดใครอะตั้งค่าทุกอย่างได้เลยค่ะ';
 
 export async function handleFollow(event) {
   await reply(event.replyToken, [linkFlex(
-    'สวัสดีค่ะ 👋 ใครอ่ะมาแล้ว!',
+    'สวัสดีค่ะ 👋 ใครอะมาแล้ว!',
     'ผูกบัญชีเพื่อรับแจ้งเตือนสายต้องสงสัย กดปุ่มด้านล่างได้เลยค่ะ',
     'status',
   )]);
@@ -61,7 +61,7 @@ export async function handleMessage(event) {
   }
   if (/^(สถานะ|status|เบอร์)/i.test(text)) {
     if (!member) {
-      await reply(event.replyToken, [linkFlex('ยังไม่ได้ผูกบัญชี', 'กดปุ่มเพื่อผูกบัญชี LINE กับใครอ่ะก่อนนะคะ', 'status', 'ผูกบัญชี')]);
+      await reply(event.replyToken, [linkFlex('ยังไม่ได้ผูกบัญชี', 'กดปุ่มเพื่อผูกบัญชี LINE กับใครอะก่อนนะคะ', 'status', 'ผูกบัญชี')]);
       return;
     }
     await reply(event.replyToken, [{
@@ -71,10 +71,10 @@ export async function handleMessage(event) {
     return;
   }
   if (/^(สาย|call|ล่าสุด)/i.test(text)) {
-    await reply(event.replyToken, [linkFlex('ดูสายล่าสุด', 'เปิดดูสายที่ใครอ่ะรับให้ พร้อมดาวน์โหลดหลักฐานแจ้งความค่ะ', 'calls', 'ดูสายล่าสุด')]);
+    await reply(event.replyToken, [linkFlex('ดูสายล่าสุด', 'เปิดดูสายที่ใครอะรับให้ พร้อมดาวน์โหลดหลักฐานแจ้งความค่ะ', 'calls', 'ดูสายล่าสุด')]);
     return;
   }
-  await reply(event.replyToken, [linkFlex('ใครอ่ะช่วยอะไรดีคะ?', HELP_TEXT, 'status')]);
+  await reply(event.replyToken, [linkFlex('ใครอะช่วยอะไรดีคะ?', HELP_TEXT, 'status')]);
 }
 
 export async function handlePostback(event) {

@@ -1,6 +1,25 @@
 // Central configuration. All secrets come from environment variables only.
 // Never commit real keys — see .env.example.
 import 'dotenv/config';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+
+// ~/.typesafe.env holds a shared machine-work TypeSafe key: local runs only.
+// Never read in production (Cloud Run sets K_SERVICE; the image NODE_ENV).
+function machineTypesafeKey() {
+  if (process.env.NODE_ENV === 'production' || process.env.K_SERVICE) return '';
+  try {
+    const txt = fs.readFileSync(path.join(os.homedir(), '.typesafe.env'), 'utf8');
+    for (const name of ['TYPESAFE_API_KEY', 'TYPESAFE_AI_KEY', 'TYPESAFE_AI_MAC_KEY']) {
+      const m = txt.match(new RegExp(`^\\s*${name}\\s*=\\s*"?([^"\\r\\n]*)"?`, 'm'));
+      if (m && m[1].trim()) return m[1].trim();
+    }
+  } catch {
+    // no machine key file
+  }
+  return '';
+}
 
 function num(name, fallback) {
   const v = Number(process.env[name]);
@@ -10,14 +29,34 @@ function num(name, fallback) {
 export const config = {
   port: num('PORT', 8080),
 
-  // Mode A (default): one virtual number per household, identify by To.
-  // Mode B (scale): one shared number, identify by ForwardedFrom header.
-  identifyMode: process.env.IDENTIFY_MODE === 'B' ? 'B' : 'A',
+  // Mode B (default): one central shared AI number per country; a call is
+  // answered only if forwarded from a registered protected number.
+  // Mode A (legacy demo): one virtual number per household, identify by To.
+  identifyMode: process.env.IDENTIFY_MODE === 'A' ? 'A' : 'B',
 
-  // Gemini (Google AI). Empty key = RULES mock mode for offline demo.
+  // Gemini (Google AI): escalation verdicts, owner reasons, persona lines.
+  // gemini-3.5-flash-lite = current stable Flash-Lite: same 20/20 on the
+  // judge smoke as gemini-3.8-flash at ~1.5 s vs ~3.8 s, and a caller waits
+  // in silence on every turn (2.0-flash was shut down 2026-06-01).
+  // Empty key = canned persona + templated reasons.
   geminiApiKey: process.env.GEMINI_API_KEY || '',
-  geminiModel: process.env.GEMINI_MODEL || 'gemini-2.0-flash',
-  geminiTimeoutMs: num('GEMINI_TIMEOUT_MS', 12000),
+  geminiModel: process.env.GEMINI_MODEL || 'gemini-3.5-flash-lite',
+  geminiTimeoutMs: num('GEMINI_TIMEOUT_MS', 12000), // off-call work (reasons at build time)
+  geminiTurnTimeoutMs: num('GEMINI_TURN_TIMEOUT_MS', 4000), // per Gemini call during a live turn
+  // Whole-turn deadline: judge + spoken reply <= 8 s even if every engine
+  // hangs (Twilio drops a webhook after 15 s). See judge/index.js.
+  judgeBudgetMs: 5000,
+  replyBudgetMs: 3000,
+
+  // Jev (TypeSafe System One): the per-turn judge. Key from env, else the
+  // machine key for local work only (see machineTypesafeKey).
+  typesafeApiKey: process.env.TYPESAFE_API_KEY || process.env.TYPESAFE_AI_KEY || process.env.TYPESAFE_AI_MAC_KEY || machineTypesafeKey(),
+  jevModel: process.env.JEV_MODEL || 'jev-latest',
+  jevTimeoutMs: num('JEV_TIMEOUT_MS', 4000),
+
+  // No AI network calls: AI_OFFLINE=1, and always under `node --test` (the
+  // suite must stay free and deterministic) unless AI_LIVE_TESTS=1.
+  aiOffline: process.env.AI_OFFLINE === '1' || (Boolean(process.env.NODE_TEST_CONTEXT) && process.env.AI_LIVE_TESTS !== '1'),
 
   // Verdict confidence gate: only SCAM/LEGIT at high confidence, else UNSURE.
   verdictThreshold: 0.8,
@@ -75,7 +114,7 @@ export const config = {
 
   // PDPA tab-3: spoken recording notice + retention windows. Day counts are
   // operational defaults pending lawyer confirmation — disclosed via /privacy.
-  recordNotice: process.env.RECORD_NOTICE_TH || 'เพื่อความปลอดภัย สายนี้มีการบันทึกเสียงค่ะ',
+  recordNotice: process.env.RECORD_NOTICE_TH || 'สายนี้มีการบันทึกบทสนทนาเพื่อความปลอดภัยค่ะ',
   retentionLegitDays: num('RETENTION_LEGIT_DAYS', 7),
   retentionUnsureDays: num('RETENTION_UNSURE_DAYS', 90),
   retentionScamDays: num('RETENTION_SCAM_DAYS', 365),
@@ -87,15 +126,23 @@ export const config = {
   // Stripe billing (test mode). Empty secret = billing disabled (503).
   stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
   stripeWebhookSecret: process.env.STRIPE_WEBHOOK_SECRET || '',
-  // One-time prices per plan/seat x region (THB for th, USD for intl).
+  // One-time prices (pricing v2) per item x region (THB for th, USD for intl);
+  // plans also have an annual price (_YR). Unset = that item can't be bought.
   stripePrices: {
-    'starter-20': { th: process.env.STRIPE_PRICE_STARTER_TH || '', intl: process.env.STRIPE_PRICE_STARTER_INTL || '' },
-    'plus-100': { th: process.env.STRIPE_PRICE_PLUS_TH || '', intl: process.env.STRIPE_PRICE_PLUS_INTL || '' },
-    'family-149': { th: process.env.STRIPE_PRICE_FAMILY_TH || '', intl: process.env.STRIPE_PRICE_FAMILY_INTL || '' },
+    'solo-99': {
+      th: process.env.STRIPE_PRICE_SOLO_TH || '', intl: process.env.STRIPE_PRICE_SOLO_INTL || '',
+      th_year: process.env.STRIPE_PRICE_SOLO_TH_YR || '', intl_year: process.env.STRIPE_PRICE_SOLO_INTL_YR || '',
+    },
+    'family-199': {
+      th: process.env.STRIPE_PRICE_FAMILY_TH || '', intl: process.env.STRIPE_PRICE_FAMILY_INTL || '',
+      th_year: process.env.STRIPE_PRICE_FAMILY_TH_YR || '', intl_year: process.env.STRIPE_PRICE_FAMILY_INTL_YR || '',
+    },
+    'gift-solo-990': { th: process.env.STRIPE_PRICE_GIFT_SOLO || '', intl: process.env.STRIPE_PRICE_GIFT_SOLO_INTL || '' },
+    'gift-family-1990': { th: process.env.STRIPE_PRICE_GIFT_FAMILY || '', intl: process.env.STRIPE_PRICE_GIFT_FAMILY_INTL || '' },
     seat: { th: process.env.STRIPE_PRICE_SEAT_TH || '', intl: process.env.STRIPE_PRICE_SEAT_INTL || '' },
     'topup-small': { th: process.env.STRIPE_PRICE_TOPUP_SMALL_TH || '', intl: process.env.STRIPE_PRICE_TOPUP_SMALL_INTL || '' },
     'topup-medium': { th: process.env.STRIPE_PRICE_TOPUP_MEDIUM_TH || '', intl: process.env.STRIPE_PRICE_TOPUP_MEDIUM_INTL || '' },
   },
 };
 
-export const isLiveAI = () => config.geminiApiKey.length > 10;
+export const isLiveAI = () => config.geminiApiKey.length > 10 && !config.aiOffline;

@@ -1,0 +1,412 @@
+{
+  "version": 1,
+  "recordedAt": "2026-10-12T07:19:50.963Z",
+  "engine": {
+    "judge": "jev-latest",
+    "judgeEngines": [
+      "gemini",
+      "jev",
+      "rule"
+    ],
+    "persona": "gemini-3.5-flash-lite",
+    "personaEngines": [
+      "canned",
+      "gemini"
+    ],
+    "tts": "gemini-3.8-flash-tts"
+  },
+  "voices": {
+    "ai": "Achernar",
+    "callerMale": "Alnilam",
+    "callerFemale": "Laomedeia",
+    "hospital": "Callirrhoe",
+    "survey": "Umbriel"
+  },
+  "scenarios": [
+    {
+      "id": "scam-police",
+      "expected": "SCAM",
+      "titleTh": "ตำรวจปลอม",
+      "titleEn": "Fake police",
+      "callerTh": "อ้างตัวเป็นตำรวจ สภ.เมือง",
+      "callerEn": "Claims to be a police officer",
+      "callerPhone": "081-999-0001",
+      "icon": "police",
+      "callerVoice": "Alnilam",
+      "totalMs": 35890,
+      "turns": [
+        {
+          "role": "ai",
+          "textTh": "สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ",
+          "textEn": "Hello, I'm taking this call for the owner. May I ask who is calling and what this is regarding?",
+          "audio": "/demo/audio/scam-police-00.mp3",
+          "ms": 8251,
+          "verdict": null,
+          "engine": "canned"
+        },
+        {
+          "role": "caller",
+          "textTh": "สวัสดีครับ ผมร้อยตำรวจโทสมศักดิ์ จาก สภ.เมืองครับ มีหมายเรียกคดีฟอกเงินออกในชื่อเจ้าของเบอร์นี้ครับ",
+          "textEn": "Hello, this is Police Lieutenant Somsak from the city police station. There's a summons for a money-laundering case in the name of this number's owner.",
+          "audio": "/demo/audio/scam-police-01.mp3",
+          "ms": 6899,
+          "verdict": {
+            "verdict": "SCAM",
+            "confidence": 0.74,
+            "reasonTh": "มิจฉาชีพอ้างเป็นตำรวจโทรมาแจ้งเรื่องหมายเรียกคดีฟอกเงิน ซึ่งเป็นกลโกงยอดฮิต",
+            "reasonEn": "The caller claimed to be a police officer reporting a money laundering summons, which is a common scam.",
+            "engine": "gemini"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ขอทราบชื่อและเบอร์โทรติดต่อกลับด้วยนะคะ",
+          "textEn": "Could I please have your name and callback number?",
+          "audio": "/demo/audio/scam-police-02.mp3",
+          "ms": 3692,
+          "verdict": null,
+          "engine": "gemini"
+        },
+        {
+          "role": "caller",
+          "textTh": "บัญชีธนาคารของเจ้าของเบอร์พัวพันกับขบวนการค้ายาเสพติด ถ้าไม่ให้ความร่วมมือภายในวันนี้ บัญชีจะถูกอายัดทั้งหมดนะครับ",
+          "textEn": "The owner's bank account is linked to a drug ring. If they don't cooperate today, every account will be frozen.",
+          "audio": "/demo/audio/scam-police-03.mp3",
+          "ms": 8253,
+          "verdict": {
+            "verdict": "SCAM",
+            "confidence": 0.99,
+            "reasonTh": "ผู้โทรอ้างเป็นตำรวจแจ้งว่ามีหมายเรียกคดีฟอกเงินและขู่จะอายัดบัญชีธนาคาร",
+            "reasonEn": "The caller claimed to be a police officer reporting a money laundering summons and threatened to freeze bank accounts.",
+            "engine": "jev"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ดิฉันจะแจ้งข้อความนี้ให้เจ้าของเบอร์ทราบเพื่อตรวจสอบเองค่ะ ขอบคุณที่ติดต่อมานะคะ สวัสดีค่ะ",
+          "textEn": "I'll pass this message to the owner so they can check it. Thank you for calling. Goodbye.",
+          "audio": "/demo/audio/scam-police-04.mp3",
+          "ms": 8795,
+          "verdict": null,
+          "engine": "gemini"
+        }
+      ],
+      "final": {
+        "verdict": "SCAM",
+        "confidence": 0.99,
+        "reasonTh": "ผู้โทรอ้างเป็นตำรวจแจ้งว่ามีหมายเรียกคดีฟอกเงินและขู่จะอายัดบัญชีธนาคาร",
+        "reasonEn": "The caller claimed to be a police officer reporting a money laundering summons and threatened to freeze bank accounts.",
+        "lineTh": "ตัดสายแล้ว — ร.ต.ท.สมศักดิ์ สภ.เมือง อ้างคดีฟอกเงิน จะอายัดบัญชี ไม่แจ้งเบอร์กลับ",
+        "lineEn": "Hung up — Pol. Lt. Somsak, Mueang Police: cited money laundering, account freeze. No callback."
+      }
+    },
+    {
+      "id": "scam-parcel",
+      "expected": "SCAM",
+      "titleTh": "พัสดุตกค้าง",
+      "titleEn": "Stuck parcel",
+      "callerTh": "อ้างเป็นบริษัทขนส่ง",
+      "callerEn": "Claims to be a courier company",
+      "callerPhone": "081-999-0002",
+      "icon": "parcel",
+      "callerVoice": "Laomedeia",
+      "totalMs": 31660,
+      "turns": [
+        {
+          "role": "ai",
+          "textTh": "สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ",
+          "textEn": "Hello, I'm answering on behalf of the owner. May I ask where you're calling from and what this is regarding?",
+          "audio": "/demo/audio/scam-parcel-00.mp3",
+          "ms": 8251,
+          "verdict": null,
+          "engine": "canned"
+        },
+        {
+          "role": "caller",
+          "textTh": "สวัสดีค่ะ ติดต่อจากบริษัทขนส่งค่ะ มีพัสดุตกค้างในชื่อเจ้าของเบอร์นี้ ส่งไม่สำเร็จมาสองรอบแล้วค่ะ",
+          "textEn": "Hello, this is the courier company. There's a parcel under this number's owner that we've failed to deliver twice.",
+          "audio": "/demo/audio/scam-parcel-01.mp3",
+          "ms": 5930,
+          "verdict": {
+            "verdict": "SCAM",
+            "confidence": 0.51,
+            "reasonTh": "มิจฉาชีพมักอ้างว่าเป็นบริษัทขนส่งแจ้งว่ามีพัสดุตกค้างเพื่อหลอกเอาข้อมูล",
+            "reasonEn": "Scammers often pretend to be a delivery company claiming undelivered parcels to steal information.",
+            "engine": "gemini"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ขอทราบชื่อและเบอร์โทรกลับด้วยนะคะ",
+          "textEn": "Could I please have your name and callback number?",
+          "audio": "/demo/audio/scam-parcel-02.mp3",
+          "ms": 2988,
+          "verdict": null,
+          "engine": "gemini"
+        },
+        {
+          "role": "caller",
+          "textTh": "ทางเราตรวจพบของผิดกฎหมายอยู่ข้างในค่ะ ถ้าไม่ยืนยันตัวตนภายในวันนี้ จะถูกส่งเรื่องให้ตำรวจดำเนินคดีนะคะ",
+          "textEn": "We found illegal items inside. If the identity isn't confirmed today, the case goes to the police.",
+          "audio": "/demo/audio/scam-parcel-03.mp3",
+          "ms": 6161,
+          "verdict": {
+            "verdict": "SCAM",
+            "confidence": 0.99,
+            "reasonTh": "ผู้โทรอ้างว่าเป็นบริษัทขนส่งแจ้งว่ามีพัสดุตกค้างและขู่ว่าจะดำเนินคดีทางกฎหมาย",
+            "reasonEn": "The caller claimed to be a delivery company with a pending parcel and threatened legal action.",
+            "engine": "jev"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "รับเรื่องไว้เรียบร้อยแล้วค่ะ เดี๋ยวจะแจ้งเจ้าของเบอร์ตรวจสอบกับหน่วยงานที่เกี่ยวข้องโดยตรงอีกครั้งนะคะ ขอบคุณค่ะ",
+          "textEn": "I've noted your message and will ask them to check directly with the relevant department. Thank you.",
+          "audio": "/demo/audio/scam-parcel-04.mp3",
+          "ms": 8330,
+          "verdict": null,
+          "engine": "gemini"
+        }
+      ],
+      "final": {
+        "verdict": "SCAM",
+        "confidence": 0.99,
+        "reasonTh": "ผู้โทรอ้างว่าเป็นบริษัทขนส่งแจ้งว่ามีพัสดุตกค้างและขู่ว่าจะดำเนินคดีทางกฎหมาย",
+        "reasonEn": "The caller claimed to be a delivery company with a pending parcel and threatened legal action.",
+        "lineTh": "ตัดสายแล้ว — บริษัทขนส่งแจ้งพบสิ่งผิดกฎหมายในพัสดุตกค้าง ให้ยืนยันตัวตนวันนี้",
+        "lineEn": "Hung up — Delivery company reported parcel with illegal items; demanded ID verification today."
+      }
+    },
+    {
+      "id": "scam-bank",
+      "expected": "SCAM",
+      "titleTh": "ธนาคารปลอม",
+      "titleEn": "Fake bank",
+      "callerTh": "อ้างเป็นฝ่ายความปลอดภัยธนาคาร",
+      "callerEn": "Claims to be the bank's security team",
+      "callerPhone": "081-999-0003",
+      "icon": "bank",
+      "callerVoice": "Alnilam",
+      "totalMs": 34038,
+      "turns": [
+        {
+          "role": "ai",
+          "textTh": "สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ",
+          "textEn": "Hello. I'm answering on behalf of the owner. May I ask who's calling and what this is regarding?",
+          "audio": "/demo/audio/scam-bank-00.mp3",
+          "ms": 8251,
+          "verdict": null,
+          "engine": "canned"
+        },
+        {
+          "role": "caller",
+          "textTh": "สวัสดีครับ ผมโทรจากฝ่ายความปลอดภัยของธนาคารครับ ระบบตรวจพบการโอนเงินออกจากบัญชีของเจ้าของเบอร์แบบผิดปกติครับ",
+          "textEn": "Hello, I'm calling from the bank's security department. Our system detected unusual transfers out of the owner's account.",
+          "audio": "/demo/audio/scam-bank-01.mp3",
+          "ms": 7301,
+          "verdict": {
+            "verdict": "SCAM",
+            "confidence": 0.81,
+            "reasonTh": "มิจฉาชีพแอบอ้างเป็นธนาคารแจ้งว่าพบบัญชีมีความผิดปกติ เพื่อหลอกให้เหยื่อหลงเชื่อ",
+            "reasonEn": "Scammers impersonate a bank claiming unusual account activity to deceive the victim.",
+            "engine": "gemini"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ขอทราบชื่อและเบอร์โทรศัพท์ติดต่อกลับด้วยนะคะ",
+          "textEn": "Could I have your name and callback number, please?",
+          "audio": "/demo/audio/scam-bank-02.mp3",
+          "ms": 3879,
+          "verdict": null,
+          "engine": "gemini"
+        },
+        {
+          "role": "caller",
+          "textTh": "เพื่อระงับความเสียหาย ต้องติดตั้งแอปป้องกันตามลิงก์ที่ผมส่งให้ทาง SMS แล้วแจ้งรหัสยืนยันหกหลักภายในสิบนาทีครับ",
+          "textEn": "To stop the damage, install the protection app from the link I sent by SMS and read me the 6-digit code within ten minutes.",
+          "audio": "/demo/audio/scam-bank-03.mp3",
+          "ms": 6997,
+          "verdict": {
+            "verdict": "SCAM",
+            "confidence": 0.95,
+            "reasonTh": "ผู้โทรอ้างว่าเป็นเจ้าหน้าที่ธนาคารแจ้งว่าบัญชีมีความผิดปกติและให้ติดตั้งแอปพลิเคชันเพื่อระงับความเสียหาย",
+            "reasonEn": "The caller claimed to be from the bank reporting account abnormalities and asked to install an app to prevent damage.",
+            "engine": "rule"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ทางเราจะรับเรื่องแจ้งเจ้าของเบอร์ตรวจสอบเองค่ะ ขอบคุณที่ติดต่อมานะคะ สวัสดีค่ะ",
+          "textEn": "I'll pass this along to the owner to review. Thank you for calling. Goodbye.",
+          "audio": "/demo/audio/scam-bank-04.mp3",
+          "ms": 7610,
+          "verdict": null,
+          "engine": "gemini"
+        }
+      ],
+      "final": {
+        "verdict": "SCAM",
+        "confidence": 0.95,
+        "reasonTh": "ผู้โทรอ้างว่าเป็นเจ้าหน้าที่ธนาคารแจ้งว่าบัญชีมีความผิดปกติและให้ติดตั้งแอปพลิเคชันเพื่อระงับความเสียหาย",
+        "reasonEn": "The caller claimed to be from the bank reporting account abnormalities and asked to install an app to prevent damage.",
+        "lineTh": "ตัดสายแล้ว — ฝ่ายความปลอดภัยธนาคาร แจ้งเงินโอนผิดปกติ ให้โหลดแอปผ่าน SMS และขอรหัส",
+        "lineEn": "Hung up — Bank security; reported abnormal transfer, asked to install app via SMS and share code"
+      }
+    },
+    {
+      "id": "legit-hospital",
+      "expected": "LEGIT",
+      "titleTh": "โรงพยาบาลนัดตรวจ",
+      "titleEn": "Hospital appointment",
+      "callerTh": "เจ้าหน้าที่โรงพยาบาลยืนยันนัด",
+      "callerEn": "Hospital staff confirming an appointment",
+      "callerPhone": "02-100-2003",
+      "icon": "hospital",
+      "callerVoice": "Callirrhoe",
+      "totalMs": 39929,
+      "turns": [
+        {
+          "role": "ai",
+          "textTh": "สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ",
+          "textEn": "Hello, I'm answering on their behalf. May I ask where you're calling from and what this is regarding?",
+          "audio": "/demo/audio/legit-hospital-00.mp3",
+          "ms": 8251,
+          "verdict": null,
+          "engine": "canned"
+        },
+        {
+          "role": "caller",
+          "textTh": "สวัสดีค่ะ ติดต่อจากโรงพยาบาลรักษ์สุขภาพค่ะ โทรมายืนยันนัดตรวจสุขภาพประจำปี วันพฤหัสนี้ เก้าโมงเช้าค่ะ",
+          "textEn": "Hello, this is Raksukkhaphap Hospital, confirming the annual check-up this Thursday at 9 a.m.",
+          "audio": "/demo/audio/legit-hospital-01.mp3",
+          "ms": 8877,
+          "verdict": {
+            "verdict": "LEGIT",
+            "confidence": 0.99,
+            "reasonTh": "ผู้โทรจากโรงพยาบาลรักษ์สุขภาพโทรมายืนยันนัดตรวจสุขภาพประจำปีในวันพฤหัสบดีนี้เวลาเก้าโมงเช้า",
+            "reasonEn": "The caller from Rak Sukkapap Hospital called to confirm the annual health check-up appointment this Thursday at 9 AM.",
+            "engine": "jev"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ขอทราบชื่อและเบอร์โทรศัพท์ติดต่อกลับด้วยนะคะ",
+          "textEn": "May I please have your name and callback number?",
+          "audio": "/demo/audio/legit-hospital-02.mp3",
+          "ms": 3879,
+          "verdict": null,
+          "engine": "gemini"
+        },
+        {
+          "role": "caller",
+          "textTh": "ดิฉันชื่อสุดา ฝ่ายนัดหมายค่ะ ถ้าวันนั้นไม่สะดวก เลื่อนได้นะคะ โทรกลับที่ 02-100-2003 ได้เลยค่ะ",
+          "textEn": "I'm Suda from appointments. If that day doesn't work, it can be moved. Please call back on 02-100-2003.",
+          "audio": "/demo/audio/legit-hospital-03.mp3",
+          "ms": 9663,
+          "verdict": {
+            "verdict": "LEGIT",
+            "confidence": 0.99,
+            "reasonTh": "ผู้โทรจากโรงพยาบาลรักษ์สุขภาพโทรมายืนยันนัดตรวจสุขภาพประจำปีในวันพฤหัสบดีนี้เวลาเก้าโมงเช้า",
+            "reasonEn": "The caller from Rak Sukkapap Hospital called to confirm the annual health check-up appointment this Thursday at nine in the morning.",
+            "engine": "jev"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "รับทราบเรื่องนัดตรวจสุขภาพและเบอร์โทรติดต่อกลับแล้วค่ะ เดี๋ยวแจ้งเจ้าของเบอร์ให้นะคะ ขอบคุณค่ะ สวัสดีค่ะ",
+          "textEn": "Noted on the health checkup appointment and your number. I'll let them know. Thank you, goodbye.",
+          "audio": "/demo/audio/legit-hospital-04.mp3",
+          "ms": 9259,
+          "verdict": null,
+          "engine": "gemini"
+        }
+      ],
+      "final": {
+        "verdict": "LEGIT",
+        "confidence": 0.99,
+        "reasonTh": "ผู้โทรจากโรงพยาบาลรักษ์สุขภาพโทรมายืนยันนัดตรวจสุขภาพประจำปีในวันพฤหัสบดีนี้เวลาเก้าโมงเช้า",
+        "reasonEn": "The caller from Rak Sukkapap Hospital called to confirm the annual health check-up appointment this Thursday at nine in the morning.",
+        "lineTh": "ฝากข้อความแล้ว — รพ.รักษ์สุขภาพ ยืนยันนัดตรวจสุขภาพ พฤหัส 9.00 น. โทร 02-100-2003",
+        "lineEn": "Message taken — Rak Sukhaphab Hospital to confirm health checkup Thu 9 AM. Callback: 02-100-2003"
+      }
+    },
+    {
+      "id": "unsure-survey",
+      "expected": "UNSURE",
+      "titleTh": "แบบสอบถามแปลก ๆ",
+      "titleEn": "Odd survey",
+      "callerTh": "อ้างทำแบบสอบถาม ข้อมูลไม่ชัด",
+      "callerEn": "Vague survey caller",
+      "callerPhone": "081-999-0009",
+      "icon": "survey",
+      "callerVoice": "Umbriel",
+      "totalMs": 37283,
+      "turns": [
+        {
+          "role": "ai",
+          "textTh": "สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ",
+          "textEn": "Hello. I'm answering on the owner's behalf. May I ask who's calling and what this is regarding?",
+          "audio": "/demo/audio/unsure-survey-00.mp3",
+          "ms": 8251,
+          "verdict": null,
+          "engine": "canned"
+        },
+        {
+          "role": "caller",
+          "textTh": "เอ่อ สวัสดีครับ ผมโทรจากศูนย์วิจัยการตลาดครับ ขอรบกวนสอบถามข้อมูลนิดหน่อยครับ",
+          "textEn": "Uh, hello. I'm calling from a marketing research centre. May I ask a few quick questions?",
+          "audio": "/demo/audio/unsure-survey-01.mp3",
+          "ms": 8125,
+          "verdict": {
+            "verdict": "UNSURE",
+            "confidence": 0.98,
+            "reasonTh": "ผู้โทรระบุว่าโทรมาจากศูนย์วิจัยการตลาดเพื่อขอรบกวนสอบถามข้อมูลนิดหน่อย",
+            "reasonEn": "The caller stated they are calling from a market research center to ask for a little information.",
+            "engine": "jev"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "ขอทราบชื่อและเบอร์โทรกลับด้วยนะคะ",
+          "textEn": "Could I have your name and callback number, please?",
+          "audio": "/demo/audio/unsure-survey-02.mp3",
+          "ms": 2988,
+          "verdict": null,
+          "engine": "gemini"
+        },
+        {
+          "role": "caller",
+          "textTh": "คือ... ขอชื่อจริงกับปีเกิดของเจ้าของเบอร์หน่อยครับ จะได้ลงทะเบียนรับของที่ระลึกครับ",
+          "textEn": "Well... could I get the owner's full name and birth year? It's to register them for a free gift.",
+          "audio": "/demo/audio/unsure-survey-03.mp3",
+          "ms": 7207,
+          "verdict": {
+            "verdict": "UNSURE",
+            "confidence": 0.78,
+            "reasonTh": "ผู้โทรอ้างว่าเป็นศูนย์วิจัยการตลาดและขอข้อมูลส่วนตัวของเจ้าของเบอร์",
+            "reasonEn": "The caller claimed to be from a market research center and asked for personal information.",
+            "engine": "jev"
+          }
+        },
+        {
+          "role": "ai",
+          "textTh": "บันทึกข้อความไว้เรียบร้อยแล้วค่ะ เจ้าของเบอร์จะเป็นผู้พิจารณาการติดต่อกลับเอง ขอบคุณที่ติดต่อเข้ามานะคะ สวัสดีค่ะ",
+          "textEn": "I've taken your message. They will decide whether to call back. Thank you for calling. Goodbye.",
+          "audio": "/demo/audio/unsure-survey-04.mp3",
+          "ms": 10712,
+          "verdict": null,
+          "engine": "gemini"
+        }
+      ],
+      "final": {
+        "verdict": "UNSURE",
+        "confidence": 0.78,
+        "reasonTh": "ผู้โทรอ้างว่าเป็นศูนย์วิจัยการตลาดและขอข้อมูลส่วนตัวของเจ้าของเบอร์",
+        "reasonEn": "The caller claimed to be from a market research center and asked for personal information.",
+        "lineTh": "รอคุณตัดสิน — ศูนย์วิจัยการตลาด ขอชื่อ-ปีเกิดเพื่อรับของที่ระลึก ไม่ระบุเบอร์",
+        "lineEn": "Your call — Market research center requested name and birth year for gift; no callback number"
+      }
+    }
+  ]
+}
