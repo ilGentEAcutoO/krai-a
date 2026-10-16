@@ -4,102 +4,257 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="color-scheme" content="light only">
+<meta name="theme-color" content="#E9F6EE">
 <link rel="icon" href="/favicon.ico">
-<title>เดโม — ใครอะ</title>
-<meta name="description" content="ฟังสายมิจฉาชีพตัวอย่าง แล้วดู AI ใครอะ รับสายแทน ตัดสิน และส่งสรุปเข้า LINE">
+<title>ใครอะ — AI รับสายมิจแทนคนที่คุณรัก · AI Builder Cup</title>
+<meta name="description" content="ใครอะ: AI รับสายเบอร์แปลกแทนคนที่คุณรัก — พ่อแม่ ญาติผู้ใหญ่ ลูกหลาน หรือตัวคุณเอง คุยกับปลายสายด้วย Gemini ตัดสินด้วย Jev ตัดสายมิจ — ฟังเคสจริงหรือลองคุยกับ AI เอง">
+<meta property="og:title" content="KRAI-A — the AI that answers scam calls for the people you love">
+<meta property="og:description" content="Listen to real recorded cases or play the scammer yourself. Gemini talks, Jev judges, Cloud Run serves.">
+<meta property="og:image" content="/logo-512.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai+Looped:wght@500&display=swap">
 <link rel="stylesheet" href="/site.css">
+<link rel="stylesheet" href="/call-demo.css">
 <link rel="stylesheet" href="/demo.css">
+<link rel="modulepreload" href="/js/call-demo.js">
 <link rel="modulepreload" href="/demo-player.js">
 </head>
-<body data-title-th="เดโม — ใครอะ" data-title-en="Demo — Krai-A">
-<nav class="nav"></nav>
+<body class="hk-body" data-title-th="ใครอะ — AI รับสายมิจแทนคนที่คุณรัก · AI Builder Cup" data-title-en="KRAI-A — AI that answers scam calls for the people you love · AI Builder Cup">
+<a class="hk-skip" href="#main" data-th="ข้ามไปที่เดโม" data-en="Skip to the demo">ข้ามไปที่เดโม</a>
 
-<main class="dm" id="main">
-  <header class="dm-head">
-    <h1 data-th="มิจโทรมา AI รับแทน" data-en="Scam call? AI picks up.">มิจโทรมา AI รับแทน</h1>
-    <p class="dm-lede" data-th="แตะหนึ่งสาย แล้วฟัง AI รับสายแทนแม่" data-en="Tap a call and hear the AI answer it for Mom.">แตะหนึ่งสาย แล้วฟัง AI รับสายแทนแม่</p>
-  </header>
-
-  <div class="dm-chips" id="chips" role="group" aria-label="สายตัวอย่าง / Sample calls">
-    <button type="button" class="chip" data-id="scam-police" aria-pressed="true"><span data-th="ตำรวจปลอม" data-en="Fake police">ตำรวจปลอม</span></button>
-    <button type="button" class="chip" data-id="scam-parcel" aria-pressed="false"><span data-th="พัสดุตกค้าง" data-en="Stuck parcel">พัสดุตกค้าง</span></button>
-    <button type="button" class="chip" data-id="scam-bank" aria-pressed="false"><span data-th="ธนาคารปลอม" data-en="Fake bank">ธนาคารปลอม</span></button>
-    <button type="button" class="chip" data-id="legit-hospital" aria-pressed="false"><span data-th="โรงพยาบาล" data-en="Hospital">โรงพยาบาล</span><span class="chip-hint" data-th="คนจริง" data-en="real">คนจริง</span></button>
-    <button type="button" class="chip" data-id="unsure-survey" aria-pressed="false"><span data-th="แบบสอบถาม" data-en="Survey">แบบสอบถาม</span><span class="chip-hint" data-th="ไม่ชัวร์" data-en="unsure">ไม่ชัวร์</span></button>
+<header class="hk-top">
+  <div class="hk-top-in">
+    <a class="hk-brand" href="#main" aria-label="ใครอะ">
+      <img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31">
+      <span class="hk-brand-tx"><b data-th="ใครอะ" data-en="KRAI-A">ใครอะ</b><small>AI Builder Cup · BFSI</small></span>
+    </a>
+    <nav class="hk-links" aria-label="หัวข้อ / Sections">
+      <a href="#flow" data-th="ใช้จริงยังไง" data-en="How it's used">ใช้จริงยังไง</a>
+      <a href="#cases" data-th="เคสทดสอบ" data-en="Cases">เคสทดสอบ</a>
+      <a href="#tech" data-th="เบื้องหลัง" data-en="Under the hood">เบื้องหลัง</a>
+    </nav>
+    <div class="hk-lang" id="langToggle" role="group" aria-label="ภาษา / Language">
+      <button type="button" data-lang="th" lang="th" aria-pressed="true">ไทย</button><button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
+    </div>
   </div>
+</header>
 
-  <section class="stage" id="stage" data-phase="idle" aria-label="สายตัวอย่าง / Sample call">
-    <div class="linecard" id="lineCard" role="status" hidden>
-      <span class="lc-app" aria-hidden="true">ค</span>
-      <div class="lc-main">
-        <div class="lc-top"><b data-th="ใครอะ" data-en="Krai-A">ใครอะ</b><span>LINE</span><time data-th="เมื่อสักครู่" data-en="now">เมื่อสักครู่</time></div>
-        <b class="lc-title" id="lcTitle"></b>
-        <p class="lc-body" id="lcBody"></p>
+<main id="main">
+  <!-- ============ HERO: the problem + the call, right there ============ -->
+  <section class="hk-hero" aria-labelledby="heroTitle">
+    <div class="hk-hero-in">
+      <div class="hk-hero-copy">
+        <p class="hk-tag"><span class="hk-tag-dot" aria-hidden="true"></span><span data-th="ต้นแบบที่ใช้งานได้จริง · ฟังได้ทันที" data-en="Working prototype · listen right now">ต้นแบบที่ใช้งานได้จริง · ฟังได้ทันที</span></p>
+        <h1 id="heroTitle" class="hk-h1" data-th="มิจโทรหาแม่<br>AI รับสายก่อน" data-en="Scammers call Mom.<br>The AI picks up first.">มิจโทรหาแม่<br>AI รับสายก่อน</h1>
+        <p class="hk-lede" data-th="แก๊งคอลเซ็นเตอร์โทรหาทุกคน และผู้สูงอายุเสียหนักที่สุด <b>ใครอะ</b> ให้ AI รับเบอร์แปลกแทนคนที่คุณรัก — พ่อแม่ ญาติผู้ใหญ่ ลูกหลาน หรือตัวคุณเอง คุยกับปลายสาย จับมุกมิจ แล้วบอกคุณทันที" data-en="Call-centre gangs call everyone, and older people lose the most. <b>KRAI-A</b> answers unknown numbers for the people you love (parents, grandparents, kids, or you): it talks to the caller, spots the scam script, and tells you right away.">แก๊งคอลเซ็นเตอร์โทรหาทุกคน และผู้สูงอายุเสียหนักที่สุด <b>ใครอะ</b> ให้ AI รับเบอร์แปลกแทนคนที่คุณรัก — พ่อแม่ ญาติผู้ใหญ่ ลูกหลาน หรือตัวคุณเอง คุยกับปลายสาย จับมุกมิจ แล้วบอกคุณทันที</p>
+        <ul class="hk-hero-facts" aria-label="ผลทดสอบ / Test results">
+          <li><b>29/29</b><span data-th="สายมิจที่จับได้" data-en="scam calls caught">สายมิจที่จับได้</span></li>
+          <li><b>0/19</b><span data-th="คนจริงที่ถูกตัดผิด" data-en="real callers blocked">คนจริงที่ถูกตัดผิด</span></li>
+          <li><b data-th="0.30 วิ" data-en="0.30 s">0.30 วิ</b><span data-th="ตัดสินต่อประโยค" data-en="to judge each turn">ตัดสินต่อประโยค</span></li>
+        </ul>
+        <p class="hk-stats-note" data-th="(ชุดทดสอบ 57 สายเขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ)" data-en="(57-call test set written and run entirely by AI agents, with no human testers)">(ชุดทดสอบ 57 สายเขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ)</p>
+        <p class="hk-hero-sim" data-th="สายในเดโมคือ<b>การจำลอง</b>ขั้นตอนจริง: บันทึกจากการรันระบบจริง (Gemini พูด, Jev ตัดสิน)" data-en="The demo calls are <b>simulations</b> of the real flow, recorded from a real run of the system (Gemini speaks, Jev judges).">สายในเดโมคือ<b>การจำลอง</b>ขั้นตอนจริง: บันทึกจากการรันระบบจริง (Gemini พูด, Jev ตัดสิน)</p>
+      </div>
+
+      <div class="hk-hero-call">
+        <div class="hk-call" id="callHost" aria-label="สายตัวอย่าง / Sample call"></div>
+        <button type="button" class="hk-live-mini" data-live-open>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg>
+          <span data-th="หรือสวมบทมิจ แล้วคุยกับ AI เอง" data-en="Or play the scammer and talk to the AI">หรือสวมบทมิจ แล้วคุยกับ AI เอง</span>
+        </button>
       </div>
     </div>
-
-    <div class="st-head">
-      <span class="st-av" id="stAv" aria-hidden="true"></span>
-      <div class="st-who">
-        <b class="st-num" id="stNum">081-999-0001</b>
-        <span class="st-claim" id="stClaim"></span>
-      </div>
-      <span class="st-time" id="stTime" aria-hidden="true">00:00</span>
-      <button type="button" class="st-pp" id="stPause" aria-pressed="false" aria-label="หยุดชั่วคราว" title="หยุดชั่วคราว"><span class="pp-ic" aria-hidden="true"></span></button>
-    </div>
-
-    <div class="st-body">
-      <p class="st-prev" id="stPrev" aria-hidden="true"></p>
-      <div class="st-now" id="stNow" aria-live="polite">
-        <div class="st-sp" id="stSp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span id="stSpName"></span></div>
-        <p class="st-tx" id="stTx"></p>
-        <p class="st-tx2" id="stTx2" lang="th"></p>
-      </div>
-      <button type="button" class="st-play" id="stPlay">
-        <span class="st-play-ic" aria-hidden="true"></span>
-        <span class="st-play-tx"><b data-th="ฟังสายนี้" data-en="Play this call">ฟังสายนี้</b><span id="stPlaySub"></span></span>
-      </button>
-    </div>
-
-    <div class="st-foot">
-      <div class="st-v" aria-live="polite">
-        <b class="vword" id="stV" data-v="">—</b>
-        <span class="vwhy" id="stWhy">AI จะตัดสินระหว่างคุย</span>
-      </div>
-      <span class="st-dots" id="stDots" aria-hidden="true"></span>
-    </div>
-
-    <div class="st-end" id="stEnd" hidden>
-      <button type="button" class="btn light" id="stAgain"><span aria-hidden="true">↻</span> <span data-th="ฟังอีกครั้ง" data-en="Play again">ฟังอีกครั้ง</span></button>
-      <a class="btn primary" href="/start.html" data-th="ให้ AI รับสายแทนคนที่คุณรัก →" data-en="Let AI answer for your loved ones →">ให้ AI รับสายแทนคนที่คุณรัก →</a>
-    </div>
-
   </section>
 
-  <div class="dm-ctl" id="ctl" data-on="false">
-    <button type="button" class="ctl" id="ctlStop"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="6.5" width="11" height="11" rx="1.5"/></svg><span data-th="หยุดเล่น" data-en="Stop">หยุดเล่น</span></button>
-    <button type="button" class="ctl" id="ctlMute" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="ic-on" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z M15.5 9a4 4 0 0 1 0 6 M18 6.5a7.5 7.5 0 0 1 0 11"/><path class="ic-off" d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z M16 9.5l5 5 M21 9.5l-5 5"/></svg><span id="ctlMuteTx">ปิดเสียง</span></button>
-    <button type="button" class="ctl" id="ctlSkip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 6l9 6-9 6z M18 6v12"/></svg><span data-th="ข้าม" data-en="Skip">ข้าม</span></button>
-    <button type="button" class="ctl" id="ctlReplay"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 12a7.5 7.5 0 1 0 2.2-5.3 M4.5 4.5v4h4"/></svg><span data-th="เริ่มใหม่" data-en="Restart">เริ่มใหม่</span></button>
-  </div>
+  <!-- ============ SCENARIO: what happens in real life ============ -->
+  <section class="hk-sec hk-flow" id="flow" aria-labelledby="flowTitle">
+    <div class="hk-wrap">
+      <div class="hk-sec-head">
+        <h2 id="flowTitle" data-th="ในชีวิตจริง เกิดอะไรขึ้นเมื่อเบอร์แปลกโทรหาแม่" data-en="In real life: what happens when a stranger calls Mom">ในชีวิตจริง เกิดอะไรขึ้นเมื่อเบอร์แปลกโทรหาแม่</h2>
+        <p data-th="ลูกตั้งค่าครั้งเดียว แม่ไม่ต้องเรียนรู้อะไรใหม่ ไม่ต้องลงแอป" data-en="The family sets it up once. Mom learns nothing new and installs nothing.">ลูกตั้งค่าครั้งเดียว แม่ไม่ต้องเรียนรู้อะไรใหม่ ไม่ต้องลงแอป</p>
+      </div>
 
-  <p class="dm-honest">
-    <span id="honest">สายตัวอย่างบันทึกไว้ล่วงหน้า</span>
-    <span class="dm-credit" id="credit" hidden></span>
-  </p>
+      <ol class="hk-steps">
+        <li class="hk-step">
+          <span class="hk-step-n" aria-hidden="true">1</span>
+          <span class="hk-step-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 2.8h8a1.6 1.6 0 0 1 1.6 1.6v15.2A1.6 1.6 0 0 1 16 21.2H8a1.6 1.6 0 0 1-1.6-1.6V4.4A1.6 1.6 0 0 1 8 2.8z M10.5 18.2h3 M12 7v5 M9.8 9.8L12 12l2.2-2.2"/></svg></span>
+          <h3 data-th="ตั้งโอนสายครั้งเดียว" data-en="Set call forwarding once">ตั้งโอนสายครั้งเดียว</h3>
+          <p data-th="บนมือถือแม่: กดรหัสโอนสายไปที่เบอร์ AI ใครอะ ครั้งเดียวจบ" data-en="On Mom's phone: dial one code to forward calls to the KRAI-A number. Done once.">บนมือถือแม่: กดรหัสโอนสายไปที่เบอร์ AI ใครอะ ครั้งเดียวจบ</p>
+          <code class="hk-code">**21*<span data-th="เบอร์ใครอะ" data-en="KRAI-A no.">เบอร์ใครอะ</span>#</code>
+        </li>
+        <li class="hk-step">
+          <span class="hk-step-n" aria-hidden="true">2</span>
+          <span class="hk-step-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6.6 3.5h2.6l1.4 4-2 1.3a11 11 0 0 0 6.6 6.6l1.3-2 4 1.4v2.6a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z M15 3.5a5.5 5.5 0 0 1 5.5 5.5 M15 7a2 2 0 0 1 2 2"/></svg></span>
+          <h3 data-th="สายแปลกถึงใครอะก่อน" data-en="Strange calls reach KRAI-A first">สายแปลกถึงใครอะก่อน</h3>
+          <p data-th="สายที่โทรเข้ามือถือแม่ไปถึง AI ก่อน แม่ไม่ต้องรับเบอร์แปลกเอง" data-en="Calls to Mom's phone reach the AI first, so she never has to pick up a strange number herself.">สายที่โทรเข้ามือถือแม่ไปถึง AI ก่อน แม่ไม่ต้องรับเบอร์แปลกเอง</p>
+        </li>
+        <li class="hk-step">
+          <span class="hk-step-n" aria-hidden="true">3</span>
+          <span class="hk-step-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3.5 12h11 M11 8l4 4-4 4 M17.5 5.5h1.8a1.2 1.2 0 0 1 1.2 1.2v10.6a1.2 1.2 0 0 1-1.2 1.2h-1.8"/></svg></span>
+          <h3 data-th="สายถูกโอนไปที่ AI" data-en="The call is forwarded to the AI">สายถูกโอนไปที่ AI</h3>
+          <p data-th="ปลายสายได้ยินผู้ช่วยของใครอะทักทาย ด้วยเสียงคนไทยที่สุภาพ" data-en="The caller hears the KRAI-A assistant greet them in a calm, polite voice.">ปลายสายได้ยินผู้ช่วยของใครอะทักทาย ด้วยเสียงคนไทยที่สุภาพ</p>
+        </li>
+        <li class="hk-step">
+          <span class="hk-step-n" aria-hidden="true">4</span>
+          <span class="hk-step-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 6.5A2.5 2.5 0 0 1 6.5 4h7A2.5 2.5 0 0 1 16 6.5v4A2.5 2.5 0 0 1 13.5 13H9l-3.5 3v-3.2A2.5 2.5 0 0 1 4 10.5z M18.5 9.5h.5a1.5 1.5 0 0 1 1.5 1.5v4a1.5 1.5 0 0 1-1.5 1.5v2.5l-3-2.5H13"/></svg></span>
+          <h3 data-th="AI คุยและตัดสินทุกประโยค" data-en="The AI talks and judges every turn">AI คุยและตัดสินทุกประโยค</h3>
+          <p data-th="Gemini ถามว่าใครโทรมาเรื่องอะไร ส่วน Jev ให้คะแนนว่าเป็นมิจ คนจริง หรือไม่ชัวร์" data-en="Gemini asks who is calling and why; Jev scores each turn as scam, real or unsure.">Gemini ถามว่าใครโทรมาเรื่องอะไร ส่วน Jev ให้คะแนนว่าเป็นมิจ คนจริง หรือไม่ชัวร์</p>
+        </li>
+      </ol>
 
-  <div class="dm-live" id="liveBlock">
-    <button type="button" class="btn light live-open" id="liveOpen">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg>
-      <span data-th="คุยกับ AI เอง (สด · 2 นาที)" data-en="Talk to the AI yourself (live · 2 min)">คุยกับ AI เอง (สด · 2 นาที)</span>
-    </button>
-    <p class="dm-live-hint" data-th="สวมบทมิจฉาชีพ แล้วดูว่า AI จับได้ไหม" data-en="Play the scammer and see if the AI catches you">สวมบทมิจฉาชีพ แล้วดูว่า AI จับได้ไหม</p>
-    <p class="dm-live-off" id="liveOff" hidden><span data-th="ตอนนี้คุยสดเต็มแล้ว — ลองฟังสายตัวอย่างด้านบนก่อนนะ" data-en="Live calls are full right now — try a sample call above first.">ตอนนี้คุยสดเต็มแล้ว — ลองฟังสายตัวอย่างด้านบนก่อนนะ</span> <button type="button" class="dm-back" id="backToChips" data-th="เลือกสายตัวอย่าง" data-en="Pick a sample call">เลือกสายตัวอย่าง</button></p>
-  </div>
+      <div class="hk-fork" role="group" aria-label="ผลลัพธ์ / Outcome">
+        <div class="hk-out" data-v="SCAM">
+          <span class="hk-out-badge" data-th="มิจฉาชีพ" data-en="Scam">มิจฉาชีพ</span>
+          <h3 data-th="ตัดสาย แม่ไม่ต้องได้ยินเลย" data-en="Cut off. Mom never hears it.">ตัดสาย แม่ไม่ต้องได้ยินเลย</h3>
+          <div class="hk-mini-line">
+            <span class="lc-app" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.4-7.5 9.5-4.3-1.1-7.5-4.9-7.5-9.5V6z M8.6 12.2l2.4 2.4 4.6-4.8"/></svg></span>
+            <p><b data-th="ตัดสายมิจฉาชีพให้แม่แล้ว" data-en="Scam call cut off for Mom">ตัดสายมิจฉาชีพให้แม่แล้ว</b><span data-th="อ้างเป็นตำรวจ ขู่อายัดบัญชี" data-en="Posed as an official, pushed a “safe account”">อ้างเป็นตำรวจ ขู่อายัดบัญชี</span></p>
+          </div>
+          <p class="hk-out-note" data-th="ครอบครัวเห็นผลการคัดกรองทันที (ในบริการจริงส่งทาง LINE ได้ · เดโมนี้ไม่ได้ส่งจริง)" data-en="The family sees the call result right away (the real service delivers it on LINE; this demo sends nothing).">ครอบครัวเห็นผลการคัดกรองทันที (ในบริการจริงส่งทาง LINE ได้ · เดโมนี้ไม่ได้ส่งจริง)</p>
+        </div>
+        <div class="hk-out" data-v="LEGIT">
+          <span class="hk-out-badge" data-th="คนจริง" data-en="Real caller">คนจริง</span>
+          <h3 data-th="ส่งต่อถึงแม่ พร้อมบอกว่าใครโทรมา" data-en="Passed to Mom, with who's calling">ส่งต่อถึงแม่ พร้อมบอกว่าใครโทรมา</h3>
+          <div class="hk-mini-line">
+            <span class="lc-app" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.4-7.5 9.5-4.3-1.1-7.5-4.9-7.5-9.5V6z M8.6 12.2l2.4 2.4 4.6-4.8"/></svg></span>
+            <p><b data-th="โรงพยาบาลโทรยืนยันนัด" data-en="Clinic confirming an appointment">โรงพยาบาลโทรยืนยันนัด</b><span data-th="ตรวจสุขภาพ พฤหัสนี้ 9 โมง" data-en="Check-up this Thursday, 9 a.m.">ตรวจสุขภาพ พฤหัสนี้ 9 โมง</span></p>
+          </div>
+          <p class="hk-out-note" data-th="ไม่ชัวร์? AI รับฝากข้อความไว้ให้ลูกตัดสิน" data-en="Unsure? The AI takes a message for the family to decide">ไม่ชัวร์? AI รับฝากข้อความไว้ให้ลูกตัดสิน</p>
+        </div>
+      </div>
+
+      <p class="hk-sim-note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 11v5 M12 8v.01"/></svg>
+        <span data-th="เดโมด้านบนจำลองขั้นที่ 2–4 และผลลัพธ์: เสียงและคำตัดสินบันทึกจากการรันระบบจริง ไม่ใช่สคริปต์ที่แต่งผลไว้" data-en="The demo above simulates steps 2–4 and the outcome: the voices and verdicts were recorded from a real run of the system, not hand-written results.">เดโมด้านบนจำลองขั้นที่ 2–4 และผลลัพธ์: เสียงและคำตัดสินบันทึกจากการรันระบบจริง ไม่ใช่สคริปต์ที่แต่งผลไว้</span>
+      </p>
+    </div>
+  </section>
+
+  <!-- ============ CASES + LIVE ============ -->
+  <section class="hk-sec hk-cases" id="cases" aria-labelledby="casesTitle">
+    <div class="hk-wrap">
+      <div class="hk-sec-head">
+        <h2 id="casesTitle" data-th="5 เคสทดสอบ และอีกหนึ่งเคสที่คุณเป็นคนโทร" data-en="Five test cases, and one where you make the call">5 เคสทดสอบ และอีกหนึ่งเคสที่คุณเป็นคนโทร</h2>
+        <p data-th="มุกแอบอ้างคลาสสิก 3 แบบ หนึ่งสายจริงที่ต้องไม่โดนตัด และหนึ่งสายกำกวม แตะเคสเพื่อฟังในโทรศัพท์ด้านบน" data-en="Three classic impersonation scripts, one real call that must not be blocked, and one ambiguous call. Tap a case to hear it on the phone above.">มุกแอบอ้างคลาสสิก 3 แบบ หนึ่งสายจริงที่ต้องไม่โดนตัด และหนึ่งสายกำกวม แตะเคสเพื่อฟังในโทรศัพท์ด้านบน</p>
+      </div>
+
+      <div class="hk-grid">
+        <button type="button" class="hk-case" data-case="scam-police" data-v="SCAM">
+          <span class="hk-case-ic" data-icon="police" data-icon-en="official" aria-hidden="true"></span>
+          <span class="hk-case-v" data-th="คาดว่า: มิจ" data-en="Expect: scam">คาดว่า: มิจ</span>
+          <b data-th="ตำรวจปลอม" data-en="Fake official · safe account">ตำรวจปลอม</b>
+          <span class="hk-case-q" data-th="“มีหมายเรียกคดีฟอกเงินในชื่อเจ้าของเบอร์นี้”" data-en="“Move your savings into a government safety account today.”">“มีหมายเรียกคดีฟอกเงินในชื่อเจ้าของเบอร์นี้”</span>
+          <span class="hk-case-go"><span data-th="ฟังเคสนี้" data-en="Play case">ฟังเคสนี้</span><i aria-hidden="true"></i></span>
+        </button>
+        <button type="button" class="hk-case" data-case="scam-parcel" data-v="SCAM">
+          <span class="hk-case-ic" data-icon="parcel" data-icon-en="family" aria-hidden="true"></span>
+          <span class="hk-case-v" data-th="คาดว่า: มิจ" data-en="Expect: scam">คาดว่า: มิจ</span>
+          <b data-th="พัสดุตกค้าง" data-en="It's me, Grandma">พัสดุตกค้าง</b>
+          <span class="hk-case-q" data-th="“มีพัสดุในชื่อเจ้าของเบอร์ ส่งไม่สำเร็จสองครั้ง”" data-en="“Don't tell Mum and Dad — I need bail money today.”">“มีพัสดุในชื่อเจ้าของเบอร์ ส่งไม่สำเร็จสองครั้ง”</span>
+          <span class="hk-case-go"><span data-th="ฟังเคสนี้" data-en="Play case">ฟังเคสนี้</span><i aria-hidden="true"></i></span>
+        </button>
+        <button type="button" class="hk-case" data-case="scam-bank" data-v="SCAM">
+          <span class="hk-case-ic" data-icon="bank" aria-hidden="true"></span>
+          <span class="hk-case-v" data-th="คาดว่า: มิจ" data-en="Expect: scam">คาดว่า: มิจ</span>
+          <b data-th="ธนาคารปลอม" data-en="Bank fraud team · OTP">ธนาคารปลอม</b>
+          <span class="hk-case-q" data-th="“ระบบพบการโอนเงินผิดปกติออกจากบัญชี”" data-en="“Read me the six-digit code we just sent.”">“ระบบพบการโอนเงินผิดปกติออกจากบัญชี”</span>
+          <span class="hk-case-go"><span data-th="ฟังเคสนี้" data-en="Play case">ฟังเคสนี้</span><i aria-hidden="true"></i></span>
+        </button>
+        <button type="button" class="hk-case" data-case="legit-hospital" data-v="LEGIT">
+          <span class="hk-case-ic" data-icon="hospital" aria-hidden="true"></span>
+          <span class="hk-case-v" data-th="คาดว่า: คนจริง" data-en="Expect: real">คาดว่า: คนจริง</span>
+          <b data-th="โรงพยาบาลยืนยันนัด" data-en="Clinic appointment">โรงพยาบาลยืนยันนัด</b>
+          <span class="hk-case-q" data-th="“ยืนยันนัดตรวจสุขภาพประจำปี วันพฤหัสนี้ 9 โมง”" data-en="“Confirming a check-up on Thursday at 9 a.m.”">“ยืนยันนัดตรวจสุขภาพประจำปี วันพฤหัสนี้ 9 โมง”</span>
+          <span class="hk-case-go"><span data-th="ฟังเคสนี้" data-en="Play case">ฟังเคสนี้</span><i aria-hidden="true"></i></span>
+        </button>
+        <button type="button" class="hk-case" data-case="unsure-survey" data-v="UNSURE">
+          <span class="hk-case-ic" data-icon="survey" aria-hidden="true"></span>
+          <span class="hk-case-v" data-th="คาดว่า: ไม่ชัวร์" data-en="Expect: unsure">คาดว่า: ไม่ชัวร์</span>
+          <b data-th="แบบสอบถามแปลก ๆ" data-en="Survey asking for details">แบบสอบถามแปลก ๆ</b>
+          <span class="hk-case-q" data-th="“โทรจากศูนย์วิจัยการตลาด ขอถามสั้น ๆ ได้ไหม”" data-en="“Could I get the owner's full name and year of birth?”">“โทรจากศูนย์วิจัยการตลาด ขอถามสั้น ๆ ได้ไหม”</span>
+          <span class="hk-case-go"><span data-th="ฟังเคสนี้" data-en="Play case">ฟังเคสนี้</span><i aria-hidden="true"></i></span>
+        </button>
+
+        <div class="hk-live dm-live" id="liveBlock">
+          <span class="hk-live-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg></span>
+          <span class="hk-live-v" data-th="สด · 2 นาที" data-en="Live · 2 min">สด · 2 นาที</span>
+          <b class="hk-live-t" data-th="คุณเป็นมิจฉาชีพ" data-en="You are the scammer">คุณเป็นมิจฉาชีพ</b>
+          <p class="dm-live-hint" data-th="โทรเข้าด้วยไมค์ของคุณ AI ตัวเดียวกันรับสาย ลองหลอกให้ได้ แล้วดูคำตัดสิน" data-en="Call in with your mic. The same AI answers. Try to fool it, then see the verdict.">โทรเข้าด้วยไมค์ของคุณ AI ตัวเดียวกันรับสาย ลองหลอกให้ได้ แล้วดูคำตัดสิน</p>
+          <button type="button" class="btn primary live-open" id="liveOpen">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg>
+            <span data-th="คุยกับ AI เอง" data-en="Talk to the AI">คุยกับ AI เอง</span>
+          </button>
+          <p class="dm-live-off" id="liveOff" hidden><span data-th="ตอนนี้คุยสดเต็มแล้ว — ลองฟังเคสตัวอย่างก่อนนะ" data-en="Live calls are full right now — try a sample case first.">ตอนนี้คุยสดเต็มแล้ว — ลองฟังเคสตัวอย่างก่อนนะ</span> <button type="button" class="dm-back" id="backToChips" data-th="เลือกเคสตัวอย่าง" data-en="Pick a sample case">เลือกเคสตัวอย่าง</button></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ UNDER THE HOOD ============ -->
+  <section class="hk-sec hk-tech" id="tech" aria-labelledby="techTitle">
+    <div class="hk-wrap">
+      <div class="hk-sec-head">
+        <h2 id="techTitle" data-th="เบื้องหลัง: หนึ่งสาย ผ่านอะไรบ้าง" data-en="Under the hood: the path of one call">เบื้องหลัง: หนึ่งสาย ผ่านอะไรบ้าง</h2>
+        <p data-th="AI สองตัวแบ่งงานกัน ตัวหนึ่งคุย อีกตัวตัดสิน เซิร์ฟเวอร์รันบน Cloud Run" data-en="Two AIs split the work: one talks, one judges. The server runs on Cloud Run.">AI สองตัวแบ่งงานกัน ตัวหนึ่งคุย อีกตัวตัดสิน เซิร์ฟเวอร์รันบน Cloud Run</p>
+      </div>
+
+      <div class="hk-arch" role="list">
+        <div class="hk-node" role="listitem" data-k="call">
+          <span class="hk-node-k" data-th="สายเข้า" data-en="Call in">สายเข้า</span>
+          <b data-th="มือถือแม่ → โอนสาย" data-en="Mom's phone → forwarding">มือถือแม่ → โอนสาย</b>
+          <span data-th="เบอร์กลางรับสายผ่าน Twilio" data-en="Central number via Twilio">เบอร์กลางรับสายผ่าน Twilio</span>
+        </div>
+        <div class="hk-node is-core" role="listitem" data-k="run">
+          <span class="hk-node-k">Cloud Run</span>
+          <b data-th="เซิร์ฟเวอร์สายเสียง" data-en="Voice-call server">เซิร์ฟเวอร์สายเสียง</b>
+          <span data-th="Node + WebSocket สตรีมเสียงสองทาง ขยายตามจำนวนสาย" data-en="Node + WebSocket two-way audio, scales with calls">Node + WebSocket สตรีมเสียงสองทาง ขยายตามจำนวนสาย</span>
+        </div>
+        <div class="hk-pair" role="listitem">
+          <div class="hk-node is-ai" data-k="gemini">
+            <span class="hk-node-k">Gemini</span>
+            <b data-th="คุยและพูดเป็นเสียง" data-en="Conversation + voice">คุยและพูดเป็นเสียง</b>
+            <span data-th="Gemini Live ฟัง ถาม และตอบเป็นภาษาไทย" data-en="Gemini Live listens, asks and replies in Thai or English">Gemini Live ฟัง ถาม และตอบเป็นภาษาไทย</span>
+          </div>
+          <div class="hk-node is-judge" data-k="jev">
+            <span class="hk-node-k">Jev</span>
+            <b data-th="ผู้ตัดสินทุกประโยค" data-en="Judge on every turn">ผู้ตัดสินทุกประโยค</b>
+            <span data-th="ให้คะแนน มิจ / คนจริง / ไม่ชัวร์ พร้อมเหตุผล" data-en="Scores scam / real / unsure with a reason">ให้คะแนน มิจ / คนจริง / ไม่ชัวร์ พร้อมเหตุผล</span>
+          </div>
+        </div>
+        <div class="hk-node" role="listitem" data-k="data">
+          <span class="hk-node-k">Firebase · Firestore</span>
+          <b data-th="บันทึกสายและคำตัดสิน" data-en="Call records &amp; verdicts">บันทึกสายและคำตัดสิน</b>
+          <span data-th="Firestore ผ่าน Firebase Admin SDK บน Cloud Run · เดโมใช้เอกสารของตัวเอง ไม่แตะข้อมูลสมาชิก (ตัวผลิตภัณฑ์: ข้อมูลครอบครัว)" data-en="Firestore via the Firebase Admin SDK on Cloud Run · the demo uses its own document, never member data (product: households)">Firestore ผ่าน Firebase Admin SDK บน Cloud Run · เดโมใช้เอกสารของตัวเอง ไม่แตะข้อมูลสมาชิก (ตัวผลิตภัณฑ์: ข้อมูลครอบครัว)</span>
+        </div>
+      </div>
+
+      <div class="hk-stats">
+        <div class="hk-stat"><b>29/29</b><span data-th="สายมิจถูกจับได้ (recall 95% CI 88.3–100%)" data-en="scam calls caught (recall 95% CI 88.3–100%)">สายมิจถูกจับได้ (recall 95% CI 88.3–100%)</span></div>
+        <div class="hk-stat"><b>0/19</b><span data-th="สายคนจริงถูกตัดสินผิดว่าเป็นมิจ" data-en="real calls wrongly judged as scam">สายคนจริงถูกตัดสินผิดว่าเป็นมิจ</span></div>
+        <div class="hk-stat"><b data-th="0.30 วิ" data-en="0.30 s">0.30 วิ</b><span data-th="ค่ากลางเวลาตัดสินต่อประโยค" data-en="median judge time per turn">ค่ากลางเวลาตัดสินต่อประโยค</span></div>
+        <div class="hk-stat"><b data-th="~฿0.03" data-en="&amp;lt;US$0.001">~฿0.03</b><span data-th="ค่า AI ข้อความต่อสาย" data-en="text-AI cost per call">ค่า AI ข้อความต่อสาย</span></div>
+      </div>
+      <p class="hk-stats-note" data-th="วัดจากชุดทดสอบ 57 สาย (สคริปต์ ไม่รวมการแปลงเสียงเป็นข้อความ) (ชุดทดสอบ 57 สายเขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ)" data-en="Measured on a 57-call evaluation set (scripted turns, speech-to-text not included) (57-call test set written and run entirely by AI agents, with no human testers).">วัดจากชุดทดสอบ 57 สาย (สคริปต์ ไม่รวมการแปลงเสียงเป็นข้อความ) (ชุดทดสอบ 57 สายเขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ)</p>
+
+      <div class="hk-links-row">
+        <a class="hk-cta" href="https://github.com/ilGentEAcutoO/krai-a" rel="noopener" target="_blank">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.8a9.2 9.2 0 0 0-2.9 17.9c.5.1.6-.2.6-.4v-1.6c-2.6.6-3.1-1.1-3.1-1.1-.4-1.1-1-1.4-1-1.4-.9-.6 0-.6 0-.6 1 .1 1.5 1 1.5 1 .8 1.4 2.2 1 2.7.8.1-.6.3-1 .6-1.2-2-.2-4.2-1-4.2-4.6 0-1 .4-1.8 1-2.5-.1-.2-.4-1.2.1-2.5 0 0 .8-.2 2.5 1a8.6 8.6 0 0 1 4.6 0c1.7-1.2 2.5-1 2.5-1 .5 1.3.2 2.3.1 2.5.6.7 1 1.5 1 2.5 0 3.6-2.2 4.4-4.2 4.6.3.3.6.8.6 1.6v2.4c0 .2.1.5.6.4A9.2 9.2 0 0 0 12 2.8z"/></svg>
+          <span><b data-th="ดูโค้ดบน GitHub" data-en="Read the code on GitHub">ดูโค้ดบน GitHub</b><small>github.com/ilGentEAcutoO/krai-a</small></span>
+          <i aria-hidden="true"></i>
+        </a>
+        <a class="hk-prod" href="https://krai-a.com" rel="noopener" target="_blank"><span data-th="ดูธุรกิจจริงที่ krai-a.com" data-en="See the business at krai-a.com">ดูธุรกิจจริงที่ krai-a.com</span></a>
+      </div>
+    </div>
+  </section>
 </main>
+
+<footer class="hk-foot">
+  <div class="hk-wrap hk-foot-in">
+    <span class="hk-brand-sm"><img class="brand-logo sm" src="/brand/sornkan-logo.png" alt="" width="28" height="27"><span data-th="ใครอะ · ทีม SORNKan" data-en="KRAI-A · Team SORNKan">ใครอะ · ทีม SORNKan</span></span>
+    <span data-th="AI Builder Cup 2026 · BFSI: Intelligent Risk, Fraud &amp; Financial Experiences" data-en="AI Builder Cup 2026 · BFSI: Intelligent Risk, Fraud &amp; Financial Experiences">AI Builder Cup 2026 · BFSI: Intelligent Risk, Fraud &amp; Financial Experiences</span>
+  </div>
+</footer>
 
 <dialog class="live" id="liveDlg" aria-labelledby="lvTitle">
   <div class="lv-in" data-state="intro" id="lvIn">
@@ -115,7 +270,7 @@
     <p class="sr-only" id="lvTimeSr" aria-live="off"></p>
 
     <div class="lv-intro" id="lvIntro">
-      <p class="lv-lede" data-th="คุณเป็นมิจฉาชีพ — AI ใครอะ รับสาย ลองหลอกให้ได้" data-en="You are the scammer — Krai-A's AI answers. Try to fool it.">คุณเป็นมิจฉาชีพ — AI ใครอะ รับสาย ลองหลอกให้ได้</p>
+      <p class="lv-lede" data-th="คุณเป็นมิจฉาชีพ — AI ใครอะ รับสาย ลองหลอกให้ได้" data-en="You are the scammer — KRAI-A's AI answers. Try to fool it.">คุณเป็นมิจฉาชีพ — AI ใครอะ รับสาย ลองหลอกให้ได้</p>
       <ul class="lv-tips">
         <li data-th="“ผมโทรจากธนาคาร ขอรหัส OTP หน่อยครับ”" data-en="“I'm from the bank, read me the OTP code.”">“ผมโทรจากธนาคาร ขอรหัส OTP หน่อยครับ”</li>
         <li data-th="“พัสดุคุณติดศุลกากร ต้องโอนค่าปรับวันนี้”" data-en="“Your parcel is stuck at customs, pay the fine today.”">“พัสดุคุณติดศุลกากร ต้องโอนค่าปรับวันนี้”</li>
@@ -125,7 +280,7 @@
 
     <div class="lv-talk" id="lvTalk" hidden>
       <div class="lv-line" data-role="caller" id="lvCaller"><span class="lv-sp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span data-th="คุณ (ปลายสาย)" data-en="You (caller)">คุณ (ปลายสาย)</span></span><p id="lvCallerTx"></p></div>
-      <div class="lv-line" data-role="ai" id="lvAi"><span class="lv-sp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span data-th="AI ใครอะ" data-en="Krai-A AI">AI ใครอะ</span></span><p id="lvAiTx"></p></div>
+      <div class="lv-line" data-role="ai" id="lvAi"><span class="lv-sp"><span class="eq" aria-hidden="true"><i></i><i></i><i></i></span><span data-th="AI ใครอะ" data-en="KRAI-A AI">AI ใครอะ</span></span><p id="lvAiTx"></p></div>
       <div class="lv-v" aria-live="polite"><b class="vword" id="lvV" data-v="">—</b><span class="vwhy" id="lvWhy"></span></div>
     </div>
 
@@ -141,7 +296,6 @@
   </div>
 </dialog>
 
-<footer class="foot"></footer>
 <script type="module" src="/demo.js"></script>
 </body>
 </html>

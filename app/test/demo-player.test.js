@@ -4,9 +4,10 @@
 // Real timers with tiny durations — the fake audio only stands in for <audio>.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { createPlayer, verdictAt, finalOf, estimateMs, autoPauseOnHidden } from '../public/demo-player.js';
+import { createPlayer, verdictAt, finalOf, estimateMs, autoPauseOnHidden, riskOf, scenarioFor } from '../public/demo-player.js';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const until = async (fn) => { while (!fn()) await sleep(5); };
 
 // Clip durations come from the URL (`/a/40` = 40 ms). Broken clips:
 // `/fail` rejects, `/throw` throws synchronously, `/hang` never starts,
@@ -221,7 +222,6 @@ describe('demo player never gets stuck', () => {
 });
 
 describe('pause / resume / stop', () => {
-  const until = async (fn) => { while (!fn()) await sleep(5); };
 
   it('pause mid-line freezes the clip and the timeline; resume continues exactly', async () => {
     const { audio, events, player, finished } = rig();
@@ -327,6 +327,118 @@ describe('pause / resume / stop', () => {
     assert.equal(player.paused, true, 'only the visitor resumes');
     unbind();
     player.stop();
+  });
+});
+
+describe('call phases: incoming → transfer → lines (call-demo)', () => {
+  it('rings, transfers, then plays the lines in order with a lead-in before each', async () => {
+    const leads = [];
+    const { events, player, finished } = rig({
+      transferMs: 30,
+      beforeLine: (turn, prev, i) => { leads.push({ role: turn.role, prev: prev?.role || null, i, at: Date.now() }); return 15; },
+    });
+    player.start(scenario());
+    await until(() => player.phase === 'transfer');
+    await finished();
+    const types = events.map((e) => e.type);
+    assert.deepEqual(types.slice(0, 3), ['ring', 'transfer', 'line']);
+    assert.deepEqual(leads.map((l) => [l.role, l.prev]), [['ai', null], ['caller', 'ai'], ['ai', 'caller'], ['caller', 'ai']]);
+    const lineAt = events.filter((e) => e.type === 'line').map((e) => e.at);
+    leads.forEach((l, i) => assert.ok(lineAt[i] - l.at >= 12, `line ${i} waits for its turn-switch tone`));
+    assert.equal(events.at(-1).type, 'final');
+  });
+
+  it('without transferMs there is no transfer phase (the old /demo stage)', async () => {
+    const { events, player, finished } = rig();
+    player.start(scenario());
+    await finished();
+    assert.equal(events.some((e) => e.type === 'transfer'), false);
+  });
+
+  it('pause during the incoming ring and during the transfer freezes them', async () => {
+    const { player, events } = rig({ ringMs: 60, transferMs: 60 });
+    player.start(scenario());
+    assert.equal(player.phase, 'ring');
+    assert.equal(player.pause(), true);
+    await sleep(150);
+    assert.equal(player.phase, 'ring');
+    player.resume();
+    await until(() => player.phase === 'transfer');
+    player.pause();
+    const n = events.length;
+    await sleep(150);
+    assert.equal(player.phase, 'transfer');
+    assert.equal(events.length, n);
+    player.resume();
+    await until(() => player.phase === 'line');
+    player.stop();
+  });
+
+  it('a paused turn-switch lead-in stays paused', async () => {
+    const { player, events } = rig({ beforeLine: () => 80 });
+    player.start(scenario());
+    await until(() => player.phase === 'gap');
+    await sleep(35); // past the 25 ms gap: inside the 80 ms lead-in
+    player.pause();
+    const lines = events.filter((e) => e.type === 'line').length;
+    await sleep(200);
+    assert.equal(events.filter((e) => e.type === 'line').length, lines);
+    player.resume();
+    await until(() => events.filter((e) => e.type === 'line').length === lines + 1);
+    player.stop();
+  });
+
+  it('stop from the transfer phase goes idle and nothing follows', async () => {
+    const { player, events, audio } = rig({ transferMs: 200 });
+    player.start(scenario());
+    await until(() => player.phase === 'transfer');
+    player.stop();
+    assert.equal(player.phase, 'idle');
+    assert.equal(audio.playing, false);
+    const n = events.length;
+    await sleep(300);
+    assert.equal(events.length, n);
+    assert.equal(events.some((e) => e.type === 'line'), false);
+  });
+
+  it('a throwing lead-in hook never stops the call short of its verdict', async () => {
+    const { events, player, finished } = rig({ transferMs: 10, beforeLine: () => { throw new Error('no AudioContext'); } });
+    const err = console.error;
+    console.error = () => {};
+    try {
+      player.start(scenario());
+      await finished();
+    } finally {
+      console.error = err;
+    }
+    assert.equal(events.filter((e) => e.type === 'line').length, 4);
+    assert.equal(events.at(-1).final.verdict, 'SCAM');
+  });
+
+  it('watchdog still guarantees the final verdict with every clip stuck, transfer included', async () => {
+    const { events, player, finished } = rig({ transferMs: 10, beforeLine: () => 5 });
+    player.start(scenario(['/a/hang', '/a/noend', '/a/fail', '/a/hang']));
+    await finished();
+    assert.equal(events.at(-1).type, 'final');
+    assert.equal(events.at(-1).final.verdict, 'SCAM');
+  });
+});
+
+describe('riskOf / scenarioFor', () => {
+  it('maps a verdict onto the risk meter', () => {
+    assert.equal(riskOf(null), null);
+    assert.equal(riskOf(V('SCAM', 0.8)), 0.9);
+    assert.equal(riskOf(V('LEGIT', 0.8)), 0.09999999999999998);
+    assert.equal(riskOf(V('UNSURE', 0.3)), 0.5);
+    assert.equal(riskOf(V('SCAM', 7)), 1, 'confidence is clamped');
+  });
+
+  it('plays the English recording in English, else Thai audio with English captions', () => {
+    const m = { scenarios: [{ id: 'a', lang: 'th' }, { id: 'b', lang: 'th' }], scenariosEn: [{ id: 'a', lang: 'en' }] };
+    assert.deepEqual(scenarioFor(m, 'a', 'en'), { scenario: { id: 'a', lang: 'en' }, audioLang: 'en' });
+    assert.deepEqual(scenarioFor(m, 'b', 'en'), { scenario: { id: 'b', lang: 'th' }, audioLang: 'th' });
+    assert.deepEqual(scenarioFor(m, 'a', 'th'), { scenario: { id: 'a', lang: 'th' }, audioLang: 'th' });
+    assert.equal(scenarioFor(null, 'a', 'en').scenario, null);
   });
 });
 

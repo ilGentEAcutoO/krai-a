@@ -1,11 +1,15 @@
 // deploy-cloudrun.sh in DRY_RUN=1 mode: prints every command, runs none.
 // Guards the deploy shape: image-only + targeted env updates (never
 // --set-env-vars, which wipes the live env), required secrets, single
-// instance, judging switch, rollback + smoke steps.
+// instance, judging switch, rollback + smoke steps, and the two site roles
+// (SERVICE + SITE_MODE: krai-a = product, krai-a-demo = demo): the hackathon
+// role never carries business secrets.
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import path from 'node:path';
+import fs from 'node:fs';
+import os from 'node:os';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
@@ -15,7 +19,7 @@ const skip = bash.status !== 0 ? 'bash not available' : false;
 function dryRun(env = {}) {
   const r = spawnSync('bash', ['deploy-cloudrun.sh'], {
     cwd: ROOT, encoding: 'utf8', timeout: 20000,
-    env: { PATH: process.env.PATH, SYSTEMROOT: process.env.SYSTEMROOT, DRY_RUN: '1', PROJECT_ID: 'test-proj', ...env },
+    env: { PATH: process.env.PATH, SYSTEMROOT: process.env.SYSTEMROOT, DRY_RUN: '1', PROJECT_ID: 'test-proj', SERVICE: 'krai-a', SITE_MODE: 'product', ...env },
   });
   return { status: r.status, out: `${r.stdout}\n${r.stderr}` };
 }
@@ -31,7 +35,7 @@ describe('deploy-cloudrun.sh (DRY_RUN=1)', { skip }, () => {
 
   it('sets the decided env and keeps AI test switches off', () => {
     const { out } = dryRun();
-    for (const kv of ['GEMINI_MODEL=gemini-3.5-flash-lite', 'IDENTIFY_MODE=B', 'DEMO_TEXT_API=0', 'PUBLIC_BASE_URL=https://krai-a.com',
+    for (const kv of ['GEMINI_MODEL=gemini-3.5-flash-lite', 'IDENTIFY_MODE=B', 'DEMO_TEXT_API=0', 'PUBLIC_BASE_URL=https://krai-a.com', 'SITE_MODE=product',
       'LIVE_MAX_SECONDS=120', 'LIVE_MAX_PER_IP_HOUR=3', 'LIVE_MAX_PER_DAY=300', 'NOTIFY_ADAPTERS=console,line']) {
       assert.ok(out.includes(kv), kv);
     }
@@ -85,5 +89,77 @@ describe('deploy-cloudrun.sh (DRY_RUN=1)', { skip }, () => {
     assert.match(out, /latestReadyRevisionName/);
     assert.match(out, /update-traffic krai-a .*--to-revisions/);
     for (const probe of ['/api/status', '/api/members', '/demo.html', 'content-security-policy']) assert.ok(out.toLowerCase().includes(probe.toLowerCase()), probe);
+  });
+});
+
+describe('deploy-cloudrun.sh site roles (SERVICE + SITE_MODE)', { skip }, () => {
+  const deployLine = (out) => out.split('\n').find((l) => l.startsWith('+ gcloud run deploy')) || '';
+
+  it('needs both SERVICE and SITE_MODE, and refuses a service in the wrong role', () => {
+    assert.notEqual(dryRun({ SERVICE: '' }).status, 0);
+    assert.notEqual(dryRun({ SITE_MODE: '' }).status, 0);
+    assert.notEqual(dryRun({ SITE_MODE: 'staging' }).status, 0);
+    const wrong = dryRun({ SERVICE: 'krai-a', SITE_MODE: 'demo' });
+    assert.equal(wrong.status, 2, wrong.out);
+    assert.match(wrong.out, /refusing: krai-a serves the product role/);
+    assert.doesNotMatch(wrong.out, /builds submit/);
+    assert.equal(dryRun({ SERVICE: 'krai-a', SITE_MODE: 'demo', ROLE_OVERRIDE: '1' }).status, 0);
+  });
+
+  it('hackathon role (krai-a-demo, demo): Gemini/Jev/reCAPTCHA only, business secrets and env removed', () => {
+    const { status, out } = dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo' });
+    assert.equal(status, 0, out);
+    assert.match(out, /service: krai-a-demo {2}site mode: demo/);
+    const d = deployLine(out);
+    assert.match(d, /gcloud run deploy krai-a-demo /);
+    assert.match(d, /SITE_MODE=demo/);
+    assert.match(d, /PUBLIC_BASE_URL=https:\/\/demo\.krai-a\.com[;']/);
+    assert.match(d, /PRODUCT_BASE_URL=https:\/\/krai-a\.com/);
+    assert.match(d, /NOTIFY_ADAPTERS=console[;']/);
+    const upd = d.match(/--update-secrets (\S+)/)[1];
+    assert.deepEqual(upd.split(',').map((x) => x.split('=')[0]).sort(), ['GEMINI_API_KEY', 'RECAPTCHA_API_KEY', 'TYPESAFE_API_KEY']);
+    const rm = d.match(/--remove-secrets (\S+)/)[1].split(',');
+    for (const s of ['THSMS_API_KEY', 'LINE_CHANNEL_ACCESS_TOKEN', 'LINE_CHANNEL_SECRET', 'TWILIO_AUTH_TOKEN', 'TRIAL_TOMBSTONE_SECRET', 'STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET']) assert.ok(rm.includes(s), s);
+    const rmEnv = d.match(/--remove-env-vars (\S+)/)[1].split(',');
+    for (const v of ['LINE_DEFAULT_TO', 'TWILIO_ACCOUNT_SID', 'TWILIO_VERIFY_SID', 'CENTRAL_NUMBER_TH']) assert.ok(rmEnv.includes(v), v);
+    assert.doesNotMatch(dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo', TWILIO_ACCOUNT_SID: 'ACx', LINE_DEFAULT_TO: 'Ux' }).out, /TWILIO_ACCOUNT_SID=ACx|LINE_DEFAULT_TO=Ux/);
+    for (const probe of ['/api/me', '/voice/incoming', '/line/webhook', '/pricing.html']) assert.ok(out.includes(probe), probe);
+    assert.match(out, /builds submit app --tag \S+krai-a:demo/);
+  });
+
+  it('business role (krai-a, product): every secret, webhooks on krai-a.com', () => {
+    const { status, out } = dryRun();
+    assert.equal(status, 0, out);
+    const d = deployLine(out);
+    assert.match(d, /gcloud run deploy krai-a /);
+    assert.match(d, /SITE_MODE=product/);
+    assert.doesNotMatch(d, /--remove-secrets/);
+    assert.match(d, /NOTIFY_ADAPTERS=console,line/);
+    assert.match(out, /Voice webhook POST https:\/\/krai-a\.com\/voice\/incoming/);
+    assert.match(out, /LINE: Messaging API webhook https:\/\/krai-a\.com\/line\/webhook, LIFF endpoint https:\/\/krai-a\.com\/liff\.html/);
+    assert.match(out, /builds submit app --tag \S+krai-a:product/);
+  });
+
+  it('SRC_DIR builds another tree (public repo); PERSIST_DOC is passed or reset', () => {
+    const r = dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo', SRC_DIR: '../krai-a-public/app', PERSIST_DOC: 'krai/hackathon' });
+    assert.match(r.out, /builds submit \.\.\/krai-a-public\/app /);
+    assert.match(deployLine(r.out), /PERSIST_DOC=krai\/hackathon/);
+    assert.match(deployLine(dryRun().out), /--remove-env-vars \S*PERSIST_DOC/);
+  });
+
+  it('COPY_ENV_FROM fills unset pass-through env from a saved describe without printing values', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deploy-'));
+    const f = path.join(dir, 'svc.json');
+    fs.writeFileSync(f, JSON.stringify({ spec: { template: { spec: { containers: [{ env: [
+      { name: 'TWILIO_ACCOUNT_SID', value: 'AC123' }, { name: 'RECAPTCHA_SITE_KEY', value: 'site-k' },
+      { name: 'GEMINI_API_KEY', valueFrom: { secretKeyRef: { name: 'gemini-api-key' } } }] }] } } } }));
+    try {
+      const prod = dryRun({ COPY_ENV_FROM: f });
+      assert.match(prod.out, /env copied from .*: RECAPTCHA_SITE_KEY TWILIO_ACCOUNT_SID/);
+      assert.match(deployLine(prod.out), /TWILIO_ACCOUNT_SID=AC123/);
+      const demo = dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo', COPY_ENV_FROM: f });
+      assert.match(deployLine(demo.out), /RECAPTCHA_SITE_KEY=site-k/);
+      assert.doesNotMatch(deployLine(demo.out), /AC123/);
+    } finally { fs.rmSync(dir, { recursive: true, force: true }); }
   });
 });

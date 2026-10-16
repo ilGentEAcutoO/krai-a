@@ -2,13 +2,18 @@
 
 **Team SORNKan** · Google Cloud AI Builder Cup 2026 (BFSI: intelligent risk & fraud)
 
-Online and phone fraud cost Thais ฿24.9B in 2025. People over 60 are 8% of victims but lose 28.5% of
-the money (Jan–Aug 2026). Krai-A forwards Mom's unknown calls to a calm Thai AI receptionist that judges every sentence,
-hangs up on scammers, and alerts the family on LINE before any money moves.
+Scammers took an estimated US$88–114 billion from people across East and South-East Asia, Australia and
+New Zealand in 2025 ([UNODC, TOCTA South-East Asia 2026, p.14](https://www.unodc.org/roseap/uploads/documents/Publications/2026/TOCTA_South-East_Asia_2026.pdf)).
+Thailand alone recorded 1,156,187 online-fraud cases from March 2022 to December 2025, with ฿107 billion
+lost: more than 1,000 cases and ฿69 million a day (same report, p.102). Krai-A answers strange calls for the people you love (parents,
+grandparents, kids, or you): unknown calls are forwarded to a calm AI receptionist (Thai or English) that judges every sentence, hangs up on scammers, and alerts the family on
+LINE before any money moves.
 
-- **Live:** https://krai-a.com
-- **Demo:** https://krai-a.com/demo.html. Play 5 pre-recorded calls from a real engine run
-  (3 scams, 1 real caller, 1 unsure), or **talk to the AI live** in a 2-minute Gemini Live session.
+- **Prototype (AI Builder Cup, for judges):** https://demo.krai-a.com. Play 5 pre-recorded calls from a real
+  engine run (3 scams, 1 real caller, 1 unsure), or **talk to the AI live** in a 2-minute Gemini Live session. The result card shows the alert the family would get
+  (the real service delivers it on LINE, WhatsApp, Telegram or KakaoTalk). The demo itself sends no notifications and has no live LINE.
+- **Business:** https://krai-a.com. This is the product we intend to run: plans, sign-up, and real LINE delivery
+  through the Krai-a LINE Official Account + LIFF.
 
 ## How it works
 
@@ -56,7 +61,9 @@ flowchart LR
 ## Measured results
 
 Final eval run, 12 Oct 2026, production config (Jev `jev-latest` + Gemini 3.5 Flash-Lite).
-Dataset: 57 calls (29 scam · 19 legit · 9 unsure; 51 Thai, 6 English), 118 judged turns.
+Dataset: 57 calls (29 scam · 19 legit · 9 unsure; 51 Thai, 6 English), 118 judged turns
+(57-call test set written and run entirely by AI agents, with no human testers;
+ชุดทดสอบ 57 สาย เขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ).
 
 | Metric | Result |
 |---|---|
@@ -69,7 +76,7 @@ Dataset: 57 calls (29 scam · 19 legit · 9 unsure; 51 Thai, 6 English), 118 jud
 | Text-AI cost per call | ≈ ฿0.03 (judge, reply and guard; excludes speech and telephony) |
 | Demo scripts | 5 / 5 |
 
-> **Caveat:** the dataset is team-written scripts (`app/test/fixtures/eval-calls.json`), not real
+> **Caveat:** the dataset is scripts written by AI agents (`app/test/fixtures/eval-calls.json`), not real
 > recordings with speech-to-text errors, and n is small. Real-traffic accuracy comes from a pilot.
 > To reproduce, run `cd app && npm run eval`. It needs the Gemini and TypeSafe keys.
 
@@ -117,7 +124,7 @@ surface are in **[app/README.md](app/README.md)**.
 
 - **Two voices on real calls.** Fixed lines use Gemini TTS (Achernar). Live replies use Twilio's
   Google Chirp3-HD voice (Aoede).
-- **Scripted eval.** Results above come from team-written calls, not live traffic.
+- **Scripted eval.** Results above come from AI-agent-written calls with no human testers, not live traffic.
 - **Central Thai number pending.** Real-call signup is a waitlist until the shared number and carrier
   forwarding tests are done.
 - **Payments in test mode.** Stripe runs in test mode, and no real charges are made.

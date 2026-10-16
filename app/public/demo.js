@@ -1,9 +1,11 @@
-// /demo: one stage that replays calls recorded from a real engine run
-// (public/demo/scenarios.json — zero API calls per visitor), plus a secondary
-// live panel that hosts /demo-live.js (the only public path that calls Gemini).
-import { initNav, i18n, api, captchaToken, escapeHtml } from '/site.js';
-import { createPlayer, verdictAt, finalOf, autoPauseOnHidden, GAP_MS, RING_MS } from '/demo-player.js';
+// demo.krai-a.com (hackathon): the shared phone-call demo (/js/call-demo.js) in the
+// hero, five case cards that drive it, and the live panel that hosts
+// /demo-live.js (the only public path that calls Gemini).
+import { initNav, i18n, api, captchaToken } from '/site.js';
+import { mount } from '/js/call-demo.js';
 
+// initNav also applies ?lang=en|th (deep link, remembered). This page ships
+// its own top bar + footer (not nav.nav / footer.foot): no product chrome.
 initNav('demo');
 
 const $ = (id) => document.getElementById(id);
@@ -11,461 +13,87 @@ const pick = (th, en) => (i18n.lang === 'en' ? (en || th) : th);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 
 const STR = {
-  ai: ['AI ใครอะ', 'Krai-A AI'],
-  caller: ['ปลายสาย', 'Caller'],
-  ringing: ['สายเข้าเบอร์แม่ — AI กำลังรับแทน', "Calling Mom's number — the AI is picking up"],
   listening: ['กำลังฟัง', 'Listening'],
-  idleWhy: ['AI จะตัดสินระหว่างคุย', 'The AI decides as the call goes'],
   SCAM: ['มิจฉาชีพ', 'Scam'],
   LEGIT: ['คนจริง', 'Real caller'],
   UNSURE: ['ไม่ชัวร์', 'Not sure'],
-  lcSCAM: ['ตัดสายมิจฉาชีพให้แม่แล้ว', 'Scam call cut off for Mom'],
-  lcLEGIT: ['มีคนฝากข้อความถึงแม่', 'A message for Mom'],
-  lcUNSURE: ['สายไม่ชัวร์ — เก็บข้อความไว้ให้', 'Unsure call — message kept'],
-  mute: ['ปิดเสียง', 'Mute'],
-  pause: ['หยุดชั่วคราว', 'Pause'],
-  resume: ['เล่นต่อ', 'Resume'],
-  unmute: ['เปิดเสียง', 'Unmute'],
-  noAudio: ['เล่นเสียงไม่ได้ — ดูคำบรรยายแทน', "Audio can't play — follow the subtitles"],
-  about: ['ประมาณ %s วินาที', 'about %s seconds'],
-  loadErr: ['โหลดสายตัวอย่างไม่ได้ — รีเฟรชหน้านี้อีกครั้ง', "Couldn't load the sample calls — refresh this page"],
 };
 const t = (k, n) => pick(...STR[k]).replace('%s', n ?? '');
-
-// Line icons for the caller avatar (24px grid, stroked).
-const ICON = {
-  phone: 'M6.6 3.5h2.6l1.4 4-2 1.3a11 11 0 0 0 6.6 6.6l1.3-2 4 1.4v2.6a2 2 0 0 1-2.2 2A17 17 0 0 1 4.6 5.7a2 2 0 0 1 2-2.2z',
-  police: 'M12 3l7 3v5c0 4.4-3 8.3-7 9.5-4-1.2-7-5.1-7-9.5V6z M12 8.3l1.1 2.3 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z',
-  parcel: 'M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z M3.5 7.5L12 12l8.5-4.5 M12 12v9 M7.8 5.3l8.4 4.5',
-  bank: 'M3 9.5L12 4l9 5.5 M5.5 10.5v6.5 M10 10.5v6.5 M14 10.5v6.5 M18.5 10.5v6.5 M3.5 20h17',
-  hospital: 'M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M12 8.5v7 M8.5 12h7',
-  survey: 'M9 3.8h6v2.8H9z M7.5 5.2H6.2a1.2 1.2 0 0 0-1.2 1.2v13.4A1.2 1.2 0 0 0 6.2 21h11.6a1.2 1.2 0 0 0 1.2-1.2V6.4a1.2 1.2 0 0 0-1.2-1.2h-1.3 M8.5 11h7 M8.5 14.5h7 M8.5 18h4',
-};
 const VERDICTS = new Set(['SCAM', 'LEGIT', 'UNSURE']);
-const iconSvg = (name) => `<svg viewBox="0 0 24 24"><path d="${ICON[name] || ICON.phone}"/></svg>`;
 
-const els = {
-  chips: [...document.querySelectorAll('#chips .chip')],
-  stage: $('stage'), av: $('stAv'), num: $('stNum'), claim: $('stClaim'), time: $('stTime'),
-  prev: $('stPrev'), now: $('stNow'), sp: $('stSp'), spName: $('stSpName'), tx: $('stTx'), tx2: $('stTx2'),
-  play: $('stPlay'), playSub: $('stPlaySub'), v: $('stV'), why: $('stWhy'), dots: $('stDots'),
-  end: $('stEnd'), again: $('stAgain'), card: $('lineCard'), lcTitle: $('lcTitle'), lcBody: $('lcBody'),
-  ctl: $('ctl'), mute: $('ctlMute'), muteTx: $('ctlMuteTx'), skip: $('ctlSkip'), replay: $('ctlReplay'),
-  stop: $('ctlStop'), pp: $('stPause'),
-};
-
-// ---- audio out: ONE <audio> element, so two voices can never overlap ----
-function silentWavUrl(ms = 120) {
-  const rate = 8000;
-  const n = Math.round((rate * ms) / 1000);
-  const buf = new ArrayBuffer(44 + n);
-  const v = new DataView(buf);
-  const w = (o, s) => [...s].forEach((c, i) => v.setUint8(o + i, c.charCodeAt(0)));
-  w(0, 'RIFF'); v.setUint32(4, 36 + n, true); w(8, 'WAVE'); w(12, 'fmt ');
-  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
-  v.setUint32(24, rate, true); v.setUint32(28, rate, true); v.setUint16(32, 1, true); v.setUint16(34, 8, true);
-  w(36, 'data'); v.setUint32(40, n, true);
-  new Uint8Array(buf, 44).fill(128);
-  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
-}
-
-function createAudioOut() {
-  const el = new Audio();
-  el.preload = 'auto';
-  const cache = new Map(); // clip url → Promise<blob url | url>
-  let pending = null;
-  let seq = 0; // bumped by play/stop: a play still awaiting its clip gives up
-  let silent = null;
-  let paused = false;
-  // A pause() interrupting a pending play() rejects it with AbortError: not a failure.
-  const playNow = (cur) => {
-    const p = el.play();
-    if (p) p.catch((e) => { if (e?.name !== 'AbortError' && pending === cur) settle(false, e); });
-  };
-  const settle = (ok, err) => {
-    const p = pending;
-    pending = null;
-    if (p) (ok ? p.resolve() : p.reject(err));
-  };
-  el.addEventListener('ended', () => settle(true));
-  el.addEventListener('error', () => settle(false, el.error || new Error('audio-error')));
-  el.addEventListener('playing', () => pending?.onStart?.()); // sound began: the player's end watchdog starts
-  return {
-    el,
-    prefetch(urls) {
-      for (const u of urls) {
-        if (!u || cache.has(u)) continue;
-        const ctrl = new AbortController();
-        const t = setTimeout(() => ctrl.abort(), 15000);
-        cache.set(u, fetch(u, { signal: ctrl.signal })
-          .then((r) => (r.ok ? r.blob() : Promise.reject(new Error(`HTTP ${r.status}`))))
-          .then((b) => URL.createObjectURL(b))
-          .catch(() => { cache.delete(u); return null; }) // missing clip: play() rejects, subtitles carry on; a replay retries
-          .finally(() => clearTimeout(t)));
-      }
-    },
-    // Called inside the tap: Safari only lets later play() calls through on an
-    // element that already played during a user gesture.
-    unlock() {
-      silent = silent || silentWavUrl();
-      settle(true);
-      seq += 1;
-      el.src = silent;
-      const p = el.play();
-      if (p) p.catch(() => {});
-    },
-    async play(url, { onStart } = {}) {
-      settle(true);
-      const my = ++seq;
-      // A slow prefetch never blocks the line: after 1.5 s stream the clip directly.
-      const src = cache.has(url)
-        ? await Promise.race([cache.get(url), new Promise((r) => setTimeout(() => r(url), 1500))])
-        : url;
-      if (my !== seq) return; // stopped or superseded while loading
-      if (!src) throw new Error('clip-unavailable');
-      await new Promise((resolve, reject) => {
-        pending = { resolve, reject, onStart };
-        el.src = src;
-        if (!paused) playNow(pending); // paused while loading: resume() starts it
-      });
-    },
-    pause() {
-      paused = true;
-      el.pause();
-    },
-    resume() {
-      paused = false;
-      if (pending) playNow(pending);
-    },
-    stop() {
-      paused = false;
-      seq += 1;
-      el.pause();
-      settle(true);
-    },
-  };
-}
-
-// ---- state ----
-const audio = createAudioOut();
-let manifest = null;
-let selected = 'scam-police';
-let timerIv = 0;
-let lineStartAt = 0;
-let pausedAt = 0;    // clock freezes while paused
-let pausedTotal = 0;
-let lastVerdict = null;
-let cardTimer = 0;
-
-const player = createPlayer({ audio, onEvent: onPlayerEvent });
-if (new URLSearchParams(location.search).has('debug')) window.__demo = { player, audio };
-
-const scenarioById = (id) => manifest?.scenarios.find((s) => s.id === id) || null;
-
-function approxSeconds(sc) {
-  const ms = sc.turns.reduce((a, tr) => a + (tr.ms || 0), 0) + GAP_MS * (sc.turns.length - 1) + RING_MS;
-  return Math.max(5, Math.round(ms / 5000) * 5);
-}
-
-function swapIn(el) {
-  if (!el.animate) return;
-  el.animate(reduceMotion.matches
-    ? [{ opacity: 0 }, { opacity: 1 }]
-    : [{ opacity: 0, transform: 'translateY(6px)', filter: 'blur(3px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
-  { duration: reduceMotion.matches ? 180 : 280, easing: 'cubic-bezier(.23,1,.32,1)' });
-}
-
-function fmtClock(ms) {
-  const s = Math.max(0, Math.floor(ms / 1000));
-  return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
-}
-
-// ---- rendering ----
 function verdictWord(v) {
   if (!v) return t('listening');
   // Never display certainty: the score tops out at 99%.
   return v.verdict === 'SCAM' ? `${t('SCAM')} ${Math.min(99, Math.round((v.confidence || 0) * 100))}%` : t(v.verdict);
 }
 
-function renderVerdict(v, { animate = false, idle = false } = {}) {
-  const changed = (els.v.dataset.v || '') !== (v ? v.verdict : idle ? '' : 'listen');
-  els.v.dataset.v = v ? v.verdict : idle ? '' : 'listen';
-  els.v.textContent = idle ? '—' : verdictWord(v);
-  els.why.textContent = v ? pick(v.reasonTh, v.reasonEn) : t('idleWhy');
-  if (animate && changed && els.v.animate) {
-    els.v.animate(reduceMotion.matches
-      ? [{ opacity: 0.3 }, { opacity: 1 }]
-      : [{ opacity: 0.3, transform: 'scale(.94)' }, { opacity: 1, transform: 'scale(1)' }],
-    { duration: 300, easing: 'cubic-bezier(.23,1,.32,1)' });
-  }
-}
+// Line icons for the case cards (24px grid, stroked).
+const ICON = {
+  police: 'M12 3l7 3v5c0 4.4-3 8.3-7 9.5-4-1.2-7-5.1-7-9.5V6z M12 8.3l1.1 2.3 2.4.3-1.8 1.7.5 2.4-2.2-1.2-2.2 1.2.5-2.4-1.8-1.7 2.4-.3z',
+  parcel: 'M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5z M3.5 7.5L12 12l8.5-4.5 M12 12v9 M7.8 5.3l8.4 4.5',
+  bank: 'M3 9.5L12 4l9 5.5 M5.5 10.5v6.5 M10 10.5v6.5 M14 10.5v6.5 M18.5 10.5v6.5 M3.5 20h17',
+  hospital: 'M7 4h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z M12 8.5v7 M8.5 12h7',
+  survey: 'M9 3.8h6v2.8H9z M7.5 5.2H6.2a1.2 1.2 0 0 0-1.2 1.2v13.4A1.2 1.2 0 0 0 6.2 21h11.6a1.2 1.2 0 0 0 1.2-1.2V6.4a1.2 1.2 0 0 0-1.2-1.2h-1.3 M8.5 11h7 M8.5 14.5h7 M8.5 18h4',
+  family: 'M9 11a3.2 3.2 0 1 0 0-6.4A3.2 3.2 0 0 0 9 11z M3 20a6 6 0 0 1 12 0 M16.5 11.5a2.6 2.6 0 1 0 0-5.2 M17 14.2a5 5 0 0 1 4 5.3',
+  official: 'M4 6.5h16v11H4z M7.5 10a1.6 1.6 0 1 0 3.2 0 1.6 1.6 0 0 0-3.2 0z M6.5 15c.6-1.4 3.6-1.4 4.2 0 M13.5 10h4 M13.5 13h3',
+};
+const iconSvg = (name) => `<svg viewBox="0 0 24 24"><path d="${ICON[name]}"/></svg>`;
 
-function renderHeader(sc) {
-  els.av.innerHTML = iconSvg(sc?.icon);
-  els.num.textContent = sc?.callerPhone || '';
-  els.claim.textContent = sc ? pick(sc.callerTh, sc.callerEn) : '';
-}
-
-// One dot per turn: upcoming = light, current = ring, done = the verdict
-// standing after that turn (grey while the AI is still listening).
-function renderDots(sc, { now = -1, upto = -1 } = {}) {
-  els.dots.innerHTML = sc.turns.map((tr, i) => {
-    if (i === now) return '<i class="now"></i>';
-    if (i > upto) return '<i></i>';
-    const raw = verdictAt(sc, i)?.verdict;
-    return VERDICTS.has(raw) ? `<i data-v="${raw}"></i>` : '<i data-done></i>';
-  }).join('');
-}
-
-function speakerName(role) {
-  return role === 'ai' ? t('ai') : t('caller');
-}
-
-function renderLine(sc, i, { animate = false } = {}) {
-  const turn = sc.turns[i];
-  const prev = sc.turns[i - 1];
-  els.prev.innerHTML = prev ? `<b>${escapeHtml(speakerName(prev.role))}</b>${escapeHtml(pick(prev.textTh, prev.textEn))}` : '';
-  els.sp.dataset.role = turn.role;
-  els.spName.textContent = speakerName(turn.role);
-  const en = i18n.lang === 'en';
-  els.tx.textContent = en ? (turn.textEn || turn.textTh) : turn.textTh;
-  els.tx.lang = en && turn.textEn ? 'en' : 'th';
-  els.tx2.textContent = en && turn.textEn ? turn.textTh : '';
-  if (animate) swapIn(els.now);
-}
-
-function renderRing() {
-  els.prev.textContent = '';
-  els.sp.dataset.role = '';
-  els.spName.textContent = '';
-  els.tx.textContent = t('ringing');
-  els.tx.lang = i18n.lang;
-  els.tx2.textContent = '';
-}
-
-function renderIdle() {
-  const sc = scenarioById(selected);
-  els.stage.dataset.phase = 'idle';
-  delete els.stage.dataset.speaking;
-  renderHeader(sc);
-  els.time.textContent = '00:00';
-  els.playSub.textContent = sc ? `${pick(sc.titleTh, sc.titleEn)} · ${t('about', approxSeconds(sc))}` : '';
-  renderVerdict(null, { idle: true });
-  if (sc) renderDots(sc); else els.dots.innerHTML = '';
-  els.ctl.dataset.on = 'false';
-  hideEnd();
-}
-
-function renderPause() {
-  const p = player.paused;
-  if (p) els.stage.dataset.paused = ''; else delete els.stage.dataset.paused;
-  els.pp.setAttribute('aria-pressed', String(p));
-  els.pp.setAttribute('aria-label', p ? t('resume') : t('pause'));
-  els.pp.title = p ? t('resume') : t('pause');
-}
-
-function renderMute() {
-  const failed = els.mute.dataset.failed === '1';
-  els.mute.setAttribute('aria-pressed', String(audio.el.muted || failed));
-  els.muteTx.textContent = failed ? t('noAudio') : audio.el.muted ? t('unmute') : t('mute');
-}
-
-function hideEnd() {
-  clearTimeout(cardTimer);
-  els.card.classList.remove('in');
-  els.card.hidden = true;
-  els.end.hidden = true;
-}
-
-// The card shows the message the family receives. A multi-line LINE message
-// keeps its own first line as the title; a one-liner gets a verdict title.
-function renderCard(f = {}) {
-  const lines = String(pick(f.lineTh || f.reasonTh, f.lineEn || f.reasonEn) || '').split('\n').map((x) => x.trim()).filter(Boolean);
-  const own = lines.length > 1;
-  els.card.dataset.v = VERDICTS.has(f.verdict) ? f.verdict : '';
-  els.lcTitle.textContent = own ? lines[0] : t(`lc${VERDICTS.has(f.verdict) ? f.verdict : 'UNSURE'}`);
-  els.lcBody.textContent = (own ? lines.slice(1) : lines).join('\n');
-}
-
-function showEnd(final) {
-  renderCard(final || {});
-  els.card.hidden = false;
-  void els.card.offsetWidth; // commit the off-screen start before sliding in
-  els.card.classList.add('in');
-  cardTimer = setTimeout(() => { els.end.hidden = false; }, reduceMotion.matches ? 150 : 600);
-}
-
-function startClock() {
-  stopClock();
-  timerIv = setInterval(() => {
-    if (lineStartAt) els.time.textContent = fmtClock((pausedAt || performance.now()) - lineStartAt - pausedTotal);
-  }, 250);
-}
-function stopClock() { clearInterval(timerIv); timerIv = 0; }
-
-function onPlayerEvent(e) {
-  const sc = player.scenario;
-  switch (e.type) {
-    case 'ring':
-      hideEnd();
-      lastVerdict = null;
-      lineStartAt = 0;
-      pausedAt = 0;
-      pausedTotal = 0;
-      renderPause();
-      els.stage.dataset.phase = 'ring';
-      delete els.stage.dataset.speaking;
-      renderHeader(sc);
-      els.time.textContent = '00:00';
-      renderRing();
-      swapIn(els.now);
-      renderVerdict(null);
-      renderDots(sc);
-      els.ctl.dataset.on = 'true';
-      break;
-    case 'line':
-      if (!lineStartAt) { lineStartAt = performance.now(); startClock(); }
-      els.stage.dataset.phase = 'line';
-      els.stage.dataset.speaking = '';
-      renderLine(sc, e.index, { animate: true });
-      renderDots(sc, { now: e.index, upto: e.index - 1 });
-      break;
-    case 'line-end':
-      els.stage.dataset.phase = 'gap';
-      delete els.stage.dataset.speaking;
-      renderDots(sc, { upto: e.index });
-      break;
-    case 'verdict':
-      lastVerdict = e.verdict;
-      renderVerdict(e.verdict, { animate: true });
-      renderDots(sc, { upto: e.index });
-      break;
-    case 'final':
-      stopClock();
-      renderPause();
-      els.stage.dataset.phase = 'done';
-      delete els.stage.dataset.speaking;
-      lastVerdict = e.final || lastVerdict;
-      renderVerdict(lastVerdict, { animate: true });
-      renderDots(sc, { upto: sc.turns.length - 1 });
-      els.ctl.dataset.on = 'false';
-      showEnd(e.final || lastVerdict);
-      break;
-    case 'audio-error':
-      els.mute.dataset.failed = '1';
-      renderMute();
-      break;
-    case 'stopped':
-      stopClock();
-      pausedAt = 0;
-      renderIdle();
-      renderPause();
-      break;
-    case 'paused':
-      pausedAt = performance.now();
-      renderPause();
-      break;
-    case 'resumed':
-      if (lineStartAt && pausedAt) pausedTotal += performance.now() - pausedAt;
-      pausedAt = 0;
-      renderPause();
-      break;
-    default:
-  }
-}
-
-// Re-render whatever is on stage in the new language (static copy is
-// handled by site.js applyLang via data-th / data-en).
-function rerender() {
-  const sc = player.scenario;
-  const phase = els.stage.dataset.phase;
-  renderMute();
-  renderPause();
-  if (phase === 'idle' || !sc) { renderIdle(); return; }
-  renderHeader(sc);
-  if (phase === 'ring') renderRing();
-  else if (player.index >= 0) renderLine(sc, player.index);
-  renderVerdict(lastVerdict);
-  if (!els.card.hidden) renderCard(finalOf(sc) || {});
-}
-
-// ---- interaction ----
-function play(id) {
-  const sc = scenarioById(id);
-  if (!sc) return;
-  selected = id;
-  for (const c of els.chips) c.setAttribute('aria-pressed', String(c.dataset.id === id));
-  audio.unlock();
-  audio.prefetch(sc.turns.map((tr) => tr.audio));
-  delete els.mute.dataset.failed;
-  renderMute();
-  player.start(sc);
-  const r = els.stage.getBoundingClientRect();
-  if (r.top < 0 || r.bottom > innerHeight) els.stage.scrollIntoView({ block: 'nearest', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-}
-
-for (const c of els.chips) c.addEventListener('click', () => play(c.dataset.id));
-els.play.addEventListener('click', () => play(selected));
-els.again.addEventListener('click', () => play(selected));
-els.replay.addEventListener('click', () => play(selected));
-els.skip.addEventListener('click', () => player.skip());
-const togglePause = () => (player.paused ? player.resume() : player.pause());
-els.pp.addEventListener('click', togglePause);
-// Stop: end the call, back to "ฟังสายนี้" for the same scenario (no LINE card).
-els.stop.addEventListener('click', () => {
-  player.stop();
-  els.play.focus({ preventScroll: true });
+// ---- the phone: one shared component, the case cards below drive it ----
+const host = $('callHost');
+const caseCards = [...document.querySelectorAll('.hk-case[data-case]')];
+const markCases = (id) => { for (const card of caseCards) card.toggleAttribute('data-on', card.dataset.case === id); };
+// Stable hooks for judges and the demo video:
+//   ?case=<id>  open that case   ·   ?autoplay=1  start it (needs a browser
+//   that allows sound without a tap, e.g. a recorder; otherwise it waits)
+const params = new URLSearchParams(location.search);
+const ids = caseCards.map((c) => c.dataset.case);
+const startCase = ids.includes(params.get('case')) ? params.get('case') : 'scam-police';
+const demo = mount(host, {
+  lang: 'auto',
+  cases: ids,
+  initial: startCase,
+  notify: 'result', // demo.krai-a.com is not wired to LINE: a neutral call-result card
+  onEvent(e) { if (e.id && (e.type === 'select' || e.type === 'incoming')) markCases(e.id); },
 });
-// A hidden tab pauses the call; only the visitor resumes it.
-autoPauseOnHidden(player, document);
-els.mute.addEventListener('click', () => {
-  if (els.mute.dataset.failed === '1') return;
-  audio.el.muted = !audio.el.muted;
-  renderMute();
-});
-window.addEventListener('krai-a:lang', () => { rerender(); renderHonest(); renderCredit(); renderLiveCopy(); });
-
-// The honest label names only engines the manifest says recorded these calls;
-// a stub judge or canned persona means no "real run" claim.
-function renderHonest() {
-  const e = manifest?.engine || {};
-  const judge = String(e.judge || '');
-  const voiced = `${e.persona || ''} ${e.tts || ''}`;
-  const real = judge && !/stub|canned/i.test(`${judge} ${e.persona || ''}`);
-  const who = [/gemini/i.test(voiced) && 'Gemini', /jev/i.test(judge) && 'Jev'].filter(Boolean).join(' + ');
-  $('honest').textContent = real && who
-    ? pick(`สายตัวอย่างบันทึกจากการรันจริงของระบบ (${who})`, `Sample calls recorded from a real run of the system (${who})`)
-    : pick('สายตัวอย่างบันทึกไว้ล่วงหน้า', 'Pre-recorded sample calls');
+markCases(demo.selected);
+if (params.get('autoplay') === '1') {
+  // The component has no "ready" event: play() is a no-op until its manifest
+  // is in, so retry briefly (~5 s) until the call leaves idle.
+  let tries = 0;
+  const kick = () => {
+    if (demo.phase !== 'idle' || tries++ > 50) return;
+    demo.play(startCase);
+    setTimeout(kick, 100);
+  };
+  kick();
 }
-
-// Credit line names only engines the server reports healthy right now.
-let engines = null;
-function renderCredit() {
-  const parts = [];
-  if (engines?.jev) parts.push(pick('ตัดสินโดย Jev', 'Judged by Jev'));
-  if (engines?.gemini) parts.push(pick('พูดโดย Gemini', 'Voiced by Gemini'));
-  $('credit').textContent = parts.join(' · ');
-  $('credit').hidden = !parts.length;
-}
-
-async function loadManifest() {
-  try {
-    const res = await fetch('/demo/scenarios.json');
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    if (!Array.isArray(data?.scenarios) || !data.scenarios.length) throw new Error('empty manifest');
-    manifest = data;
-    renderHonest();
-    for (const c of els.chips) c.hidden = !scenarioById(c.dataset.id);
-    if (!scenarioById(selected)) selected = data.scenarios[0].id;
-    for (const c of els.chips) c.setAttribute('aria-pressed', String(c.dataset.id === selected));
-    renderIdle();
-  } catch {
-    els.play.disabled = true;
-    for (const c of els.chips) c.disabled = true;
-    els.playSub.textContent = t('loadErr');
+if (params.has('case') && !params.has('autoplay')) host.scrollIntoView({ block: 'center' });
+// A card may show another case in English (data-icon-en; its EN text is in data-en).
+const cardIcons = () => {
+  const en = document.documentElement.lang === 'en';
+  for (const ic of document.querySelectorAll('.hk-case [data-icon]')) {
+    const name = en && ic.dataset.iconEn ? ic.dataset.iconEn : ic.dataset.icon;
+    if (ic.dataset.shown !== name) { ic.innerHTML = iconSvg(name); ic.dataset.shown = name; }
   }
+};
+cardIcons();
+window.addEventListener('krai-a:lang', cardIcons);
+for (const card of caseCards) {
+  card.addEventListener('click', () => {
+    demo.play(card.dataset.case);
+    markCases(card.dataset.case);
+    host.scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
 }
+for (const b of document.querySelectorAll('[data-live-open]')) {
+  b.addEventListener('click', () => {
+    if ($('liveBlock').dataset.live === 'on') openLive();
+    else $('liveBlock').scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
+}
+window.addEventListener('krai-a:lang', () => renderLiveCopy());
+if (new URLSearchParams(location.search).has('debug')) window.__demo = { demo };
 
 // ---- live panel: layout + copy here; mic, audio and the socket live in /demo-live.js ----
 const lv = {
@@ -570,7 +198,7 @@ function leaveLive() {
 }
 
 function openLive() {
-  player.stop(); // one voice at a time: the sample call yields to the live one
+  demo.stop(); // one voice at a time: the sample call yields to the live one
   leaveLive();
   resetLiveCall();
   setLive('intro', { startKey: 'start' });
@@ -687,6 +315,12 @@ function beginLive(mod) {
 }
 
 $('liveOpen').addEventListener('click', openLive);
+for (const b of document.querySelectorAll('[data-live-open]')) {
+  b.addEventListener('click', () => {
+    if (lv.block.dataset.live === 'on') openLive();
+    else $('liveBlock').scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  });
+}
 $('liveOpen').addEventListener('pointerenter', loadLiveModule, { once: true });
 lv.start.addEventListener('click', () => {
   if (live.startKey === 'samples') { lv.dlg.close(); backToChips(); return; }
@@ -708,9 +342,8 @@ lv.dlg.addEventListener('click', (e) => {
 });
 
 function backToChips() {
-  const chip = els.chips.find((c) => c.dataset.id === selected && !c.hidden) || els.chips[0];
-  $('chips').scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-  chip?.focus({ preventScroll: true });
+  host.scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
+  host.querySelector('.kcd-chip[aria-pressed="true"], .kcd-chip')?.focus({ preventScroll: true });
 }
 $('backToChips').addEventListener('click', backToChips);
 
@@ -721,23 +354,10 @@ function setLiveEntry(on) {
   $('liveOpen').hidden = !on;
   lv.block.querySelector('.dm-live-hint').hidden = !on;
   $('liveOff').hidden = on;
+  for (const b of document.querySelectorAll('[data-live-open]')) b.hidden = !on;
 }
 api('/api/status').then((st) => {
-  engines = st?.engines || null;
-  renderCredit();
   setLiveEntry(Boolean(st?.live));
 }).catch(() => setLiveEntry(false));
 
-// Space pauses / resumes while a sample call plays (Enter still presses buttons).
-document.addEventListener('keydown', (e) => {
-  if (e.key !== ' ' || e.repeat || e.altKey || e.ctrlKey || e.metaKey || lv.dlg.open) return;
-  const el = e.target;
-  if (el?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el?.tagName || '')) return;
-  if (!['ring', 'line', 'gap'].includes(player.phase)) return;
-  e.preventDefault();
-  togglePause();
-});
-
 if (window.__demo) window.__demo.live = live;
-renderIdle();
-loadManifest();

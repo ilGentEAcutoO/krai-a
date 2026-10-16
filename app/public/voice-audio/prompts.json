@@ -1,43 +1,43 @@
 {
   "version": 1,
-  "recordedAt": "2026-10-12T07:20:20.126Z",
+  "recordedAt": "2026-10-16T04:34:19.346Z",
   "tts": "gemini-3.8-flash-tts",
   "voice": "Achernar",
   "prompts": {
     "record": {
       "text": "สายนี้มีการบันทึกบทสนทนาเพื่อความปลอดภัยค่ะ",
       "file": "/voice-audio/record.mp3",
-      "ms": 4398
+      "ms": 4182
     },
     "greeting": {
-      "text": "สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ",
+      "text": "สวัสดีค่ะ ตอนนี้เจ้าของเบอร์ไม่สะดวกรับสาย ดิฉันรับสายแทนนะคะ ไม่ทราบว่าใครโทรมา แล้วมีธุระอะไรคะ",
       "file": "/voice-audio/greeting.mp3",
-      "ms": 8251
+      "ms": 10294
     },
     "gather": {
       "text": "เชิญพูดธุระได้เลยค่ะ",
       "file": "/voice-audio/gather.mp3",
-      "ms": 2395
+      "ms": 2218
     },
     "noSpeech": {
       "text": "ไม่ได้ยินเสียงเลยค่ะ ขอบคุณที่โทรมานะคะ",
       "file": "/voice-audio/noSpeech.mp3",
-      "ms": 4006
+      "ms": 3800
     },
     "closing-scam": {
       "text": "ขอเวลาตรวจสอบข้อมูลก่อนนะคะ ขอบคุณที่ติดต่อมาค่ะ",
       "file": "/voice-audio/closing-scam.mp3",
-      "ms": 5157
+      "ms": 4960
     },
     "closing-legit": {
       "text": "รับเรื่องไว้แล้วค่ะ จะแจ้งเจ้าของเบอร์ให้ติดต่อกลับนะคะ ขอบคุณค่ะ",
       "file": "/voice-audio/closing-legit.mp3",
-      "ms": 5671
+      "ms": 5655
     },
     "closing-unsure": {
       "text": "รับเรื่องไว้แล้วค่ะ เดี๋ยวแจ้งเจ้าของเบอร์ให้ตัดสินนะคะ ขอบคุณค่ะ",
       "file": "/voice-audio/closing-unsure.mp3",
-      "ms": 5363
+      "ms": 5326
     }
   }
 }

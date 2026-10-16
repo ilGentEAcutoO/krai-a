@@ -129,7 +129,7 @@ const S = {
   watchersP: { th: 'ได้แจ้งเตือนทาง LINE ทุกครั้งที่ AI รับสายแทนครอบครัว', en: 'They get a LINE alert every time the AI answers for your family.' },
   lineOk: { th: 'LINE ✓', en: 'LINE ✓' }, lineNo: { th: 'ยังไม่เชื่อม LINE', en: 'LINE not linked' },
   invite: { th: 'ส่งลิงก์เชิญ', en: 'Send invite' },
-  inviteText: { th: 'ช่วยเป็นผู้ดูแลครอบครัวใน "ใครอะ" หน่อย กดลิงก์นี้ใน LINE แล้วยืนยันเบอร์ของคุณ: ', en: 'Be our family watcher on Krai-A — open this in LINE and verify your number: ' },
+  inviteText: { th: 'ช่วยเป็นผู้ดูแลครอบครัวใน "ใครอะ" หน่อย กดลิงก์นี้ใน LINE แล้วยืนยันเบอร์ของคุณ: ', en: 'Be our family watcher on KRAI-A — open this in LINE and verify your number: ' },
   noWatchers: { th: 'ยังไม่มีผู้ดูแล', en: 'No watchers yet' },
   addWatcher: { th: 'เพิ่มผู้ดูแล', en: 'Add watcher' },
   save: { th: 'บันทึก', en: 'Save' }, remove: { th: 'ลบ', en: 'Remove' },
@@ -162,7 +162,7 @@ const S = {
   stepWait: { th: 'รอข้อความว่าตั้งค่าสำเร็จ', en: 'Wait for the “forwarding set” message' },
   copy: { th: 'คัดลอก', en: 'Copy' }, copied: { th: 'คัดลอกแล้ว ✓', en: 'Copied ✓' },
   shareLine: { th: 'ส่งวิธีตั้งทาง LINE', en: 'Send the steps via LINE' },
-  shareText: { th: 'ตั้งโอนสายให้ AI "ใครอะ" รับสายแปลกแทน: เปิดแอปโทรศัพท์ กด %C% แล้วโทรออก', en: 'Let the Krai-A AI answer unknown calls: open the Phone app, dial %C% and press call.' },
+  shareText: { th: 'ตั้งโอนสายให้ AI "ใครอะ" รับสายแปลกแทน: เปิดแอปโทรศัพท์ กด %C% แล้วโทรออก', en: 'Let the KRAI-A AI answer unknown calls: open the Phone app, dial %C% and press call.' },
   testH: { th: 'โทรทดสอบ', en: 'Test it' },
   testAll: { th: 'ใช้อีกเครื่องโทรหา %P% — AI จะรับสาย', en: 'Call %P% from another phone — the AI will answer.' },
   testMissed: { th: 'ใช้อีกเครื่องโทรหา %P% แล้วปล่อยให้ดังจนตัด — AI จะรับสาย', en: 'Call %P% from another phone and let it ring out — the AI will answer.' },
@@ -224,7 +224,7 @@ const S = {
   eraseAck: { th: 'ฉันเข้าใจว่าลบแล้วกู้คืนไม่ได้', en: 'I understand this cannot be undone' },
   eraseYes: { th: 'ลบถาวร', en: 'Delete permanently' },
   erasedH: { th: 'ลบบัญชีและข้อมูลแล้ว', en: 'Your account and data are deleted' },
-  erasedP: { th: 'ขอบคุณที่ใช้ใครอะ อย่าลืมกด ##002# ที่เครื่องที่เคยตั้งโอนสายไว้', en: 'Thanks for using Krai-A. Remember to dial ##002# on any phone that forwarded calls.' },
+  erasedP: { th: 'ขอบคุณที่ใช้ใครอะ อย่าลืมกด ##002# ที่เครื่องที่เคยตั้งโอนสายไว้', en: 'Thanks for using KRAI-A. Remember to dial ##002# on any phone that forwarded calls.' },
   // errors
   e_invalid_phone: { th: 'รูปแบบเบอร์ไม่ถูกต้อง ใช้ 08x-xxx-xxxx', en: 'Invalid number — use 08x-xxx-xxxx' },
   'e_plan-limit': { th: 'ครบจำนวนเครื่องของแผนนี้แล้ว — อัปเกรดในตั้งค่า', en: 'Plan limit reached — upgrade in Settings' },
@@ -590,8 +590,8 @@ export function mountMemberApp(root, opts = {}) {
   const destroyLive = () => { live.forEach((c) => c.destroy?.()); live = []; };
 
   root.innerHTML = `<div class="ma${platform === 'liff' ? ' liff' : ''}">
-    <header class="ma-top"><a class="brand" href="${platform === 'liff' ? '#home' : '/'}"><span class="dot" aria-hidden="true">ค</span><span data-th="ใครอะ" data-en="Krai-A">ใครอะ</span></a><span class="ma-who" id="maWho"></span></header>
-    <aside class="ma-rail"><a class="brand" href="/"><span class="dot" aria-hidden="true">ค</span><span data-th="ใครอะ" data-en="Krai-A">ใครอะ</span></a>
+    <header class="ma-top"><a class="brand" href="${platform === 'liff' ? '#home' : '/'}"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a><span class="ma-who" id="maWho"></span></header>
+    <aside class="ma-rail"><a class="brand" href="/"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
       <nav aria-label="Member">${TABS.map((k) => `<a class="ma-tab" href="#${k}" data-tab="${k}">${TAB_ICON[k]}<span data-tab-label="${k}"></span></a>`).join('')}</nav>
       <div class="ma-rail-foot"><span class="m-fine tnum" id="maWho2"></span><a class="m-link quiet" href="/" id="maBack"></a></div></aside>
     <div class="ma-toast" id="maToast" role="status" aria-live="polite" hidden></div>

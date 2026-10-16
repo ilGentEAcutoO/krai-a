@@ -30,7 +30,7 @@ const L = {
 const tl = (k) => L[k][i18n.lang];
 const app = document.getElementById('app');
 const card = (html) => {
-  app.innerHTML = `<div class="ma liff"><header class="ma-top"><span class="brand"><span class="dot" aria-hidden="true">ค</span><span>${i18n.lang === 'th' ? 'ใครอะ' : 'Krai-A'}</span></span></header><main class="ma-main"><div class="ma-card" id="box">${html}</div></main></div>`;
+  app.innerHTML = `<div class="ma liff"><header class="ma-top"><span class="brand"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span>${i18n.lang === 'th' ? 'ใครอะ' : 'KRAI-A'}</span></span></header><main class="ma-main"><div class="ma-card" id="box">${html}</div></main></div>`;
   return document.getElementById('box');
 };
 const isWatch = () => {

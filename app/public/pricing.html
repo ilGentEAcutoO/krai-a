@@ -9,7 +9,7 @@
 <meta name="description" content="ราคาใครอะ ต่อคนที่คุณดูแล รายปีหรือรายเดือน ทดลองฟรีก่อน ไม่ต้องผูกบัตร ยกเลิกเองได้ทุกเมื่อ">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/site.css">
 <style>
 /* ---- pricing v2: focus = the recommended (Family) plan, yearly by default ---- */
@@ -59,6 +59,17 @@
 .money{display:grid;grid-template-columns:.8fr 1.2fr;gap:var(--sp-8);align-items:start}
 .money h2{font-size:var(--fs-h2)}
 .money p.sub{color:var(--ink2);margin-top:var(--sp-3)}
+/* v6 green family (shared with the landing) */
+.plan{border-radius:32px;box-shadow:inset 0 0 0 1px var(--gline),var(--sh-soft)}
+.plan.rec{box-shadow:inset 0 0 0 2px var(--forest),0 30px 60px -28px rgba(11,61,44,.45)}
+.plan .tag{background:var(--leaf);color:var(--leaf-deep)}
+.plan .amt b{font-family:var(--display)}
+.plan li::before{border-color:#037A34}
+.plan .btn.primary{background:var(--forest)}
+.plan .btn.primary:hover{background:var(--forest2)}
+.period .save{background:var(--mint);color:#037A34}
+.gift{background:var(--mint)}
+.pay .mark{background:#fff;box-shadow:inset 0 0 0 1px var(--gline)}
 @media (max-width:920px){
   .plans{grid-template-columns:1fr;max-width:480px;gap:var(--sp-6)}
   .plan.rec{order:-1}
@@ -80,13 +91,13 @@
 }
 </style>
 </head>
-<body data-title-th="ราคา — ใครอะ" data-title-en="Pricing — Krai-A">
+<body class="home" data-title-th="ราคา — ใครอะ" data-title-en="Pricing — KRAI-A">
 <nav class="nav"></nav>
 
 <main>
 <header class="pr-hero"><div class="wrap">
   <h1 id="prH1" data-th="จ่ายตามจำนวนคนที่คุณดูแล" data-en="Priced per person you look after">จ่ายตามจำนวนคนที่คุณดูแล</h1>
-  <p data-th="<span class='ch'>ราคาเท่าแอปเช็กเบอร์</span> <span class='ch'>แต่มี AI รับสายแทนพ่อแม่จริง ๆ</span> <span class='ch'>แล้วบอกคุณทันที</span>" data-en="The price of a caller-ID app — but an AI actually answers your parents’ calls and tells you right away."><span class="ch">ราคาเท่าแอปเช็กเบอร์</span> <span class="ch">แต่มี AI รับสายแทนพ่อแม่จริง ๆ</span> <span class="ch">แล้วบอกคุณทันที</span></p>
+  <p data-th="<span class='ch'>ราคาเท่าแอปเช็กเบอร์</span> <span class='ch'>แต่มี AI รับสายแทนคนที่คุณรักจริง ๆ</span> <span class='ch'>แล้วบอกคุณทันที</span>" data-en="The price of a caller-ID app — but an AI actually answers strange calls for the people you love, or for you, and tells you right away."><span class="ch">ราคาเท่าแอปเช็กเบอร์</span> <span class="ch">แต่มี AI รับสายแทนคนที่คุณรักจริง ๆ</span> <span class="ch">แล้วบอกคุณทันที</span></p>
 </div></header>
 
 <section class="wrap" aria-label="Plans">
@@ -112,7 +123,7 @@
 <section class="gift" id="gift" hidden><div class="wrap gift-in">
   <div>
     <h2 data-th="ซื้อเป็นของขวัญ 1 ปี" data-en="Give it as a 1-year gift">ซื้อเป็นของขวัญ 1 ปี</h2>
-    <p data-th="ให้แม่ ให้พ่อ ให้ยาย — รวมการตั้งโอนสายให้ทางวิดีโอคอล และไม่ต่ออายุอัตโนมัติ" data-en="For Mom, Dad or Grandma — includes setting up call forwarding with them over a video call, and it never auto-renews.">ให้แม่ ให้พ่อ ให้ยาย — รวมการตั้งโอนสายให้ทางวิดีโอคอล และไม่ต่ออายุอัตโนมัติ</p>
+    <p data-th="ให้พ่อแม่ ปู่ย่าตายาย ลูกหลาน หรือคนที่คุณรัก — รวมการตั้งโอนสายให้ทางวิดีโอคอล และไม่ต่ออายุอัตโนมัติ" data-en="For parents, grandparents, kids, or anyone you love — includes setting up call forwarding with them over a video call, and it never auto-renews.">ให้พ่อแม่ ปู่ย่าตายาย ลูกหลาน หรือคนที่คุณรัก — รวมการตั้งโอนสายให้ทางวิดีโอคอล และไม่ต่ออายุอัตโนมัติ</p>
   </div>
   <div class="gifts" id="gifts"></div>
 </div></section>
@@ -128,7 +139,7 @@
     <details><summary data-th="เก็บบทสนทนานานแค่ไหน?" data-en="How long are transcripts kept?">เก็บบทสนทนานานแค่ไหน?</summary><div id="faqKeep" data-th="เก็บตามผลของสาย และลบเองได้ทีละสายในห้องของฉัน" data-en="It depends on the verdict, and you can delete any call yourself in My dashboard.">เก็บตามผลของสาย และลบเองได้ทีละสายในห้องของฉัน</div></details>
     <details><summary data-th="เปลี่ยนแผนได้ไหม?" data-en="Can I switch plans?">เปลี่ยนแผนได้ไหม?</summary><div data-th="ได้ กดเปลี่ยนเองในห้องของฉัน จำนวนเบอร์และโควตาปรับตามแผนใหม่" data-en="Yes — switch yourself in My dashboard. Phones and quota follow the new plan.">ได้ กดเปลี่ยนเองในห้องของฉัน จำนวนเบอร์และโควตาปรับตามแผนใหม่</div></details>
     <details><summary data-th="ยกเลิกแล้วโดนเก็บเงินอีกไหม?" data-en="Will I be charged after cancelling?">ยกเลิกแล้วโดนเก็บเงินอีกไหม?</summary><div data-th="ไม่ เราไม่ต่ออายุอัตโนมัติ ยกเลิกแล้วไม่มีการเรียกเก็บรอบถัดไป" data-en="No. Nothing renews automatically, so cancelling means no next charge.">ไม่ เราไม่ต่ออายุอัตโนมัติ ยกเลิกแล้วไม่มีการเรียกเก็บรอบถัดไป</div></details>
-    <details><summary data-th="ธนาคาร ค่ายมือถือ หรือองค์กร ใช้ได้ไหม?" data-en="Banks, carriers or organisations?">ธนาคาร ค่ายมือถือ หรือองค์กร ใช้ได้ไหม?</summary><div data-th="ได้ ใครอะใช้เป็นบริการคุ้มครองลูกค้าผู้สูงอายุได้ โดยใช้เบอร์ AI กลางเบอร์เดียวกัน" data-en="Yes. Krai-A can run as a protection service for senior customers on the same central AI number.">ได้ ใครอะใช้เป็นบริการคุ้มครองลูกค้าผู้สูงอายุได้ โดยใช้เบอร์ AI กลางเบอร์เดียวกัน</div></details>
+    <details><summary data-th="ธนาคาร ค่ายมือถือ หรือองค์กร ใช้ได้ไหม?" data-en="Banks, carriers or organisations?">ธนาคาร ค่ายมือถือ หรือองค์กร ใช้ได้ไหม?</summary><div data-th="ได้ ใครอะใช้เป็นบริการคุ้มครองลูกค้าผู้สูงอายุได้ โดยใช้เบอร์ AI กลางเบอร์เดียวกัน" data-en="Yes. KRAI-A can run as a protection service for senior customers on the same central AI number.">ได้ ใครอะใช้เป็นบริการคุ้มครองลูกค้าผู้สูงอายุได้ โดยใช้เบอร์ AI กลางเบอร์เดียวกัน</div></details>
   </div>
 </div></section>
 </main>

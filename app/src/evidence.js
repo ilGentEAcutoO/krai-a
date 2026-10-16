@@ -44,7 +44,7 @@ export function buildEvidenceBundle(call) {
 export function privacyNoticeTh() {
   const site = (config.publicBaseUrl || 'https://krai-a.com').replace(/^https?:\/\//, '');
   return [
-    'นโยบายความเป็นส่วนตัว ใครอะ (Krai-A) — ฉบับย่อสำหรับผู้โทร',
+    'นโยบายความเป็นส่วนตัว ใครอะ — ฉบับย่อสำหรับผู้โทร',
     '1. เราเก็บอะไร: เบอร์ที่โทรมา บทสนทนาเป็นข้อความ (ถอดจากเสียงระหว่างสาย ไม่เก็บไฟล์เสียง) และผลการคัดกรองสาย',
     '2. ทำไม (ฐานกฎหมาย PDPA): ประโยชน์โดยชอบด้วยกฎหมาย (legitimate interests) — ป้องกันภัยมิจฉาชีพ และป้องกันอันตรายต่อชีวิต/ทรัพย์สิน (vital interests)',
     '3. ผู้ประมวลผลข้อมูล: Twilio (รับสายและแปลงเสียงพูดเป็นข้อความ) · Google Gemini และ TypeSafe Jev (ตอบและวิเคราะห์บทสนทนา) · LINE (แจ้งเตือน) · THSMS (SMS) · Stripe (ชำระเงินของสมาชิก)',

@@ -26,6 +26,7 @@ import { securityHeaders, cspReportRoute } from './securityHeaders.js';
 import { take } from './ratelimit.js';
 import { probeEngines } from './judge/index.js';
 import { startJobs } from './jobs.js';
+import { siteMode, siteModeGate } from './siteMode.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Node 20 kills the process on an unhandled rejection / stray throw —
@@ -42,6 +43,9 @@ app.use(securityHeaders());
 app.post('/api/csp-report', express.json({ type: ['application/csp-report', 'application/reports+json', 'application/json'], limit: '16kb' }), cspReportRoute(take));
 app.use(express.json({ verify: (req, res, buf) => { req.rawBody = buf; } }));
 app.use(express.urlencoded({ extended: false }));
+// SITE_MODE=demo (hackathon site): / = demo.html, member/pay/LINE/Twilio
+// routes 404, product pages 302 to the business host. Before every router.
+app.use(siteModeGate({ publicDir: path.join(__dirname, '..', 'public') }));
 
 // Seed demo household (mode A default number; override via env). Runs AFTER
 // the snapshot restore (a restore replaces the store) and keys on
@@ -127,9 +131,9 @@ ensureSeedMember();
 sweepExpired(); // after the restore, so restored expired records go too
 setInterval(sweepExpired, 3600000).unref();
 startPersistence(); // 15s snapshots + SIGTERM flush (needs max-instances=1)
-startJobs(); // hourly trial reminders / lapse sweep (after the restore; not under NODE_ENV=test)
+if (siteMode() === 'product') startJobs(); // hourly trial reminders / lapse sweep (after the restore; not under NODE_ENV=test)
 probeEngines().catch(() => {}); // first /api/status is already truthful
 
 server.listen(config.port, () => {
-  console.log(`[krai-a] listening on :${config.port} identifyMode=${config.identifyMode} ai=${config.geminiApiKey ? 'gemini' : 'rules'}`);
+  console.log(`[krai-a] listening on :${config.port} site=${siteMode()} identifyMode=${config.identifyMode} ai=${config.geminiApiKey ? 'gemini' : 'rules'}`);
 });

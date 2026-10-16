@@ -1,6 +1,6 @@
 // Persistence round-trips: store/auth serialize+restore, Firestore value
-// codec. No live Firestore here (needs metadata server) — the REST shape is
-// covered by _enc/_dec unit tests + a manual CLI probe at setup time.
+// writes through the Firebase Admin SDK. No live Firestore here: a fake
+// db stands in for firebase-admin's Firestore (doc().get()/set()).
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import {
@@ -8,7 +8,7 @@ import {
   setReputation, getReputation, serializeStore, restoreStore,
 } from '../src/store.js';
 import { requestOtp, verifyOtp, createSession, getSession, serializeAuth, restoreAuth } from '../src/auth.js';
-import { _enc, _dec } from '../src/persist/firestore.js';
+import { loadSnapshot, saveSnapshot, _setDb } from '../src/persist/firestore.js';
 
 describe('store snapshot round-trip', () => {
   it('members, calls, verdicts, reputation survive serialize/restore', () => {
@@ -46,28 +46,33 @@ describe('auth snapshot round-trip', () => {
   });
 });
 
-describe('firestore codec', () => {
-  it('round-trips nested types incl. thai, ints, nulls, empty arrays', () => {
-    const obj = {
-      s: 'สวัสดี otp ครับ',
-      i: 7,
-      f: 0.95,
-      b: true,
-      n: null,
-      u: undefined,
-      arr: [1, 'x', null],
-      empty: [],
-      nested: { a: [{ b: 2 }] },
-    };
-    const back = _dec(_enc(obj));
-    assert.equal(back.s, obj.s);
-    assert.equal(back.i, 7);
-    assert.equal(back.f, 0.95);
-    assert.equal(back.b, true);
-    assert.equal(back.n, null);
-    assert.equal(back.u, null); // undefined -> null
-    assert.deepEqual(back.arr, [1, 'x', null]);
-    assert.deepEqual(back.empty, []);
-    assert.deepEqual(back.nested, { a: [{ b: 2 }] });
+describe('firestore snapshot (firebase-admin)', () => {
+  it('stores plain JSON (thai, ints, nulls, empty arrays; undefined dropped) and reads it back', async () => {
+    const docs = new Map();
+    _setDb({ doc: (p) => ({
+      get: async () => ({ exists: docs.has(p), data: () => structuredClone(docs.get(p)) }),
+      set: async (v) => { docs.set(p, v); },
+    }) });
+    try {
+      const obj = { s: 'สวัสดี otp ครับ', i: 7, f: 0.95, b: true, n: null, u: undefined, d: new Date('2026-10-16T00:00:00Z'),
+        arr: [1, 'x', null], empty: [], nested: { a: [{ b: 2 }] } };
+      await saveSnapshot('krai/test', obj);
+      const back = await loadSnapshot('krai/test');
+      assert.deepEqual(back, { s: obj.s, i: 7, f: 0.95, b: true, n: null, d: '2026-10-16T00:00:00.000Z',
+        arr: [1, 'x', null], empty: [], nested: { a: [{ b: 2 }] } });
+      assert.equal(await loadSnapshot('krai/missing'), null);
+    } finally { _setDb(null); }
+  });
+
+  it('refuses to touch Firestore off Cloud Run (a laptop with gcloud credentials stays in-memory)', async () => {
+    const saved = { k: process.env.K_SERVICE, e: process.env.FIRESTORE_EMULATOR_HOST };
+    delete process.env.K_SERVICE; delete process.env.FIRESTORE_EMULATOR_HOST;
+    try {
+      await assert.rejects(loadSnapshot('krai/snapshot'), /not-on-cloud-run/);
+      await assert.rejects(saveSnapshot('krai/snapshot', {}), /not-on-cloud-run/);
+    } finally {
+      if (saved.k !== undefined) process.env.K_SERVICE = saved.k;
+      if (saved.e !== undefined) process.env.FIRESTORE_EMULATOR_HOST = saved.e;
+    }
   });
 });

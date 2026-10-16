@@ -9,6 +9,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { config } from './config.js';
+import { stripTrailingChunks } from './audioTail.js';
 
 const API = 'https://generativelanguage.googleapis.com/v1beta';
 export const SAMPLE_RATE = 24000; // Gemini TTS output: 24 kHz mono s16le
@@ -37,8 +38,25 @@ export function pcmToWav(pcm, rate = SAMPLE_RATE) {
   return Buffer.concat([h, pcm]);
 }
 
-// Unary responses are audio/wav (RIFF); strip any header to get bare PCM.
-const stripRiff = (b) => (b.subarray(0, 4).toString() === 'RIFF' ? b.subarray(44) : b);
+// Unary responses are audio/wav (RIFF) and carry a trailing 'C2PA' chunk
+// (content credentials) after the samples: keep ONLY the 'data' chunk, or
+// the metadata plays as a ~130 ms full-scale burst. Bare PCM (SSE chunks,
+// old cache files) gets any glued trailing chunk stripped the same way.
+export function stripRiff(b) {
+  if (b.length < 12 || b.subarray(0, 4).toString() !== 'RIFF' || b.subarray(8, 12).toString() !== 'WAVE') return stripTrailingChunks(b);
+  let p = 12;
+  while (p + 8 <= b.length) {
+    const id = b.subarray(p, p + 4).toString('latin1');
+    const size = b.readUInt32LE(p + 4);
+    const start = p + 8;
+    if (id === 'data') {
+      const end = size >= 0xfffffff0 ? b.length : Math.min(b.length, start + size); // streamed: size unknown
+      return b.subarray(start, end - ((end - start) % 2));
+    }
+    p = start + size + (size % 2);
+  }
+  return stripTrailingChunks(b.subarray(44)); // no data chunk found: legacy assumption
+}
 
 function findAudio(o, acc = []) {
   if (!o || typeof o !== 'object') return acc;
@@ -95,7 +113,7 @@ export async function synth(text, {
   const file = path.join(cacheDir, `${key}.pcm`);
   const t0 = Date.now();
   try {
-    const pcm = await fs.readFile(file);
+    const pcm = stripTrailingChunks(await fs.readFile(file)); // caches written before the C2PA fix
     return { pcm, wav: pcmToWav(pcm), sampleRate: SAMPLE_RATE, cached: true, api: 'cache', latencyMs: Date.now() - t0 };
   } catch { /* miss */ }
 
@@ -146,7 +164,7 @@ export async function synthStream(text, onChunk, {
   const file = path.join(cacheDir, `${cacheKey({ model, voice, style: '', text: clean })}.pcm`);
   const t0 = Date.now();
   try {
-    const pcm = await fs.readFile(file);
+    const pcm = stripTrailingChunks(await fs.readFile(file));
     onChunk(pcm, { complete: true });
     return { cached: true, api: 'cache', firstChunkMs: Date.now() - t0, bytes: pcm.length };
   } catch { /* miss */ }

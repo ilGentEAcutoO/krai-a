@@ -1,4 +1,4 @@
-FROM node:20-slim
+FROM node:22-slim
 WORKDIR /srv/krai-a
 ENV NODE_ENV=production PORT=8080
 COPY package.json package-lock.json ./

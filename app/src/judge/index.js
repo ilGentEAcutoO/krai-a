@@ -38,8 +38,8 @@ export function normalizeTurns(turns = [], callerText) {
 // The greeting is fixed (pre-renderable, no AI wait on pickup). The phone
 // path prepends config.recordNotice; the public demo records nothing.
 const OPENING = {
-  th: 'สวัสดีค่ะ ผู้ช่วยรับสายแทนเจ้าของเบอร์ค่ะ ไม่ทราบว่าติดต่อจากที่ไหน และมีธุระอะไรคะ',
-  en: "Hello, this is the assistant answering for the phone's owner. May I ask who is calling and what it is about?",
+  th: 'สวัสดีค่ะ ตอนนี้เจ้าของเบอร์ไม่สะดวกรับสาย ดิฉันรับสายแทนนะคะ ไม่ทราบว่าใครโทรมา แล้วมีธุระอะไรคะ',
+  en: "Hello, the owner of this phone can't pick up right now, so I'm answering for them. May I ask who is calling, and what it's about?",
 };
 export const openingLine = (lang = 'th') => OPENING[lang === 'en' ? 'en' : 'th'];
 
@@ -51,20 +51,20 @@ const CANNED = {
       'ขอเวลาตรวจสอบข้อมูลก่อนนะคะ รบกวนแจ้งเบอร์ติดต่อกลับไว้ค่ะ',
     ],
     'wrap-up': 'ขอเบอร์ติดต่อกลับไว้หน่อยได้ไหมคะ เดี๋ยวจะแจ้งเจ้าของเบอร์ให้ค่ะ',
-    'close-scam': 'ขอบคุณที่ติดต่อมาค่ะ ดิฉันจะแจ้งเจ้าของเบอร์ให้ตรวจสอบเองอีกครั้งนะคะ สวัสดีค่ะ',
+    'close-scam': 'ขอบคุณที่โทรมานะคะ เดี๋ยวจะแจ้งเจ้าของเบอร์ให้ตรวจสอบเองค่ะ สวัสดีค่ะ',
     'close-message': 'รับเรื่องไว้แล้วค่ะ จะแจ้งเจ้าของเบอร์ให้ติดต่อกลับนะคะ ขอบคุณค่ะ สวัสดีค่ะ',
     'close-unsure': 'รับเรื่องไว้แล้วค่ะ เดี๋ยวแจ้งเจ้าของเบอร์ให้ตัดสินนะคะ ขอบคุณค่ะ สวัสดีค่ะ',
   },
   en: {
     continue: [
-      'May I have your name, your organisation, and a number to call you back?',
-      'Could you leave a callback number, please? I will let the owner know.',
-      'I need a moment to verify this. Please leave a callback number.',
+      "Sure. May I have your name, where you're calling from, and a number to call you back?",
+      "Okay. Could you leave a callback number? I'll let the owner know.",
+      "I see. Could you leave a callback number, please?",
     ],
-    'wrap-up': 'Could you leave a callback number, please? I will pass it on.',
-    'close-scam': 'Thank you for calling. I will pass this on so the owner can verify it independently. Goodbye.',
-    'close-message': 'Thank you, I have noted your message and number. The owner will get back to you. Goodbye.',
-    'close-unsure': 'Thank you, I have noted your message. The owner will decide how to follow up. Goodbye.',
+    'wrap-up': "Could you leave a callback number, please? I'll pass it on.",
+    'close-scam': "Thanks for calling. I'll let the owner know, and they'll check it themselves. Goodbye.",
+    'close-message': "Thanks, I've got your message and number. The owner will get back to you. Goodbye.",
+    'close-unsure': "Thanks, I've noted your message. The owner will decide what to do next. Goodbye.",
   },
 };
 

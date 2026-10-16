@@ -12,7 +12,12 @@
 // recorded length, the line carries on with subtitles and the call still
 // reaches its verdict and LINE card.
 //
-// Pause freezes everything: the clip, the ring/gap/subtitle waits and both
+// Phases: ring (the incoming call) → transfer (optional: "transferring to
+// the KRAI-A assistant", transferMs > 0) → line / gap … → done. beforeLine
+// (optional) runs before every line and returns how long to wait first —
+// call-demo plays its turn-switch tone there; that wait pauses like any other.
+//
+// Pause freezes everything: the clip, the ring/transfer/gap/subtitle waits and both
 // watchdogs. Resume continues exactly where it stopped. A finished call never
 // chains into another one.
 
@@ -49,13 +54,13 @@ export function autoPauseOnHidden(player, doc, onPaused = () => {}) {
 }
 
 export function createPlayer({
-  audio, gapMs = GAP_MS, ringMs = RING_MS, loadTimeoutMs = LOAD_TIMEOUT_MS, endMarginMs = END_MARGIN_MS,
-  now = () => Date.now(), onEvent = () => {},
+  audio, gapMs = GAP_MS, ringMs = RING_MS, transferMs = 0, loadTimeoutMs = LOAD_TIMEOUT_MS, endMarginMs = END_MARGIN_MS,
+  now = () => Date.now(), onEvent = () => {}, beforeLine = null,
 }) {
   let run = 0;          // bumped by every start/stop: stale continuations bail out
   let interrupt = null; // ends the wait or clip in progress (skip/stop)
   let scenario = null;
-  let phase = 'idle';   // idle | ring | line | gap | done
+  let phase = 'idle';   // idle | ring | transfer | line | gap | done
   let index = -1;
   let paused = false;
   let audioFailed = false;
@@ -142,10 +147,22 @@ export function createPlayer({
     phase = 'ring';
     emit({ type: 'ring', scenario: sc });
     await wait(ringMs);
+    if (id !== run) return;
+    if (transferMs > 0) {
+      phase = 'transfer';
+      emit({ type: 'transfer', scenario: sc });
+      await wait(transferMs);
+    }
     const turns = Array.isArray(sc?.turns) ? sc.turns : [];
     for (let i = 0; i < turns.length; i += 1) {
       if (id !== run) return;
       const turn = turns[i];
+      if (beforeLine) {
+        let lead = 0;
+        try { lead = Number(beforeLine(turn, turns[i - 1] || null, i)) || 0; } catch (err) { console.error(err); }
+        if (lead > 0) await wait(lead);
+        if (id !== run) return;
+      }
       phase = 'line';
       index = i;
       const rec = { index: i, role: turn.role, start: now(), end: null, skipped: false, pausedMs: 0 };
@@ -181,7 +198,7 @@ export function createPlayer({
     audio.stop();
   }
 
-  const active = () => phase === 'ring' || phase === 'line' || phase === 'gap';
+  const active = () => phase === 'ring' || phase === 'transfer' || phase === 'line' || phase === 'gap';
 
   const player = {
     start(sc) {
@@ -231,4 +248,26 @@ export function createPlayer({
     get timeline() { return timeline.map((r) => ({ ...r })); },
   };
   return player;
+}
+
+// Risk meter 0..1 from a per-turn verdict (null = still listening):
+// SCAM fills from the middle up with its confidence, LEGIT drains down, UNSURE sits mid.
+export function riskOf(v) {
+  if (!v?.verdict) return null;
+  const c = Math.max(0, Math.min(1, Number(v.confidence) || 0));
+  if (v.verdict === 'SCAM') return 0.5 + c / 2;
+  if (v.verdict === 'LEGIT') return 0.5 - c / 2;
+  return 0.5;
+}
+
+// The recording for one case in one language: English calls live in
+// `scenariosEn` (a separate real run in English). Without one, the Thai
+// recording plays with English subtitles (audioLang tells the UI which).
+export function scenarioFor(manifest, id, lang = 'th') {
+  const th = manifest?.scenarios?.find((s) => s.id === id) || null;
+  if (lang === 'en') {
+    const en = manifest?.scenariosEn?.find((s) => s.id === id);
+    if (en) return { scenario: en, audioLang: 'en' };
+  }
+  return { scenario: th, audioLang: 'th' };
 }

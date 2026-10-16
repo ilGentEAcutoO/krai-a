@@ -16,6 +16,8 @@ The family gets a LINE card. Transcripts are stored, not audio.
 **Demo surface.** `/demo.html` replays 5 calls recorded once from the real engine and voiced with
 **Gemini 3.8 Flash TTS**, so visitors trigger zero API calls. "Talk to the AI" opens a 2-minute
 **Gemini 3.8 Live** native-audio session (reCAPTCHA plus per-IP and daily caps).
+On https://demo.krai-a.com the result card only previews the family alert. The demo sends nothing and has no
+live LINE; LINE delivery is part of the product at https://krai-a.com.
 
 One Cloud Run service serves the site, the member app (`/start.html`, `/dashboard.html`, LINE LIFF),
 the Twilio voice webhooks, the demo and the live WebSocket. Product pages are Thai-first with an EN toggle.
@@ -112,7 +114,7 @@ Steps the USER must do in the LINE Developers Console (https://developers.line.b
 Env vars (see .env.example): LINE_LOGIN_CHANNEL_ID, LINE_LIFF_ID,
 LINE_CHANNEL_SECRET, LINE_CHANNEL_ACCESS_TOKEN, LINE_DEFAULT_TO (push only).
 
-## Deploy (live: https://krai-a.com, Google Cloud Run)
+## Deploy (Google Cloud Run: business at https://krai-a.com, hackathon prototype at https://demo.krai-a.com)
 
 ```sh
 DRY_RUN=1 PROJECT_ID=krai-a ./deploy-cloudrun.sh   # print every command, run nothing
@@ -136,7 +138,7 @@ revision + the rollback command, and smoke-tests `/api/status`, `/api/members`
 | Path | Purpose |
 |---|---|
 | `/` | one-page site: hero, how it works (`#setup`), who it protects (`#family`), trust, FAQ, price (TH/EN) |
-| `/demo.html` | demo stage: 5 recorded calls + "Talk to the AI" (2-min Gemini Live) |
+| `/demo.html` | demo stage: 5 recorded calls + "Talk to the AI" (2-min Gemini Live); served at `/` on https://demo.krai-a.com |
 | `/pricing.html` | pricing v2 (rendered from `GET /api/plans`) |
 | `/start.html` | sign up / log in with phone OTP (`?plan=` preselects) |
 | `/dashboard.html` | member app: Home · My people (protected phones, forwarding codes) · Settings (plan, LINE, account erasure, cancel) |
@@ -319,11 +321,11 @@ Base case (biz-v2 calculator: annual PromptPay, mix 50/45/5) gives an 84% blende
 
 ## Demo script for judges (3 minutes)
 
-1. **(0:00)** Open https://krai-a.com/demo.html. Use the footer language switch for English.
-   One line: "Unknown calls to Mom reach an AI first, and the family hears about it on LINE."
+1. **(0:00)** Open https://demo.krai-a.com. Use the footer language switch for English.
+   One line: "Unknown calls to Mom reach an AI first, and the family hears about it on LINE." (In the real service. The demo sends nothing.)
 2. **(0:15)** Play **Fake police** (~40 s). Turn 1: Jev is unsure, Gemini escalates, SCAM. Turn 2: Jev
-   alone at 99% → the AI hangs up → red LINE card "Scam call cut off for Mom".
-3. **(1:00)** Play **Hospital**: a real person, message and callback number taken, green LINE card.
+   alone at 99% → the AI hangs up → red alert card "Scam call cut off for Mom" (a preview; the demo sends nothing).
+3. **(1:00)** Play **Hospital**: a real person, message and callback number taken, green alert card.
    Optionally **Survey**: unsure (amber), the family decides.
 4. **(1:30)** Click **Talk to the AI** (2-min Gemini Live, mic + reCAPTCHA). Play a fake officer who demands a
    transfer and secrecy → Scam 99%, the AI ends the call. Thai works best.

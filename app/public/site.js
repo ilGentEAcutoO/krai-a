@@ -8,10 +8,20 @@ export const session = {
   get loggedIn() { return !!this.token; },
 };
 
+// `?lang=en|th` in the URL wins once and is remembered (shareable EN links).
+function langFromUrl() {
+  try {
+    const q = new URLSearchParams(globalThis.location?.search || '').get('lang');
+    if (q === 'en' || q === 'th') localStorage.setItem(LANG_KEY, q);
+  } catch { /* no location / storage: keep the stored choice */ }
+}
+
 export const i18n = {
-  get lang() { return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'th'; },
+  get lang() {
+    try { return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'th'; } catch { return 'th'; }
+  },
   set lang(v) {
-    localStorage.setItem(LANG_KEY, v === 'en' ? 'en' : 'th');
+    try { localStorage.setItem(LANG_KEY, v === 'en' ? 'en' : 'th'); } catch { /* private mode: this page only */ }
     applyLang();
     window.dispatchEvent(new CustomEvent('krai-a:lang'));
   },
@@ -25,6 +35,9 @@ export function applyLang() {
     const v = lang === 'th' ? el.dataset.th : ('en' in el.dataset ? el.dataset.en : el.dataset.th);
     if (v !== undefined && el.innerHTML !== v) el.innerHTML = v;
   });
+  document.querySelectorAll('[data-aria-th]').forEach((el) => {
+    el.setAttribute('aria-label', lang === 'th' ? el.dataset.ariaTh : (el.dataset.ariaEn || el.dataset.ariaTh));
+  });
   document.querySelectorAll('[data-th-ph]').forEach((el) => {
     el.placeholder = lang === 'th' ? el.dataset.thPh : ('enPh' in el.dataset ? el.dataset.enPh : el.dataset.thPh);
   });
@@ -32,7 +45,7 @@ export function applyLang() {
   if (document.body.dataset.titleTh) {
     document.title = lang === 'th' ? document.body.dataset.titleTh : (document.body.dataset.titleEn || document.body.dataset.titleTh);
   }
-  document.querySelectorAll('#langToggle button[data-lang]').forEach((b) => {
+  document.querySelectorAll('#langToggle button[data-lang], [data-lang-toggle] button[data-lang]').forEach((b) => {
     b.classList.toggle('on', b.dataset.lang === lang);
     b.setAttribute('aria-pressed', String(b.dataset.lang === lang));
   });
@@ -134,30 +147,34 @@ export function logout() {
 }
 
 // Site chrome: every public page shares one nav + one footer, rendered here.
-// Pages ship `<nav class="nav"></nav>` / `<footer class="foot"></footer>`
-// shells (or this exact markup, data-v="2", which is left untouched).
-// Nav = brand · เดโม · ราคา · [เริ่มใช้ฟรี]; login is a small text link and
-// the language switch lives in the footer.
-const CHROME_V = '2';
+// Pages ship empty `<nav class="nav"></nav>` / `<footer class="foot"></footer>`
+// shells; any nav/footer that already carries data-v is left untouched.
+// Nav = brand · ฟังสายจริง · วิธีตั้งค่า · ราคา · ลองคุยกับ AI (demo.krai-a.com) · TH|EN · [เริ่มใช้ฟรี]; login
+// is a small text link; the footer repeats the language switch.
+const CHROME_V = '3';
 
 const NAV_HTML = `<div class="nav-in">
-  <a class="brand" href="/"><span class="dot" aria-hidden="true">ค</span><span data-th="ใครอะ" data-en="Krai-A">ใครอะ</span></a>
+  <a class="brand" href="/"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
   <div class="nav-links" id="navLinks">
-    <a data-page="demo" href="/demo.html" data-th="เดโม" data-en="Demo">เดโม</a>
+    <a href="/#listen" data-th="ฟังสายจริง" data-en="Hear a call">ฟังสายจริง</a>
+    <a href="/#setup" data-th="วิธีตั้งค่า" data-en="How it works">วิธีตั้งค่า</a>
     <a data-page="pricing" href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
+    <a href="https://demo.krai-a.com" data-th="ลองคุยกับ AI" data-en="Try the demo">ลองคุยกับ AI</a>
     <span id="navSheetAuth" class="nav-sheet-slot"></span>
   </div>
+  <div class="nav-lang" data-lang-toggle role="group" aria-label="ภาษา / Language"><button type="button" data-lang="th" lang="th" aria-pressed="true">TH</button><button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button></div>
   <div class="nav-right" id="navAuth"></div>
   <button type="button" class="hamb" aria-controls="navLinks" aria-expanded="false" aria-label="เมนู / Menu"><span></span><span></span></button>
 </div>`;
 
 const FOOT_HTML = `<div class="foot-in">
   <div class="foot-brand">
-    <a class="brand" href="/"><span class="dot" aria-hidden="true">ค</span><span data-th="ใครอะ" data-en="Krai-A">ใครอะ</span></a>
+    <a class="brand" href="/"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
     <p data-th="AI รับสายแปลกแทนคนที่คุณรัก คุยสุภาพ จับมุกมิจ แล้วสรุปให้คุณ" data-en="AI answers unknown calls for the people you love — politely, catching scam scripts, then briefing you.">AI รับสายแปลกแทนคนที่คุณรัก คุยสุภาพ จับมุกมิจ แล้วสรุปให้คุณ</p>
   </div>
   <nav class="foot-links" aria-label="Footer">
-    <a href="/demo.html" data-th="เดโม" data-en="Demo">เดโม</a>
+    <a href="/#listen" data-th="ฟังสายจริง" data-en="Hear a call">ฟังสายจริง</a>
+    <a href="/#setup" data-th="วิธีตั้งค่า" data-en="How it works">วิธีตั้งค่า</a>
     <a href="/pricing.html" data-th="ราคา" data-en="Pricing">ราคา</a>
     <a href="/#faq" data-th="คำถามที่พบบ่อย" data-en="FAQ">คำถามที่พบบ่อย</a>
     <a href="/start.html" data-th="สมัคร / เข้าสู่ระบบ" data-en="Sign up / Log in">สมัคร / เข้าสู่ระบบ</a>
@@ -166,16 +183,18 @@ const FOOT_HTML = `<div class="foot-in">
     <button type="button" data-lang="th" lang="th" aria-pressed="true">ไทย</button><button type="button" data-lang="en" lang="en" aria-pressed="false">English</button>
   </div>
 </div>
-<div class="foot-base"><span>© 2026 Krai-A</span><span data-th="รับเฉพาะสายที่คุณโอนมา ไม่ยุ่งกับสายอื่นในมือถือคุณ" data-en="Only calls you forward reach us — nothing else on your phone.">รับเฉพาะสายที่คุณโอนมา ไม่ยุ่งกับสายอื่นในมือถือคุณ</span></div>`;
+<div class="foot-base"><span data-th="© 2026 ใครอะ" data-en="© 2026 KRAI-A">© 2026 ใครอะ</span><span data-th="รับเฉพาะสายที่คุณโอนมา ไม่ยุ่งกับสายอื่นในมือถือคุณ" data-en="Only calls you forward reach us — nothing else on your phone.">รับเฉพาะสายที่คุณโอนมา ไม่ยุ่งกับสายอื่นในมือถือคุณ</span></div>`;
 
 function renderChrome() {
+  // Only empty shells are filled: a page that ships its own chrome (any
+  // data-v, e.g. the hackathon demo page) keeps it — no product links there.
   const nav = document.querySelector('nav.nav');
-  if (nav && nav.dataset.v !== CHROME_V) {
+  if (nav && nav.dataset.v === undefined) {
     nav.innerHTML = NAV_HTML;
     nav.dataset.v = CHROME_V;
   }
   const foot = document.querySelector('footer.foot');
-  if (foot && foot.dataset.v !== CHROME_V) {
+  if (foot && foot.dataset.v === undefined) {
     foot.innerHTML = FOOT_HTML;
     foot.dataset.v = CHROME_V;
   }
@@ -187,8 +206,9 @@ function renderNavAuth(page) {
   if (!slot) return;
   if (session.loggedIn) {
     slot.innerHTML = `<button type="button" class="nav-text" data-logout data-th="ออกจากระบบ" data-en="Log out">ออกจากระบบ</button>
-      <a class="btn small secondary" href="/dashboard.html" data-th="ห้องของฉัน" data-en="My dashboard">ห้องของฉัน</a>`;
-    if (sheet) sheet.innerHTML = `<button type="button" class="nav-sheet-only nav-text" data-logout data-th="ออกจากระบบ" data-en="Log out">ออกจากระบบ</button>`;
+      <a class="btn small secondary" href="/dashboard.html" data-th="ห้องของฉัน" data-en="Dashboard">ห้องของฉัน</a>`;
+    if (sheet) sheet.innerHTML = `<a class="nav-sheet-only" href="/dashboard.html" data-th="ห้องของฉัน" data-en="Dashboard">ห้องของฉัน</a>
+      <button type="button" class="nav-sheet-only nav-text" data-logout data-th="ออกจากระบบ" data-en="Log out">ออกจากระบบ</button>`;
   } else {
     // The signup page is its own CTA: no second primary button above it.
     // Secondary style: each page's own CTA is the one ink primary on screen.
@@ -219,13 +239,14 @@ function wireMenu() {
 }
 
 export function initNav(page) {
+  langFromUrl();
   renderChrome();
   document.querySelectorAll('.nav-links a').forEach((a) => {
     const on = a.dataset.page === page;
     a.classList.toggle('on', on);
     if (on) a.setAttribute('aria-current', 'page');
   });
-  document.querySelectorAll('#langToggle button[data-lang]').forEach((b) => {
+  document.querySelectorAll('#langToggle button[data-lang], [data-lang-toggle] button[data-lang]').forEach((b) => {
     b.onclick = () => { i18n.lang = b.dataset.lang; };
   });
   document.querySelectorAll('#langToggle select').forEach((s) => {
