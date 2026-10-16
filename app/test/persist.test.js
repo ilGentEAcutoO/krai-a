@@ -8,7 +8,7 @@ import {
   setReputation, getReputation, serializeStore, restoreStore,
 } from '../src/store.js';
 import { requestOtp, verifyOtp, createSession, getSession, serializeAuth, restoreAuth } from '../src/auth.js';
-import { loadSnapshot, saveSnapshot, _setDb } from '../src/persist/firestore.js';
+import { loadSnapshot, saveSnapshot, _setDb, persistDatabase, _databaseId } from '../src/persist/firestore.js';
 
 describe('store snapshot round-trip', () => {
   it('members, calls, verdicts, reputation survive serialize/restore', () => {
@@ -74,5 +74,41 @@ describe('firestore snapshot (firebase-admin)', () => {
       if (saved.k !== undefined) process.env.K_SERVICE = saved.k;
       if (saved.e !== undefined) process.env.FIRESTORE_EMULATOR_HOST = saved.e;
     }
+  });
+});
+
+describe('firestore database per role (PERSIST_DATABASE)', () => {
+  const withEnv = async (vars, fn) => {
+    const saved = Object.fromEntries(Object.keys(vars).map((k) => [k, process.env[k]]));
+    for (const [k, v] of Object.entries(vars)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+    _setDb(null);
+    try { return await fn(); } finally {
+      for (const [k, v] of Object.entries(saved)) { if (v === undefined) delete process.env[k]; else process.env[k] = v; }
+      _setDb(null);
+    }
+  };
+
+  it('defaults to "(default)" and accepts a valid database id', async () => {
+    await withEnv({ PERSIST_DATABASE: undefined }, () => assert.equal(persistDatabase(), '(default)'));
+    await withEnv({ PERSIST_DATABASE: '(default)' }, () => assert.equal(persistDatabase(), '(default)'));
+    await withEnv({ PERSIST_DATABASE: ' hackathon ' }, () => assert.equal(persistDatabase(), 'hackathon'));
+  });
+
+  it('refuses malformed ids instead of falling back to the member database', async () => {
+    for (const bad of ['Hackathon', 'hack_athon', 'ab', '../(default)', 'projects/krai-a/databases/(default)', '1hack']) {
+      await withEnv({ PERSIST_DATABASE: bad }, () => assert.throws(() => persistDatabase(), /bad-persist-database/));
+    }
+    await withEnv({ PERSIST_DATABASE: 'Bad_DB', FIRESTORE_EMULATOR_HOST: '127.0.0.1:1' }, async () => {
+      await assert.rejects(loadSnapshot('krai/hackathon'), /bad-persist-database/);
+    });
+  });
+
+  it('opens the configured database through firebase-admin (no network call)', async () => {
+    await withEnv({ PERSIST_DATABASE: 'hackathon', FIRESTORE_EMULATOR_HOST: '127.0.0.1:1' }, async () => {
+      assert.equal(await _databaseId(), 'hackathon');
+    });
+    await withEnv({ PERSIST_DATABASE: undefined, FIRESTORE_EMULATOR_HOST: '127.0.0.1:1' }, async () => {
+      assert.equal(await _databaseId(), '(default)');
+    });
   });
 });

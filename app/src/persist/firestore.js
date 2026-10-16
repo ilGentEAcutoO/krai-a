@@ -6,17 +6,29 @@
 // Single 1MB-max doc per site role (see siteMode.js): fine for pilot scale.
 const PROJECT = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT || 'krai-a';
 
+// Firestore database id (PERSIST_DATABASE, default "(default)"). The demo role
+// runs in its own database ("hackathon") under a service account that IAM
+// limits to that database, so the public site can never reach member data.
+// A malformed id throws: persistence then stays off rather than guessing.
+export function persistDatabase() {
+  const v = String(process.env.PERSIST_DATABASE || '').trim();
+  if (!v || v === '(default)') return '(default)';
+  if (/^[a-z][a-z0-9-]{2,61}[a-z0-9]$/.test(v)) return v;
+  throw new Error('bad-persist-database');
+}
+
 let dbPromise = null;
 
 async function db() {
   if (dbPromise) return dbPromise;
   if (!process.env.K_SERVICE && !process.env.FIRESTORE_EMULATOR_HOST) throw new Error('not-on-cloud-run');
+  const databaseId = persistDatabase();
   dbPromise = (async () => {
     // Lazy: tests and local dev never load the SDK.
     const { initializeApp, getApps } = await import('firebase-admin/app');
     const { getFirestore } = await import('firebase-admin/firestore');
     const app = getApps()[0] || initializeApp({ projectId: PROJECT });
-    return getFirestore(app);
+    return getFirestore(app, databaseId);
   })();
   dbPromise.catch(() => { dbPromise = null; }); // retry init on the next call
   return dbPromise;
@@ -34,3 +46,4 @@ export async function saveSnapshot(doc, obj) {
 }
 
 export function _setDb(fake) { dbPromise = fake ? Promise.resolve(fake) : null; } // tests only
+export async function _databaseId() { return (await db()).databaseId; } // tests only

@@ -6,6 +6,11 @@
 #   SERVICE=krai-a-demo SITE_MODE=demo     -> https://demo.krai-a.com  hackathon site: Gemini/Jev/Firestore only
 # Any other SERVICE/SITE_MODE pair is refused unless ROLE_OVERRIDE=1.
 # Demo mode REMOVES every business secret/env from the service.
+# Each role runs as its own least-privilege service account (never the
+# default compute SA, which holds roles/editor): krai-a-run reads the business
+# secrets + Firestore (default) only; krai-a-demo-run reads Gemini/Jev/reCAPTCHA
+# + Firestore database "hackathon" only, so the public site cannot reach member
+# data even if its code is compromised.
 # Usage (repo root; needs gcloud + curl):
 #   SERVICE=krai-a SITE_MODE=product PROJECT_ID=krai-a ./deploy-cloudrun.sh
 #   DRY_RUN=1 SERVICE=krai-a-demo SITE_MODE=demo PROJECT_ID=krai-a ./deploy-cloudrun.sh   # print every command, run none
@@ -13,7 +18,9 @@
 # Optional overrides: REGION, SRC_DIR (default app; the public repo tree for the
 # hackathon role), PUBLIC_BASE_URL (default = the service's domain mapping),
 # PRODUCT_BASE_URL (demo mode: where product pages redirect), PERSIST_DOC
-# (default = the role's own Firestore doc), LIVE_MAX_SECONDS /
+# (default = the role's own Firestore doc), PERSIST_DATABASE (default: demo
+# "hackathon", product "(default)"), RUN_SA (default: the role's service
+# account), LIVE_MAX_SECONDS /
 # LIVE_MAX_PER_IP_HOUR / LIVE_MAX_PER_DAY, RECAPTCHA_PROJECT_ID.
 # Exported RECAPTCHA_SITE_KEY / LINE_DEFAULT_TO / TWILIO_ACCOUNT_SID /
 # TWILIO_VERIFY_SID / CENTRAL_NUMBER_TH are applied (demo mode takes only
@@ -37,12 +44,24 @@ if [ "$SITE_MODE" != "$ROLE" ] && [ "${ROLE_OVERRIDE:-0}" != 1 ]; then
 fi
 REPO="krai-a"
 SRC_DIR="${SRC_DIR:-app}"
+# LIVE_RECORD_DIR is the local-only live-session recorder (PDPA): it must never
+# reach Cloud Run, so its presence in this shell or the tree's .env stops the deploy.
+if [ -n "${LIVE_RECORD_DIR:-}" ] || { [ -f "$SRC_DIR/.env" ] && grep -qE '^[[:space:]]*(export[[:space:]]+)?LIVE_RECORD_DIR=[^[:space:]#]' "$SRC_DIR/.env"; }; then
+  echo "refusing: LIVE_RECORD_DIR is a local-only recorder" >&2; exit 1
+fi
 IMAGE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/krai-a:$SITE_MODE"
 PUBLIC_BASE_URL="${PUBLIC_BASE_URL:-$DOMAIN}"
 [ -n "$PUBLIC_BASE_URL" ] || { echo "set PUBLIC_BASE_URL for an unmapped service" >&2; exit 2; }
 PRODUCT_BASE_URL="${PRODUCT_BASE_URL:-https://krai-a.com}"
 DRY_RUN="${DRY_RUN:-0}"
 JUDGING="${JUDGING:-0}"
+if [ "$SITE_MODE" = demo ]; then
+  RUN_SA="${RUN_SA:-krai-a-demo-run@$PROJECT_ID.iam.gserviceaccount.com}"
+  PERSIST_DATABASE="${PERSIST_DATABASE:-hackathon}"
+else
+  RUN_SA="${RUN_SA:-krai-a-run@$PROJECT_ID.iam.gserviceaccount.com}"
+  PERSIST_DATABASE="${PERSIST_DATABASE:-}"
+fi
 
 say() { printf '%s\n' "$*"; }
 # show: print a command so it can be pasted back into a shell.
@@ -69,6 +88,7 @@ exists() { # read-only existence check; DRY_RUN assumes present unless the
 
 [ "$DRY_RUN" = 1 ] && say "== DRY RUN: printing commands, nothing is executed =="
 say "service: $SERVICE  site mode: $SITE_MODE  public: $PUBLIC_BASE_URL  image: $IMAGE  source: $SRC_DIR"
+say "runs as: $RUN_SA  firestore database: ${PERSIST_DATABASE:-(default)}"
 
 run gcloud config set project "$PROJECT_ID"
 run gcloud services enable run.googleapis.com artifactregistry.googleapis.com secretmanager.googleapis.com
@@ -119,14 +139,25 @@ for row in "${SECRETS[@]}"; do
     else
       say "  read -rs VALUE && printf %s \"\$VALUE\" | gcloud secrets create $name --data-file=- && unset VALUE"
     fi
-    say "  gcloud secrets add-iam-policy-binding $name --role=roles/secretmanager.secretAccessor \\"
-    say "    --member=\"serviceAccount:\$(gcloud run services describe $SERVICE --region $REGION --format='value(spec.template.spec.serviceAccountName)')\""
-    say "    (empty service account = the default: PROJECT_NUMBER-compute@developer.gserviceaccount.com)"
+    say "  gcloud secrets add-iam-policy-binding $name --role=roles/secretmanager.secretAccessor --member=serviceAccount:$RUN_SA"
   fi
 done
 # reCAPTCHA server key is optional (absent = bot gate off). Both roles: it guards live talk.
 if exists gcloud secrets describe recaptcha-api-key; then secret_args+=("RECAPTCHA_API_KEY=recaptcha-api-key:latest"); fi
 [ "$missing" = 1 ] && { say "aborting: create the missing secrets first"; exit 1; }
+
+# ---- runtime identity + data isolation: the role's SA and database must exist ----
+if ! exists gcloud iam service-accounts describe "$RUN_SA"; then
+  say "missing service account: $RUN_SA (create it once, grant secretAccessor per secret above and"
+  say "  roles/datastore.user with an IAM condition on its Firestore database only; never a project-wide role)"
+  exit 1
+fi
+if [ -n "$PERSIST_DATABASE" ] && [ "$PERSIST_DATABASE" != "(default)" ] \
+  && ! exists gcloud firestore databases describe --database="$PERSIST_DATABASE"; then
+  say "missing Firestore database: $PERSIST_DATABASE"
+  say "  gcloud firestore databases create --database=$PERSIST_DATABASE --location=$REGION --type=firestore-native"
+  exit 1
+fi
 
 # ---- plain env: decided values + optional pass-through (never secrets) ----
 env_args=(
@@ -140,8 +171,9 @@ env_args=(
   "LIVE_MAX_PER_IP_HOUR=${LIVE_MAX_PER_IP_HOUR:-3}"
   "LIVE_MAX_PER_DAY=${LIVE_MAX_PER_DAY:-300}"
 )
-remove_env="AI_OFFLINE,AI_LIVE_TESTS,GEMINI_PERSONA_MODEL"
+remove_env="AI_OFFLINE,AI_LIVE_TESTS,GEMINI_PERSONA_MODEL,LIVE_RECORD_DIR"
 if [ -n "${PERSIST_DOC:-}" ]; then env_args+=("PERSIST_DOC=$PERSIST_DOC"); else remove_env+=",PERSIST_DOC"; fi
+if [ -n "$PERSIST_DATABASE" ]; then env_args+=("PERSIST_DATABASE=$PERSIST_DATABASE"); else remove_env+=",PERSIST_DATABASE"; fi
 if [ "$SITE_MODE" = product ]; then
   env_args+=("NOTIFY_ADAPTERS=console,line" "LINE_LOGIN_CHANNEL_ID=2008922436")
   pass=(RECAPTCHA_SITE_KEY LINE_DEFAULT_TO TWILIO_ACCOUNT_SID TWILIO_VERIFY_SID CENTRAL_NUMBER_TH)
@@ -185,6 +217,7 @@ say "current revision (rollback target): $PREV"
 run gcloud builds submit "$SRC_DIR" --tag "$IMAGE" --quiet
 run gcloud run deploy "$SERVICE" \
   --image "$IMAGE" --region "$REGION" --platform managed --allow-unauthenticated --memory 512Mi \
+  --service-account "$RUN_SA" \
   "${scale_args[@]}" \
   --update-env-vars "^;^$(join ';' "${env_args[@]}")" \
   --remove-env-vars "$remove_env" \

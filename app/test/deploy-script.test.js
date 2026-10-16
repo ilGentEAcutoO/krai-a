@@ -147,6 +147,47 @@ describe('deploy-cloudrun.sh site roles (SERVICE + SITE_MODE)', { skip }, () => 
     assert.match(deployLine(dryRun().out), /--remove-env-vars \S*PERSIST_DOC/);
   });
 
+  it('each role runs as its own least-privilege SA and Firestore database (never the default compute SA)', () => {
+    const demo = deployLine(dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo' }).out);
+    assert.match(demo, /--service-account krai-a-demo-run@test-proj\.iam\.gserviceaccount\.com /);
+    assert.match(demo, /PERSIST_DATABASE=hackathon[;']/);
+    const prod = deployLine(dryRun().out);
+    assert.match(prod, /--service-account krai-a-run@test-proj\.iam\.gserviceaccount\.com /);
+    assert.doesNotMatch(prod, /PERSIST_DATABASE=/);
+    assert.match(prod, /--remove-env-vars \S*PERSIST_DATABASE/);
+    for (const d of [demo, prod]) assert.doesNotMatch(d, /compute@developer/);
+    // a missing SA or demo database aborts before anything is built
+    const noSa = dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo', DRY_RUN_ABSENT: 'krai-a-demo-run@test-proj.iam.gserviceaccount.com' });
+    assert.equal(noSa.status, 1, noSa.out);
+    assert.match(noSa.out, /missing service account: krai-a-demo-run@/);
+    assert.doesNotMatch(noSa.out, /builds submit/);
+    const noDb = dryRun({ SERVICE: 'krai-a-demo', SITE_MODE: 'demo', DRY_RUN_ABSENT: '--database=hackathon' });
+    assert.equal(noDb.status, 1, noDb.out);
+    assert.match(noDb.out, /missing Firestore database: hackathon/);
+    assert.doesNotMatch(noDb.out, /builds submit/);
+    // a missing secret's fix-up hint grants the role's SA, not the service's current one
+    const noKey = dryRun({ DRY_RUN_ABSENT: 'thsms-api-key' });
+    assert.match(noKey.out, /secretAccessor --member=serviceAccount:krai-a-run@test-proj/);
+  });
+
+  it('refuses to deploy the local-only live recorder (LIVE_RECORD_DIR in env or the tree .env)', () => {
+    const fromEnv = dryRun({ LIVE_RECORD_DIR: 'C:/tmp/rec' });
+    assert.equal(fromEnv.status, 1, fromEnv.out);
+    assert.match(fromEnv.out, /refusing: LIVE_RECORD_DIR is a local-only recorder/);
+    assert.doesNotMatch(fromEnv.out, /builds submit|run deploy/);
+    const tree = fs.mkdtempSync(path.join(os.tmpdir(), 'krai-rec-'));
+    try {
+      fs.writeFileSync(path.join(tree, '.env'), 'GEMINI_MODEL=x\nLIVE_RECORD_DIR=./recordings\n');
+      const fromFile = dryRun({ SRC_DIR: tree });
+      assert.equal(fromFile.status, 1, fromFile.out);
+      assert.match(fromFile.out, /refusing: LIVE_RECORD_DIR is a local-only recorder/);
+      assert.doesNotMatch(fromFile.out, /builds submit|run deploy/);
+      fs.writeFileSync(path.join(tree, '.env'), '# LIVE_RECORD_DIR=./recordings\nLIVE_RECORD_DIR=\n');
+      assert.equal(dryRun({ SRC_DIR: tree }).status, 0); // commented out or empty is fine
+    } finally { fs.rmSync(tree, { recursive: true, force: true }); }
+    assert.match(deployLine(dryRun().out), /--remove-env-vars \S*LIVE_RECORD_DIR/); // never left on the service
+  });
+
   it('COPY_ENV_FROM fills unset pass-through env from a saved describe without printing values', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'deploy-'));
     const f = path.join(dir, 'svc.json');

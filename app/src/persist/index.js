@@ -4,7 +4,7 @@
 // silent no-op: pure in-memory, exactly like before.
 import { serializeStore, restoreStore } from '../store.js';
 import { serializeAuth, restoreAuth } from '../auth.js';
-import { loadSnapshot, saveSnapshot } from './firestore.js';
+import { loadSnapshot, saveSnapshot, persistDatabase } from './firestore.js';
 import { persistDoc } from '../siteMode.js';
 
 let timer = null;
@@ -17,7 +17,7 @@ export async function bootLoad() {
     if (snap) {
       if (snap.store) restoreStore(snap.store);
       if (snap.auth) restoreAuth(snap.auth);
-      console.log(`[persist] snapshot restored from ${doc}`);
+      console.log(`[persist] snapshot restored from ${doc} (database ${persistDatabase()})`);
     }
   } catch (e) {
     console.log('[persist] boot load skipped:', e.message);
