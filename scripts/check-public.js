@@ -11,6 +11,11 @@ const FORBIDDEN_PATHS = [
   { re: /^agent-temp\// },
   { re: /^\.playwright-mcp\// },
   { re: /^\.agents\// }, // local agent memory must never be committed
+  // Live-session recordings (LIVE_RECORD_DIR) hold real callers' voices (PDPA):
+  // no session folder, raw .wav or event log may ever go public, wherever it lands.
+  { re: /(^|\/)live-sessions\// },
+  { re: /\.wav$/i },
+  { re: /(^|\/)events\.jsonl$/ },
 ];
 
 const SELF = 'scripts/check-public.js';
@@ -88,6 +93,10 @@ function selfTest() {
   if (!blocked('app/.env')) { console.error('self-test FAIL: .env must be blocked'); fail += 1; }
   if (blocked('app/.env.example')) { console.error('self-test FAIL: .env.example must pass'); fail += 1; }
   if (!blocked('.agents/memory/x.md')) { console.error('self-test FAIL: .agents must be blocked'); fail += 1; }
+  if (!blocked('app/live-sessions/s1/notes.txt')) { console.error('self-test FAIL: live-sessions must be blocked'); fail += 1; }
+  if (!blocked('rec/2026-10-17-en/caller.wav')) { console.error('self-test FAIL: .wav must be blocked'); fail += 1; }
+  if (!blocked('rec/2026-10-17-en/events.jsonl')) { console.error('self-test FAIL: events.jsonl must be blocked'); fail += 1; }
+  if (blocked('app/public/demo/audio/legit-hospital-00.mp3')) { console.error('self-test FAIL: demo mp3 must pass'); fail += 1; }
   console.log(fail ? `self-test: ${fail} FAIL` : 'self-test: ok');
   process.exit(fail ? 1 : 0);
 }

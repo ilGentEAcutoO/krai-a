@@ -40,4 +40,22 @@ describe('scripts/check-public.js', () => {
       assert.equal(r.status, 0, r.stderr);
     } finally { rmSync(dir, { recursive: true, force: true }); }
   });
+
+  it('blocks live-session recordings wherever they land', () => {
+    const dir = repo();
+    try {
+      mkdirSync(path.join(dir, 'rec', 'live-sessions', 's1'), { recursive: true });
+      writeFileSync(path.join(dir, 'rec', 'live-sessions', 's1', 'events.jsonl'), '{}\n');
+      writeFileSync(path.join(dir, 'caller.wav'), 'RIFF');
+      const r = run(dir);
+      assert.equal(r.status, 1);
+      assert.match(r.stderr, /live-sessions\/s1\/events\.jsonl: forbidden path/);
+      assert.match(r.stderr, /caller\.wav: forbidden path/);
+    } finally { rmSync(dir, { recursive: true, force: true }); }
+  });
+
+  it('self-test passes', () => {
+    const r = spawnSync(process.execPath, [SCRIPT, '--self-test'], { encoding: 'utf8' });
+    assert.equal(r.status, 0, r.stderr);
+  });
 });

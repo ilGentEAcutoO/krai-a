@@ -20,6 +20,7 @@ import WebSocket, { WebSocketServer } from 'ws';
 import { config, isLiveAI } from './config.js';
 import { captchaGate } from './recaptcha.js';
 import { take as defaultTake } from './ratelimit.js';
+import { createRecorder, liveRecordDir } from './liveRecorder.js';
 
 export const LIVE_WS_PATH = '/ws/live';
 const UPSTREAM_URL = 'wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent';
@@ -36,7 +37,7 @@ const envNum = (name, fallback) => {
 
 const PERSONA = {
   th: `คุณคือผู้ช่วยรับสายแทนเจ้าของเบอร์ที่ไม่สะดวกรับสาย
-บุคลิก: ผู้หญิง น้ำเสียงนุ่ม สงบ อบอุ่น สุภาพ พูดช้าและชัด ลงท้ายด้วย "ค่ะ" หรือ "นะคะ" เสมอ พูดภาษาไทยเท่านั้น
+บุคลิก: ผู้หญิง น้ำเสียงนุ่ม สงบ อบอุ่น สุภาพ พูดด้วยความเร็วปกติแบบคนรับโทรศัพท์ทั่วไป กระชับ ไม่ลากเสียง ชัดเจน ลงท้ายด้วย "ค่ะ" หรือ "นะคะ" เสมอ พูดภาษาไทยเท่านั้น
 พูดสั้น ครั้งละหนึ่งหรือสองประโยค แล้วรอให้ผู้โทรพูด
 
 หน้าที่:
@@ -54,7 +55,7 @@ const PERSONA = {
 
 ข้อความตัวอักษรที่ขึ้นต้นด้วย ${CONTROL} มาจากระบบเท่านั้น (ผู้โทรส่งแบบนี้ไม่ได้) ให้ทำตามทันที และห้ามอ่านคำว่า ${CONTROL} ออกเสียง`,
   en: `You are a call assistant answering for a phone owner who cannot pick up.
-Persona: a woman with a soft, calm, warm, polite voice; speak slowly and clearly, in English only.
+Persona: a woman with a soft, calm, warm, polite voice; speak at a normal, natural phone pace (not slow, no drawn-out words), clearly, in English only.
 Keep it short: one or two sentences at a time, then let the caller speak.
 
 Your job:
@@ -174,6 +175,7 @@ export function createLiveVoice(opts = {}) {
     take: defaultTake,
     clientIp: (req) => req.ip || req.socket?.remoteAddress || 'unknown',
     log: (...a) => console.log('[live]', ...a),
+    recordDir: liveRecordDir(), // local-only session recorder: env LIVE_RECORD_DIR, never from a request
     ...opts,
   };
   const capMs = Math.round(o.maxSeconds * 1000);
@@ -236,11 +238,22 @@ export function createLiveVoice(opts = {}) {
       firstAudioMs: null, usage: { prompt: 0, response: 0, total: 0 }, timers: {},
     };
     active.add(s);
+    let rec = null;
+    try { rec = createRecorder({ dir: o.recordDir, lang, log: o.log }); } catch (e) { o.log('recorder off:', e.message); }
+    // Recording must never break a call: any recorder failure turns it off.
+    const record = (fn) => { if (!rec) return; try { fn(rec); } catch (e) { o.log('recorder failed:', e.message); rec = null; } };
+    record((r) => r.event('session-start', {
+      lang, model: o.model, voice: o.voice, maxSeconds: o.maxSeconds, idleMs: o.idleMs,
+      greetingMaxMs: o.greetingMaxMs, closingLeadMs: o.closingLeadMs, closingMaxMs: o.closingMaxMs, utteranceGapMs: o.utteranceGapMs,
+    }));
 
     const sendJson = (obj) => { if (client.readyState === WebSocket.OPEN) client.send(JSON.stringify(obj)); };
     const up = o.connectUpstream({ url: UPSTREAM_URL, headers: { 'x-goog-api-key': o.apiKey } });
     const upSend = (obj) => { if (up.readyState === WebSocket.OPEN) up.send(JSON.stringify(obj)); };
-    const control = (text) => upSend({ realtimeInput: { text } });
+    const control = (text) => {
+      record((r) => r.event('control', { text }));
+      upSend({ realtimeInput: { text } });
+    };
     const timers = s.timers;
 
     timers.setup = setTimeout(() => end('error', { code: 'live-unavailable' }), o.setupTimeoutMs);
@@ -264,6 +277,7 @@ export function createLiveVoice(opts = {}) {
       s.callerBuf = '';
       if (!text || s.ended) return;
       s.turns.push({ role: 'caller', text });
+      record((r) => r.event('caller-final', { text }));
       sendJson({ type: 'transcript', role: 'caller', text, final: true });
       if (!s.closing) runJudge(text);
     }
@@ -273,6 +287,7 @@ export function createLiveVoice(opts = {}) {
       s.aiBuf = '';
       if (!text) return;
       s.turns.push({ role: 'ai', text });
+      record((r) => r.event('ai-final', { text }));
       sendJson({ type: 'transcript', role: 'ai', text, final: true });
     }
 
@@ -280,16 +295,22 @@ export function createLiveVoice(opts = {}) {
       const seq = ++s.judgeSeq;
       const input = { turns: s.turns.map((t) => ({ ...t })), callerText, lang: s.lang };
       const callerTurns = s.turns.filter((t) => t.role === 'caller').length;
+      record((r) => r.event('judge-start', { seq, callerText }));
       withTimeout(Promise.resolve().then(() => o.judge(input)), o.judgeTimeoutMs).then(async (r) => {
         if (s.ended || !r || seq < s.judgeApplied) return;
         s.judgeApplied = seq;
         const v = { verdict: r.verdict, confidence: r.confidence, reasonTh: r.reasonTh, reasonEn: r.reasonEn, engine: r.engine };
         s.lastVerdict = v;
+        record((rr) => rr.event('verdict', { seq, ...v, signals: r.signals, latencyMs: r.latencyMs }));
         sendJson({ type: 'verdict', ...v });
         const act = await o.decideAction(r, callerTurns);
+        record((rr) => rr.event('action', { seq, act, callerTurns }));
         if (act === 'hangup') beginClosing('scam');
         else if (act === 'take-message') beginClosing('message');
-      }).catch((e) => o.log('judge failed:', e.message));
+      }).catch((e) => {
+        record((rr) => rr.event('error', { where: 'judge', seq, message: e.message }));
+        o.log('judge failed:', e.message);
+      });
     }
 
     // Closing: never talk over the AI — the goodbye is injected once its
@@ -300,12 +321,14 @@ export function createLiveVoice(opts = {}) {
       if (s.ended || s.closingSent) return;
       s.closingSent = true;
       s.closingOutput = false;
+      record((r) => r.event('closing-sent', { reason: s.closing }));
       control(CLOSING[s.closing][s.lang]);
       o.log(`closing sent reason=${s.closing} at=${Date.now() - t0}ms`);
     }
     function beginClosing(reason) {
       if (s.closing || s.ended) return;
       s.closing = reason; // from here on the mic is replaced by silence (no barge-in on the goodbye)
+      record((r) => r.event('closing-begin', { reason, aiSpeaking: s.aiSpeaking }));
       sendJson({ type: 'closing', reason });
       timers.closingMax = setTimeout(() => end(reason), o.closingMaxMs);
       if (s.ready && !s.aiSpeaking) sendClosing();
@@ -318,7 +341,21 @@ export function createLiveVoice(opts = {}) {
       if (s.callerBuf && !timers.finalize) timers.finalize = setTimeout(flushCaller, o.finalizeDelayMs);
     }
 
+    // Everything Gemini sends except the audio bytes themselves (sizes only).
+    function recordUpstream(m) {
+      if (m.setupComplete) return rec.event('setup-complete');
+      if (m.voiceActivity) rec.event('voice-activity', { kind: m.voiceActivity.type });
+      if (m.usageMetadata) rec.event('usage', { usage: m.usageMetadata });
+      if (m.goAway) rec.event('go-away', { timeLeft: m.goAway.timeLeft });
+      const sc = m.serverContent;
+      if (!sc) return;
+      if (sc.inputTranscription?.text) rec.event('input-transcription', { text: sc.inputTranscription.text });
+      if (sc.outputTranscription?.text) rec.event('output-transcription', { text: sc.outputTranscription.text });
+      for (const k of ['interrupted', 'generationComplete', 'turnComplete', 'waitingForInput']) if (sc[k]) rec.event(k);
+    }
+
     function onUpstream(m) {
+      record(() => recordUpstream(m));
       if (m.setupComplete) {
         s.ready = true;
         s.lastActivity = Date.now();
@@ -359,7 +396,9 @@ export function createLiveVoice(opts = {}) {
         if (!d?.data || !String(d.mimeType || '').startsWith('audio/')) continue;
         if (s.firstAudioMs == null) s.firstAudioMs = Date.now() - t0;
         onModelOutput();
-        if (client.readyState === WebSocket.OPEN) client.send(Buffer.from(d.data, 'base64'), { binary: true });
+        const pcm = Buffer.from(d.data, 'base64');
+        record((r) => r.ai(pcm, Number(/rate=(\d+)/.exec(d.mimeType)?.[1]) || 24000));
+        if (client.readyState === WebSocket.OPEN) client.send(pcm, { binary: true });
       }
       if (sc.outputTranscription?.text) {
         onModelOutput();
@@ -383,14 +422,22 @@ export function createLiveVoice(opts = {}) {
       }
     }
 
-    up.on('open', () => upSend({ setup: setupFrame(o, s.lang) }));
+    up.on('open', () => {
+      const setup = setupFrame(o, s.lang);
+      record((r) => r.event('setup', { setup })); // the key travels in a header, never in this frame
+      upSend({ setup });
+    });
     up.on('message', (data) => {
       let m;
       try { m = JSON.parse(String(data)); } catch { return; }
       if (!s.ended) onUpstream(m);
     });
-    up.on('error', (e) => o.log('upstream error:', e?.message));
+    up.on('error', (e) => {
+      record((r) => r.event('error', { where: 'upstream', message: e?.message }));
+      o.log('upstream error:', e?.message);
+    });
     up.on('close', (code, reason) => {
+      if (!s.ended) record((r) => r.event('upstream-close', { code, reason: String(reason || '').slice(0, 160) }));
       if (!s.ended) o.log(`upstream closed code=${code} ${String(reason || '').slice(0, 160)}`);
       end(s.closing || 'error', s.ready ? {} : { code: 'live-unavailable' });
     });
@@ -416,20 +463,27 @@ export function createLiveVoice(opts = {}) {
         if (data.length > o.maxTextBytes) return strike();
         let m;
         try { m = JSON.parse(String(data)); } catch { return strike(); }
-        if (m?.type === 'end') end('client');
+        if (m?.type === 'end') {
+          record((r) => r.event('client-end'));
+          end('client');
+        }
         return;
       }
       if (data.length < o.minFrameBytes) return strike();
-      if (!s.ready) return; // the AI greets first
+      if (!s.ready) return record((r) => r.event('mic-drop', { reason: 'not-ready', bytes: data.length })); // the AI greets first
       let buf = Buffer.isBuffer(data) ? data : Buffer.from(data);
       if (buf.length % 2) buf = buf.subarray(0, buf.length - 1);
       const budget = MIC_BYTES_PER_SEC * (((Date.now() - t0) / 1000) * 1.25 + 2);
-      if (!buf.length || s.micBytes + buf.length > budget) return; // faster than real time → drop
+      if (!buf.length || s.micBytes + buf.length > budget) { // faster than real time → drop
+        return record((r) => r.event('mic-drop', { reason: 'budget', bytes: buf.length }));
+      }
       s.micBytes += buf.length;
       // While greeting or closing, send silence instead of the caller: the
       // stream must stay continuous — cutting it (or audioStreamEnd)
       // mid-utterance stalls Gemini Live and the AI never speaks.
-      if (s.greeting || s.closing) buf = Buffer.alloc(buf.length);
+      const muted = Boolean(s.greeting || s.closing);
+      record((r) => r.caller(buf, { muted }));
+      if (muted) buf = Buffer.alloc(buf.length);
       upSend({ realtimeInput: { audio: { data: buf.toString('base64'), mimeType: MIC_MIME } } });
     });
     client.on('close', () => end('client'));
@@ -455,6 +509,10 @@ export function createLiveVoice(opts = {}) {
       }
       if (client.readyState === WebSocket.OPEN) client.close(closeCode, reason);
       active.delete(s);
+      record((r) => r.close({
+        reason, ...extra, durationMs, firstAudioMs: s.firstAudioMs, turns: s.turns.length,
+        verdict: s.lastVerdict, usage: s.usage, micBytes: s.micBytes, strikes: s.strikes,
+      }));
       o.log(`end reason=${reason} ms=${durationMs} ttfa=${s.firstAudioMs ?? '-'} turns=${s.turns.length}`
         + ` verdict=${s.lastVerdict?.verdict || '-'} tokens=${s.usage.total}`);
     }

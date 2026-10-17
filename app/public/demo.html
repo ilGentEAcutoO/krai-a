@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en" data-default-lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -33,6 +33,7 @@
       <a href="#flow" data-th="ใช้จริงยังไง" data-en="How it's used">ใช้จริงยังไง</a>
       <a href="#cases" data-th="เคสทดสอบ" data-en="Cases">เคสทดสอบ</a>
       <a href="#tech" data-th="เบื้องหลัง" data-en="Under the hood">เบื้องหลัง</a>
+      <a class="hk-pill" href="#try"><span class="hk-pill-dot" aria-hidden="true"></span><span data-th="คุยกับ AI" data-en="Talk to the AI">คุยกับ AI</span></a>
     </nav>
     <div class="hk-lang" id="langToggle" role="group" aria-label="ภาษา / Language">
       <button type="button" data-lang="th" lang="th" aria-pressed="true">ไทย</button><button type="button" data-lang="en" lang="en" aria-pressed="false">EN</button>
@@ -59,10 +60,10 @@
 
       <div class="hk-hero-call">
         <div class="hk-call" id="callHost" aria-label="สายตัวอย่าง / Sample call"></div>
-        <button type="button" class="hk-live-mini" data-live-open>
+        <a class="hk-live-mini" href="#try">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg>
           <span data-th="หรือสวมบทมิจ แล้วคุยกับ AI เอง" data-en="Or play the scammer and talk to the AI">หรือสวมบทมิจ แล้วคุยกับ AI เอง</span>
-        </button>
+        </a>
       </div>
     </div>
   </section>
@@ -131,7 +132,7 @@
     </div>
   </section>
 
-  <!-- ============ CASES + LIVE ============ -->
+  <!-- ============ CASES ============ -->
   <section class="hk-sec hk-cases" id="cases" aria-labelledby="casesTitle">
     <div class="hk-wrap">
       <div class="hk-sec-head">
@@ -175,15 +176,23 @@
           <span class="hk-case-q" data-th="“โทรจากศูนย์วิจัยการตลาด ขอถามสั้น ๆ ได้ไหม”" data-en="“Could I get the owner's full name and year of birth?”">“โทรจากศูนย์วิจัยการตลาด ขอถามสั้น ๆ ได้ไหม”</span>
           <span class="hk-case-go"><span data-th="ฟังเคสนี้" data-en="Play case">ฟังเคสนี้</span><i aria-hidden="true"></i></span>
         </button>
+      </div>
+    </div>
+  </section>
 
-        <div class="hk-live dm-live" id="liveBlock">
-          <span class="hk-live-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg></span>
-          <span class="hk-live-v" data-th="สด · 2 นาที" data-en="Live · 2 min">สด · 2 นาที</span>
-          <b class="hk-live-t" data-th="คุณเป็นมิจฉาชีพ" data-en="You are the scammer">คุณเป็นมิจฉาชีพ</b>
-          <p class="dm-live-hint" data-th="โทรเข้าด้วยไมค์ของคุณ AI ตัวเดียวกันรับสาย ลองหลอกให้ได้ แล้วดูคำตัดสิน" data-en="Call in with your mic. The same AI answers. Try to fool it, then see the verdict.">โทรเข้าด้วยไมค์ของคุณ AI ตัวเดียวกันรับสาย ลองหลอกให้ได้ แล้วดูคำตัดสิน</p>
-          <button type="button" class="btn primary live-open" id="liveOpen">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg>
+  <!-- ============ TRY IT: you are the scammer, live ============ -->
+  <section class="hk-try" id="try" aria-labelledby="tryTitle">
+    <div class="hk-wrap">
+      <div class="hk-try-in dm-live" id="liveBlock">
+        <div class="hk-try-copy">
+          <p class="hk-try-k"><span class="hk-pill-dot" aria-hidden="true"></span><span data-th="สด · ประมาณ 2 นาที" data-en="Live · about 2 min">สด · ประมาณ 2 นาที</span></p>
+          <h2 id="tryTitle" class="hk-try-h" data-th="ลองสวมบทมิจ<br>คุยกับ AI เอง" data-en="Play the scammer.<br>Talk to the AI yourself.">ลองสวมบทมิจ<br>คุยกับ AI เอง</h2>
+          <p class="hk-try-lede" data-th="สายเสียงสดกับ Gemini ราว 2 นาที ต้องใช้ไมค์ ลองหลอกให้ได้ แล้ว Jev จะตัดสินทุกประโยคที่คุณพูด" data-en="A live Gemini voice call, about two minutes. You need a microphone. Try to fool it while Jev judges every sentence you say.">สายเสียงสดกับ Gemini ราว 2 นาที ต้องใช้ไมค์ ลองหลอกให้ได้ แล้ว Jev จะตัดสินทุกประโยคที่คุณพูด</p>
+        </div>
+        <div class="hk-try-act">
+          <button type="button" class="btn leaf live-open" id="liveOpen">
             <span data-th="คุยกับ AI เอง" data-en="Talk to the AI">คุยกับ AI เอง</span>
+            <span class="isl" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 3.5a3 3 0 0 1 3 3v5a3 3 0 0 1-6 0v-5a3 3 0 0 1 3-3z M6 11a6 6 0 0 0 12 0 M12 17v3.5"/></svg></span>
           </button>
           <p class="dm-live-off" id="liveOff" hidden><span data-th="ตอนนี้คุยสดเต็มแล้ว — ลองฟังเคสตัวอย่างก่อนนะ" data-en="Live calls are full right now — try a sample case first.">ตอนนี้คุยสดเต็มแล้ว — ลองฟังเคสตัวอย่างก่อนนะ</span> <button type="button" class="dm-back" id="backToChips" data-th="เลือกเคสตัวอย่าง" data-en="Pick a sample case">เลือกเคสตัวอย่าง</button></p>
         </div>
@@ -235,7 +244,7 @@
         <div class="hk-stat"><b data-th="0.30 วิ" data-en="0.30 s">0.30 วิ</b><span data-th="ค่ากลางเวลาตัดสินต่อประโยค" data-en="median judge time per turn">ค่ากลางเวลาตัดสินต่อประโยค</span></div>
         <div class="hk-stat"><b data-th="~฿0.03" data-en="&amp;lt;US$0.001">~฿0.03</b><span data-th="ค่า AI ข้อความต่อสาย" data-en="text-AI cost per call">ค่า AI ข้อความต่อสาย</span></div>
       </div>
-      <p class="hk-stats-note" data-th="วัดจากชุดทดสอบ 57 สาย (สคริปต์ ไม่รวมการแปลงเสียงเป็นข้อความ) (ชุดทดสอบ 57 สายเขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ)" data-en="Measured on a 57-call evaluation set (scripted turns, speech-to-text not included) (57-call test set written and run entirely by AI agents, with no human testers).">วัดจากชุดทดสอบ 57 สาย (สคริปต์ ไม่รวมการแปลงเสียงเป็นข้อความ) (ชุดทดสอบ 57 สายเขียนและรันโดย AI agent ทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ)</p>
+      <p class="hk-stats-note" data-th="วัดจากชุดทดสอบ 57 สายแบบสคริปต์ ที่ AI agent เขียนและรันเองทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ (ไม่รวมการแปลงเสียงเป็นข้อความ)" data-en="Measured on a 57-call scripted test set, written and run entirely by AI agents with no human testers (speech-to-text not included).">วัดจากชุดทดสอบ 57 สายแบบสคริปต์ ที่ AI agent เขียนและรันเองทั้งหมด ไม่มีมนุษย์ร่วมทดสอบ (ไม่รวมการแปลงเสียงเป็นข้อความ)</p>
 
       <div class="hk-links-row">
         <a class="hk-cta" href="https://github.com/ilGentEAcutoO/krai-a" rel="noopener" target="_blank">

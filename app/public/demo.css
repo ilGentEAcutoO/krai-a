@@ -25,7 +25,14 @@ dialog.live{
 .hk-wrap{max-width:var(--hk-wrap);margin:0 auto;padding:0 24px}
 
 /* ---------- top bar: floats on the hero, not glued to the edge ---------- */
-.hk-top{position:absolute;z-index:5;top:0;left:0;right:0}   /* floats on the hero: one surface, no seam */
+.hk-top{position:fixed;z-index:50;top:0;left:0;right:0;transition:background-color .2s ease,box-shadow .2s ease}   /* floats on the hero, stays on top for the section anchors */
+.hk-top.is-stuck{background:rgba(255,255,255,.88);-webkit-backdrop-filter:saturate(180%) blur(14px);backdrop-filter:saturate(180%) blur(14px);box-shadow:0 1px 0 rgba(11,46,28,.08)}
+.hk-top.is-stuck .hk-top-in{padding-top:8px;padding-bottom:8px}
+/* anchors land just under the stuck bar (64px): sections are full-bleed bands,
+   so their top meets the bar; anything else keeps a little air above it */
+html:has(> body.hk-body){scroll-padding-top:64px}
+.hk-body [id]{scroll-margin-top:16px}
+.hk-body section[id]{scroll-margin-top:0}
 .hk-top-in{max-width:var(--hk-wrap);margin:0 auto;padding:16px 24px 0;display:flex;align-items:center;gap:24px}
 .hk-brand{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--ink,#111214)}
 .hk-brand:hover{color:var(--ink,#111214)}
@@ -36,6 +43,13 @@ dialog.live{
 .hk-links{display:flex;gap:4px;margin-left:auto}
 .hk-links a{display:inline-flex;align-items:center;min-height:44px;padding:0 14px;border-radius:999px;color:var(--ink2,#46484F);font-size:15px;font-weight:500;text-decoration:none;transition:background-color var(--dur-fast,160ms) ease,color var(--dur-fast,160ms) ease}
 .hk-links a:hover{background:rgba(255,255,255,.7);color:var(--ink,#111214)}
+.hk-top.is-stuck .hk-links a:not(.hk-pill):hover{background:var(--soft,#F5F5F7)}
+.hk-links a[aria-current]:not(.hk-pill){color:var(--ink,#111214);box-shadow:inset 0 -2px 0 var(--brand,#06C755);border-radius:0}
+/* the one highlighted link: the live call */
+.hk-links .hk-pill{gap:8px;margin-left:8px;padding:0 16px 0 14px;background:var(--hk-deep);color:#fff;font-weight:600;white-space:nowrap}
+.hk-links .hk-pill:hover{background:var(--forest2,#0F5139);color:#fff}
+.hk-pill-dot{flex:none;width:8px;height:8px;border-radius:50%;background:var(--leaf-hi,#2EE57A);box-shadow:0 0 0 3px rgba(46,229,122,.25);animation:hk-pulse-hi 2.4s var(--hk-ease) infinite}
+@keyframes hk-pulse-hi{50%{box-shadow:0 0 0 6px rgba(46,229,122,0)}}
 .hk-lang{display:inline-flex;padding:4px;border-radius:999px;background:#fff;box-shadow:0 0 0 1px rgba(11,46,28,.08)}
 .hk-lang button{min-width:48px;min-height:40px;padding:0 12px;border:0;border-radius:999px;background:none;color:var(--ink2,#46484F);font:600 14px/1 var(--font);cursor:pointer;transition:background-color var(--dur-fast,160ms) ease,color var(--dur-fast,160ms) ease}
 .hk-lang button[aria-pressed="true"]{background:var(--ink,#111214);color:#fff}
@@ -77,7 +91,7 @@ html[lang="en"] .hk-h1{font-size:clamp(36px,3.7vw,54px);line-height:1.06;letter-
 .hk-step{position:relative;display:flex;flex-direction:column;gap:8px}
 .hk-step-n{position:relative;z-index:1;display:grid;place-items:center;width:48px;height:48px;border-radius:50%;background:var(--ink,#111214);color:#fff;font-weight:700;font-size:18px;box-shadow:0 0 0 6px #fff}
 .hk-step-ic{display:grid;place-items:center;width:44px;height:44px;margin-top:12px;border-radius:14px;background:var(--hk-mint);color:var(--brand-ink,#037A34)}
-.hk-step-ic svg,.hk-case-ic svg,.hk-live-ic svg,.hk-sim-note svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
+.hk-step-ic svg,.hk-case-ic svg,.hk-sim-note svg{width:24px;height:24px;fill:none;stroke:currentColor;stroke-width:1.5;stroke-linecap:round;stroke-linejoin:round}
 .hk-step h3{font-size:var(--fs-h3,20px);margin-top:4px}
 .hk-step p{font-size:15.5px;line-height:1.6;color:var(--ink2,#46484F)}
 .hk-code{align-self:flex-start;margin-top:4px;padding:4px 10px;border-radius:8px;background:var(--soft,#F5F5F7);font:500 14px/1.5 var(--mono,ui-monospace,monospace);color:var(--ink,#111214)}
@@ -103,7 +117,9 @@ html[lang="en"] .hk-h1{font-size:clamp(36px,3.7vw,54px);line-height:1.06;letter-
 
 /* ---- cases + live ---- */
 .hk-cases{background:var(--soft,#F5F5F7)}
-.hk-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.hk-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px}
+.hk-grid > *{grid-column:span 2}
+.hk-grid > :nth-last-child(-n+2):nth-child(n+4){grid-column:span 3}   /* 5 cards: 3 + 2, no hole */
 .hk-case{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:228px;padding:24px;border:0;border-radius:28px;background:#fff;color:var(--ink,#111214);font:inherit;text-align:left;cursor:pointer;box-shadow:0 0 0 1px rgba(17,18,20,.04);transition:transform .5s var(--hk-ease),box-shadow .5s var(--hk-ease)}
 .hk-case:active{transform:scale(.98)}
 @media (hover:hover) and (pointer:fine){.hk-case:hover{transform:translateY(-3px);box-shadow:0 0 0 1px rgba(17,18,20,.06),0 24px 48px -28px rgba(17,18,20,.35)}}
@@ -120,19 +136,23 @@ html[lang="en"] .hk-h1{font-size:clamp(36px,3.7vw,54px);line-height:1.06;letter-
 .hk-case-go i::before{content:"";margin-left:3px;border-left:9px solid #fff;border-top:6px solid transparent;border-bottom:6px solid transparent}
 @media (hover:hover) and (pointer:fine){.hk-case:hover .hk-case-go i{transform:translateX(3px) scale(1.06)}}
 
-.hk-live{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:228px;padding:24px;border-radius:28px;background:var(--hk-deep);color:#fff;overflow:hidden}
-.hk-live::before{content:"";position:absolute;right:-60px;bottom:-80px;width:240px;height:240px;border-radius:50%;background:radial-gradient(closest-side,rgba(6,199,85,.35),rgba(6,199,85,0));pointer-events:none}
-.hk-live > *{position:relative}
-.hk-live-ic{display:grid;place-items:center;width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.1);color:var(--leaf-hi,#2EE57A)}
-.hk-live-v{position:absolute;top:24px;right:24px;padding:3px 10px;border-radius:999px;background:rgba(6,199,85,.2);color:var(--leaf-hi,#2EE57A);font-size:13px;font-weight:600}
-.hk-live-t{margin-top:8px;font-size:20px;line-height:1.35}
-.hk-live .dm-live-hint{font-size:15px;line-height:1.55;color:rgba(255,255,255,.78)}
-.hk-live .live-open{margin-top:auto;background:#fff;color:var(--hk-deep)}
-.hk-live .live-open:hover{background:#E6F7EC;color:var(--hk-deep)}
 .live-open svg,.lv-act svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
-.dm-live:not([data-live]) > .live-open,.dm-live:not([data-live]) > .dm-live-off{visibility:hidden}   /* until /api/status answers: no flash */
-.hk-live .dm-live-off{font-size:15px;line-height:1.5;color:rgba(255,255,255,.85)}
-.hk-live .dm-back{display:inline-flex;align-items:center;min-height:48px;padding:0 4px;border:0;background:none;font:600 15px/1.2 var(--font);color:#fff;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
+.dm-live:not([data-live]) .live-open,.dm-live:not([data-live]) .dm-live-off{visibility:hidden}   /* until /api/status answers: no flash */
+
+/* ---- try it: the live call gets its own deep-green band ---- */
+.hk-try{position:relative;padding:clamp(64px,10vh,112px) 0;background:var(--hk-deep);color:#fff;overflow:hidden;isolation:isolate}
+.hk-try::before{content:"";position:absolute;z-index:-1;right:-8%;top:50%;width:min(720px,90vw);aspect-ratio:1;transform:translateY(-50%);border-radius:50%;background:radial-gradient(closest-side,rgba(6,199,85,.32),rgba(6,199,85,0));pointer-events:none}
+.hk-try-in{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:32px 56px}
+.hk-try-k{display:inline-flex;align-items:center;gap:10px;padding:6px 14px 6px 12px;border-radius:999px;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14);font-size:14px;font-weight:600;color:var(--leaf-hi,#2EE57A)}
+.hk-try-h{margin-top:18px;font-family:var(--hk-display);font-size:clamp(34px,4.6vw,60px);line-height:1.25;letter-spacing:-.02em;font-weight:700;color:#fff;text-wrap:balance}
+html[lang="en"] .hk-try-h{line-height:1.08;letter-spacing:-.03em}
+.hk-try-lede{margin-top:18px;max-width:36em;font-size:var(--fs-lead,19px);line-height:1.6;color:rgba(255,255,255,.8);text-wrap:pretty}
+.hk-try-act{display:flex;flex-direction:column;align-items:flex-start;gap:12px}
+.hk-try .live-open{min-height:68px;padding:0 10px 0 30px;gap:18px;font-size:19px}
+.hk-try .live-open .isl{width:48px;height:48px}
+.hk-try .live-open .isl svg{width:22px;height:22px}
+.hk-try .dm-live-off{max-width:24em;font-size:16px;line-height:1.5;color:rgba(255,255,255,.88)}
+.hk-try .dm-back{display:inline-flex;align-items:center;min-height:48px;padding:0 4px;border:0;background:none;font:600 15px/1.2 var(--font);color:#fff;text-decoration:underline;text-underline-offset:3px;cursor:pointer}
 
 /* ---- under the hood ---- */
 .hk-tech{background:#fff}
@@ -244,10 +264,13 @@ dialog.live[open]{animation:lv-pop .26s var(--ease-out)}
   .hk-arch > [role="listitem"]::after{display:none}
   .hk-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .hk-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .hk-grid > *,.hk-grid > :nth-last-child(-n+2):nth-child(n+4){grid-column:auto}
+  .hk-grid > :last-child:nth-child(odd){grid-column:1 / -1}   /* 5 cards: 2 + 2 + 1 wide */
+  .hk-try-in{grid-template-columns:minmax(0,1fr);align-items:start;max-width:720px}
 }
 @media (max-width:820px){
-  .hk-links{display:none}
-  .hk-lang{margin-left:auto}
+  /* section links fold away; the live-call pill stays */
+  .hk-links a:not(.hk-pill){display:none}
   .hk-steps{grid-template-columns:minmax(0,1fr);gap:28px;padding-left:0}
   .hk-steps::before{left:23px;right:auto;top:24px;bottom:24px;width:2px;height:auto;background:repeating-linear-gradient(180deg,var(--line2,#D2D4D9) 0 8px,transparent 8px 14px)}
   .hk-step{display:grid;grid-template-columns:48px minmax(0,1fr);column-gap:16px;row-gap:6px}
@@ -274,8 +297,9 @@ dialog.live[open]{animation:lv-pop .26s var(--ease-out)}
   .hk-hero-sim{font-size:13.5px}
       .hk-sec{padding:64px 0}
   .hk-grid{grid-template-columns:minmax(0,1fr);gap:12px}
-  .hk-case,.hk-live{min-height:0;padding:18px;border-radius:24px}
-  .hk-case-v,.hk-live-v{top:18px;right:18px}
+  .hk-grid > :last-child:nth-child(odd){grid-column:auto}
+  .hk-case{min-height:0;padding:18px;border-radius:24px}
+  .hk-case-v{top:18px;right:18px}
   /* compact row: icon · title + quote · play */
   .hk-case{display:grid;grid-template-columns:44px minmax(0,1fr) 32px;column-gap:14px;row-gap:2px;align-items:center}
   .hk-case-ic{grid-row:1 / span 3;width:44px;height:44px;border-radius:14px}
@@ -284,7 +308,14 @@ dialog.live[open]{animation:lv-pop .26s var(--ease-out)}
   .hk-case-q{grid-column:2;font-size:14px}
   .hk-case-go{grid-column:3;grid-row:1 / span 3;margin:0;padding:0}
   .hk-case-go > span{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
-  .hk-live .live-open{margin-top:10px;align-self:stretch}
+  .hk-links .hk-pill{margin-left:0;padding:0 14px 0 12px;font-size:14px}
+  .hk-lang button{min-width:44px}
+  .hk-try{padding:56px 0 60px}
+  .hk-try-h{margin-top:14px;font-size:clamp(32px,9vw,40px)}
+  html[lang="en"] .hk-try-h{font-size:clamp(30px,8.4vw,38px)}
+  .hk-try-lede{margin-top:12px;font-size:17px}
+  .hk-try-act{align-self:stretch}
+  .hk-try .live-open{align-self:stretch;justify-content:space-between;min-height:64px;padding-left:24px}
   .hk-arch{grid-template-columns:minmax(0,1fr);gap:24px}
   .hk-arch > [role="listitem"]:not(:last-child)::after{display:block;top:auto;bottom:-20px;right:auto;left:50%;margin:0 0 0 -8px;transform:rotate(90deg)}
   .hk-stats{gap:8px;padding:6px;border-radius:26px}
@@ -302,7 +333,7 @@ dialog.live[open]{animation:lv-pop .26s var(--ease-out)}
 }
 
 @media (prefers-reduced-motion:reduce){
-  .hk-tag-dot{animation:none}
+  .hk-tag-dot,.hk-pill-dot{animation:none}
   .hk-case,.hk-cta,.hk-case-go i,.hk-cta i{transition:none}
   .hk-case:hover,.hk-case:active,.hk-cta:active{transform:none}
   dialog.live[open]{animation:none}

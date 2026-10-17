@@ -17,8 +17,14 @@ function langFromUrl() {
 }
 
 export const i18n = {
+  // A stored choice wins; otherwise the page's <html data-default-lang> (the
+  // hackathon page defaults to English for judges), else Thai.
   get lang() {
-    try { return localStorage.getItem(LANG_KEY) === 'en' ? 'en' : 'th'; } catch { return 'th'; }
+    try {
+      const v = localStorage.getItem(LANG_KEY);
+      if (v === 'en' || v === 'th') return v;
+    } catch { /* storage blocked: fall through to the page default */ }
+    return globalThis.document?.documentElement?.dataset?.defaultLang === 'en' ? 'en' : 'th';
   },
   set lang(v) {
     try { localStorage.setItem(LANG_KEY, v === 'en' ? 'en' : 'th'); } catch { /* private mode: this page only */ }

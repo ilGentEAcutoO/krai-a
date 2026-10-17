@@ -8,6 +8,30 @@ import { mount } from '/js/call-demo.js';
 // its own top bar + footer (not nav.nav / footer.foot): no product chrome.
 initNav('demo');
 
+// The top bar is fixed; once the page scrolls it gets a solid backdrop so the
+// section links stay readable over any content.
+const topBar = document.querySelector('.hk-top');
+if (topBar) {
+  const stick = () => topBar.classList.toggle('is-stuck', window.scrollY > 8);
+  stick();
+  window.addEventListener('scroll', stick, { passive: true });
+}
+
+// Mark the section in view on its nav link (aria-current), so the bar says where you are.
+const navLinks = [...document.querySelectorAll('.hk-links a[href^="#"]')];
+if (navLinks.length && 'IntersectionObserver' in window) {
+  const linkFor = new Map(navLinks.map((a) => [a.getAttribute('href').slice(1), a]));
+  const seen = new Map();
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) seen.set(e.target.id, e.isIntersecting);
+    const current = [...linkFor.keys()].find((id) => seen.get(id));
+    for (const [id, a] of linkFor) {
+      if (id === current) a.setAttribute('aria-current', 'true'); else a.removeAttribute('aria-current');
+    }
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  for (const id of linkFor.keys()) { const el = document.getElementById(id); if (el) io.observe(el); }
+}
+
 const $ = (id) => document.getElementById(id);
 const pick = (th, en) => (i18n.lang === 'en' ? (en || th) : th);
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -84,12 +108,6 @@ for (const card of caseCards) {
     demo.play(card.dataset.case);
     markCases(card.dataset.case);
     host.scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
-  });
-}
-for (const b of document.querySelectorAll('[data-live-open]')) {
-  b.addEventListener('click', () => {
-    if ($('liveBlock').dataset.live === 'on') openLive();
-    else $('liveBlock').scrollIntoView({ block: 'center', behavior: reduceMotion.matches ? 'auto' : 'smooth' });
   });
 }
 window.addEventListener('krai-a:lang', () => renderLiveCopy());
@@ -352,7 +370,6 @@ $('backToChips').addEventListener('click', backToChips);
 function setLiveEntry(on) {
   lv.block.dataset.live = on ? 'on' : 'off';
   $('liveOpen').hidden = !on;
-  lv.block.querySelector('.dm-live-hint').hidden = !on;
   $('liveOff').hidden = on;
   for (const b of document.querySelectorAll('[data-live-open]')) b.hidden = !on;
 }
