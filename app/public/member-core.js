@@ -590,8 +590,8 @@ export function mountMemberApp(root, opts = {}) {
   const destroyLive = () => { live.forEach((c) => c.destroy?.()); live = []; };
 
   root.innerHTML = `<div class="ma${platform === 'liff' ? ' liff' : ''}">
-    <header class="ma-top"><a class="brand" href="${platform === 'liff' ? '#home' : '/'}"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a><span class="ma-who" id="maWho"></span></header>
-    <aside class="ma-rail"><a class="brand" href="/"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
+    <header class="ma-top"><a class="brand" href="${platform === 'liff' ? '#home' : '/'}"><img class="brand-logo" src="/brand/krai-a-icon.png" alt="" width="32" height="32"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a><span class="ma-who" id="maWho"></span></header>
+    <aside class="ma-rail"><a class="brand" href="/"><img class="brand-logo" src="/brand/krai-a-icon.png" alt="" width="32" height="32"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
       <nav aria-label="Member">${TABS.map((k) => `<a class="ma-tab" href="#${k}" data-tab="${k}">${TAB_ICON[k]}<span data-tab-label="${k}"></span></a>`).join('')}</nav>
       <div class="ma-rail-foot"><span class="m-fine tnum" id="maWho2"></span><a class="m-link quiet" href="/" id="maBack"></a></div></aside>
     <div class="ma-toast" id="maToast" role="status" aria-live="polite" hidden></div>

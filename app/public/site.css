@@ -101,9 +101,9 @@ button{font-family:inherit}
 .brand{display:inline-flex;align-items:center;gap:9px;white-space:nowrap;min-height:var(--tap);font-weight:700;font-size:19px;color:var(--ink);text-decoration:none;letter-spacing:-.01em}
 .brand:hover{color:var(--ink)}
 .brand .dot{width:26px;height:26px;border-radius:8px;background:var(--brand);display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:700;flex:none}
-/* team logo (SORNKan door illustration): crop its empty right side so the name sits close */
-.brand-logo{display:block;width:25px;height:32px;flex:none;object-fit:cover;object-position:left center}
-.brand-logo.sm,.foot-brand .brand-logo{width:22px;height:28px}
+/* app icon (girl peeking from behind a phone): rounded like the home-screen icon */
+.brand-logo{display:block;width:32px;height:32px;flex:none;border-radius:8px}
+.brand-logo.sm,.foot-brand .brand-logo{width:28px;height:28px;border-radius:7px}
 .nav-links{display:flex;align-items:center;gap:2px;margin-left:var(--sp-5)}
 .nav-links a{display:inline-flex;align-items:center;min-height:var(--tap);padding:0 14px;color:var(--ink2);text-decoration:none;font-size:var(--fs-sm);font-weight:500;border-radius:var(--r-sm);transition:color var(--dur-fast) ease}
 .nav-links a:hover{color:var(--ink)}

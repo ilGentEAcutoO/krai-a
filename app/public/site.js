@@ -160,7 +160,7 @@ export function logout() {
 const CHROME_V = '3';
 
 const NAV_HTML = `<div class="nav-in">
-  <a class="brand" href="/"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
+  <a class="brand" href="/"><img class="brand-logo" src="/brand/krai-a-icon.png" alt="" width="32" height="32"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
   <div class="nav-links" id="navLinks">
     <a href="/#listen" data-th="ฟังสายจริง" data-en="Hear a call">ฟังสายจริง</a>
     <a href="/#setup" data-th="วิธีตั้งค่า" data-en="How it works">วิธีตั้งค่า</a>
@@ -175,7 +175,7 @@ const NAV_HTML = `<div class="nav-in">
 
 const FOOT_HTML = `<div class="foot-in">
   <div class="foot-brand">
-    <a class="brand" href="/"><img class="brand-logo" src="/brand/sornkan-logo.png" alt="" width="32" height="31"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
+    <a class="brand" href="/"><img class="brand-logo" src="/brand/krai-a-icon.png" alt="" width="32" height="32"><span data-th="ใครอะ" data-en="KRAI-A">ใครอะ</span></a>
     <p data-th="AI รับสายแปลกแทนคนที่คุณรัก คุยสุภาพ จับมุกมิจ แล้วสรุปให้คุณ" data-en="AI answers unknown calls for the people you love — politely, catching scam scripts, then briefing you.">AI รับสายแปลกแทนคนที่คุณรัก คุยสุภาพ จับมุกมิจ แล้วสรุปให้คุณ</p>
   </div>
   <nav class="foot-links" aria-label="Footer">
