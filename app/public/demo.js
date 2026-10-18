@@ -381,8 +381,8 @@ if (window.__demo) window.__demo.live = live;
 
 // ---- demo video: a YouTube embed in the panel style. The iframe exists only
 // while the panel is open (no third-party request before the tap; closing
-// removes it, so playback stops). One id per language; EN serves both for now.
-const DEMO_VIDEO = { th: 'rpfFIl3cSBs', en: 'rpfFIl3cSBs' };
+// removes it, so playback stops). One id per language.
+const DEMO_VIDEO = { th: 'nO7OIqzKA2E', en: 'rpfFIl3cSBs' };
 const vid = { dlg: $('vidDlg'), frame: $('vidFrame'), open: $('vidOpen') };
 
 function openVideo() {
