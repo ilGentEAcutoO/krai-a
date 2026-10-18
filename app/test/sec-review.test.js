@@ -542,4 +542,19 @@ describe('CSP violation reports', () => {
     assert.doesNotMatch(csp, /unsafe-inline' \*/);
     assert.equal(csp.split(';').filter((d) => d.trim().startsWith('script-src ')).length, 1);
   });
+
+  it('frames the demo video player (youtube-nocookie) on the demo site only', async () => {
+    const { contentSecurityPolicy } = await import('../src/securityHeaders.js');
+    const frameSrc = () => contentSecurityPolicy('x.test').split(';').map((d) => d.trim()).find((d) => d.startsWith('frame-src ')).split(/\s+/);
+    const prev = process.env.SITE_MODE;
+    try {
+      process.env.SITE_MODE = 'demo';
+      assert.ok(frameSrc().includes('https://www.youtube-nocookie.com'));
+      assert.ok(!frameSrc().includes('https://www.youtube.com'), 'only the no-cookie host');
+      process.env.SITE_MODE = 'product';
+      assert.ok(!frameSrc().includes('https://www.youtube-nocookie.com'), 'the business site frames no video');
+    } finally {
+      if (prev === undefined) delete process.env.SITE_MODE; else process.env.SITE_MODE = prev;
+    }
+  });
 });

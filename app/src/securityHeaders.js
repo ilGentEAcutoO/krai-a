@@ -7,8 +7,12 @@
 //   blob: in media-src  — pre-rendered demo audio is played from blob URLs
 //   (the live demo's AudioWorklet is a same-origin file: no blob: scripts)
 //   'unsafe-inline' in style-src only — style attributes / <style> blocks
+//   youtube-nocookie in frame-src, demo mode only — the demo video player
+import { siteMode } from './siteMode.js';
+
 const RECAPTCHA = ['https://www.google.com/recaptcha/', 'https://www.gstatic.com/recaptcha/'];
 const LINE_SDK = 'https://static.line-scdn.net';
+const YOUTUBE = 'https://www.youtube-nocookie.com';
 
 export function contentSecurityPolicy(host = '') {
   const h = String(host).replace(/[^A-Za-z0-9.:[\]-]/g, ''); // a hostile Host header can't inject directives
@@ -21,7 +25,7 @@ export function contentSecurityPolicy(host = '') {
     'img-src': ["'self'", 'data:', 'blob:', 'https://*.line-scdn.net', 'https://www.gstatic.com'],
     'media-src': ["'self'", 'blob:', 'data:'],
     'connect-src': ["'self'", ...sockets, 'https://www.google.com/recaptcha/', 'https://*.line.me', 'https://*.line-scdn.net'],
-    'frame-src': [...RECAPTCHA.slice(0, 1), 'https://recaptcha.google.com/recaptcha/', 'https://*.line.me'],
+    'frame-src': [...RECAPTCHA.slice(0, 1), 'https://recaptcha.google.com/recaptcha/', 'https://*.line.me', ...(siteMode() === 'demo' ? [YOUTUBE] : [])],
     'worker-src': ["'self'"],
     'manifest-src': ["'self'"],
     'form-action': ["'self'"],

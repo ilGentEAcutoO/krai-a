@@ -46,7 +46,13 @@
   <section class="hk-hero" aria-labelledby="heroTitle">
     <div class="hk-hero-in">
       <div class="hk-hero-copy">
-        <p class="hk-tag"><span class="hk-tag-dot" aria-hidden="true"></span><span data-th="ต้นแบบที่ใช้งานได้จริง · ฟังได้ทันที" data-en="Working prototype · listen right now">ต้นแบบที่ใช้งานได้จริง · ฟังได้ทันที</span></p>
+        <div class="hk-hero-tags">
+          <p class="hk-tag"><span class="hk-tag-dot" aria-hidden="true"></span><span data-th="ต้นแบบที่ใช้งานได้จริง · ฟังได้ทันที" data-en="Working prototype · listen right now">ต้นแบบที่ใช้งานได้จริง · ฟังได้ทันที</span></p>
+          <button type="button" class="hk-vid-open" id="vidOpen" aria-haspopup="dialog" aria-controls="vidDlg">
+            <span class="hk-vid-ic" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M9.5 7.2v9.6L17 12z"/></svg></span>
+            <span data-th="ดูวิดีโอเดโม 3 นาที" data-en="Watch the 3-min demo">ดูวิดีโอเดโม 3 นาที</span>
+          </button>
+        </div>
         <h1 id="heroTitle" class="hk-h1" data-th="มิจโทรหาแม่<br>AI รับสายก่อน" data-en="Scammers call Mom.<br>The AI picks up first.">มิจโทรหาแม่<br>AI รับสายก่อน</h1>
         <p class="hk-lede" data-th="แก๊งคอลเซ็นเตอร์โทรหาทุกคน และผู้สูงอายุเสียหนักที่สุด <b>ใครอะ</b> ให้ AI รับเบอร์แปลกแทนคนที่คุณรัก — พ่อแม่ ญาติผู้ใหญ่ ลูกหลาน หรือตัวคุณเอง คุยกับปลายสาย จับมุกมิจ แล้วบอกคุณทันที" data-en="Call-centre gangs call everyone, and older people lose the most. <b>KRAI-A</b> answers unknown numbers for the people you love (parents, grandparents, kids, or you): it talks to the caller, spots the scam script, and tells you right away.">แก๊งคอลเซ็นเตอร์โทรหาทุกคน และผู้สูงอายุเสียหนักที่สุด <b>ใครอะ</b> ให้ AI รับเบอร์แปลกแทนคนที่คุณรัก — พ่อแม่ ญาติผู้ใหญ่ ลูกหลาน หรือตัวคุณเอง คุยกับปลายสาย จับมุกมิจ แล้วบอกคุณทันที</p>
         <ul class="hk-hero-facts" aria-label="ผลทดสอบ / Test results">
@@ -302,6 +308,17 @@
     </div>
     <p class="lv-mic" id="lvMic" data-th="สายจบเองใน 2 นาที" data-en="The call ends by itself in 2 minutes">สายจบเองใน 2 นาที</p>
     <div class="lv-host" id="lvHost" hidden></div>
+  </div>
+</dialog>
+
+<!-- demo video: the YouTube iframe is created on open and removed on close (demo.js) -->
+<dialog class="live vid" id="vidDlg" aria-labelledby="vidTitle">
+  <div class="vid-in">
+    <div class="lv-top">
+      <h2 id="vidTitle" data-th="วิดีโอเดโม ใครอะ" data-en="KRAI-A demo video">วิดีโอเดโม ใครอะ</h2>
+      <button type="button" class="lv-x" id="vidClose" aria-label="ปิด / Close"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="vid-frame" id="vidFrame"></div>
   </div>
 </dialog>
 

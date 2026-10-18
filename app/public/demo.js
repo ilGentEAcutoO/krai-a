@@ -378,3 +378,28 @@ api('/api/status').then((st) => {
 }).catch(() => setLiveEntry(false));
 
 if (window.__demo) window.__demo.live = live;
+
+// ---- demo video: a YouTube embed in the panel style. The iframe exists only
+// while the panel is open (no third-party request before the tap; closing
+// removes it, so playback stops). One id per language; EN serves both for now.
+const DEMO_VIDEO = { th: 'rpfFIl3cSBs', en: 'rpfFIl3cSBs' };
+const vid = { dlg: $('vidDlg'), frame: $('vidFrame'), open: $('vidOpen') };
+
+function openVideo() {
+  demo.stop(); // one voice at a time
+  const id = DEMO_VIDEO[i18n.lang] || DEMO_VIDEO.en;
+  const f = document.createElement('iframe');
+  f.src = `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`;
+  f.title = pick('วิดีโอเดโม ใครอะ (YouTube)', 'KRAI-A demo video (YouTube)');
+  f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+  f.allowFullscreen = true;
+  vid.frame.replaceChildren(f);
+  vid.dlg.showModal();
+  $('vidClose').focus();
+}
+vid.open.addEventListener('click', openVideo);
+$('vidClose').addEventListener('click', () => vid.dlg.close());
+vid.dlg.addEventListener('click', (e) => { if (e.target === vid.dlg) vid.dlg.close(); });
+// Esc, the close button and a backdrop tap all end here: drop the player.
+// The dialog itself hands focus back to the pill.
+vid.dlg.addEventListener('close', () => vid.frame.replaceChildren());
