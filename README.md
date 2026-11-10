@@ -1,3 +1,5 @@
+> **Archived — hackathon submission (Google Cloud AI Builder Cup 2026).** The live product is at https://krai-a.com. This repository is read-only and no longer maintained.
+
 # ใครอะ · Krai-A — AI that answers scam calls for the people you love
 
 **Team SORNKan** · Google Cloud AI Builder Cup 2026 (BFSI: intelligent risk & fraud)
